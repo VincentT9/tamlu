@@ -1,6 +1,6 @@
 import PaidIcon from "@mui/icons-material/Paid";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Grid, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
@@ -58,6 +58,20 @@ export function DonatePage() {
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 5 }}>
             <Stack spacing={2}>
+              <Paper variant="outlined" sx={{ overflow: "hidden", borderRadius: 4 }}>
+                <Box
+                  component="img"
+                  src={detail.data?.campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"}
+                  alt={detail.data?.campaign.name ?? "Flood relief campaign"}
+                  sx={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
+                />
+                <Stack spacing={1} sx={{ p: 2.5 }}>
+                  <Typography variant="h6" fontWeight={900}>{detail.data?.campaign.name ?? "Campaign"}</Typography>
+                  <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                    Your payment is initialized through the existing bank transfer flow and recorded in the public campaign ledger after success.
+                  </Typography>
+                </Stack>
+              </Paper>
               <MetricCard label="Campaign" value={detail.data?.campaign.name ?? "-"} />
               <MetricCard label="Raised" value={formatMoney(detail.data?.campaign.currentAmount)} tone="green" />
               <MetricCard label="Target" value={formatMoney(detail.data?.campaign.targetAmount)} tone="orange" />
@@ -70,6 +84,7 @@ export function DonatePage() {
                 <Typography variant="h6" fontWeight={900}>
                   Donation information
                 </Typography>
+                <Alert severity="info">You may donate with your name or leave name blank to be recorded anonymously.</Alert>
                 <TextField label="Amount (VND)" type="number" {...form.register("amount")} error={Boolean(form.formState.errors.amount)} helperText={form.formState.errors.amount?.message} />
                 <TextField label="Name" {...form.register("donorName")} />
                 <TextField label="Email" type="email" {...form.register("donorEmail")} error={Boolean(form.formState.errors.donorEmail)} helperText={form.formState.errors.donorEmail?.message} />

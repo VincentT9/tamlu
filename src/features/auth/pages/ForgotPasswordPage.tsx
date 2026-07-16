@@ -45,12 +45,12 @@ export function ForgotPasswordPage() {
   });
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-50 px-4 py-10">
-      <Card className="w-full max-w-md">
+    <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_16%_4%,rgba(45,212,191,.18),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(245,184,91,.11),transparent_28%),linear-gradient(180deg,#031014_0%,#04181d_100%)] px-4 py-10 text-white">
+      <Card className="w-full max-w-md border-cyan-200/20 bg-[#061a22]/90">
         <div className="mb-6">
-          <p className="text-sm font-black uppercase text-water-700">Account recovery</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950">Reset password</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Use your registered email to receive an OTP, then create a new password.</p>
+          <p className="text-sm font-black uppercase tracking-wide text-[#67e8f9]">Account recovery</p>
+          <h1 className="mt-2 text-3xl font-black text-white">Reset password</h1>
+          <p className="mt-2 text-sm leading-6 text-white/62">Use your registered email to receive an OTP, then create a new password.</p>
         </div>
 
         {requestMutation.error ? <Alert severity="error">{getErrorMessage(requestMutation.error)}</Alert> : null}
@@ -86,7 +86,7 @@ export function ForgotPasswordPage() {
           </form>
         )}
 
-        <Link to="/login" className="mt-5 block text-center text-sm font-bold text-water-700 hover:text-water-600">
+        <Link to="/login" className="mt-5 block text-center text-sm font-bold text-[#67e8f9] hover:text-white">
           Back to login
         </Link>
       </Card>

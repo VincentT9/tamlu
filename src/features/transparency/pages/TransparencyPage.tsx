@@ -12,7 +12,7 @@ import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
 
-const colors = ["#0b6fb3", "#e87624", "#197f5b", "#8b5cf6"];
+const colors = ["#0b6fb3", "#e87624", "#197f5b", "#536575"];
 
 export function TransparencyPage() {
   const { id = "" } = useParams();
@@ -119,14 +119,53 @@ export function TransparencyPage() {
           </Grid>
           <Grid size={{ xs: 12 }}>
             <SectionPaper>
-              <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
-                Verified logistics map
-              </Typography>
+              <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1.5} sx={{ mb: 2 }}>
+                <Box>
+                  <Typography variant="h6" fontWeight={900}>
+                    Verified logistics map
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Public map uses campaign transparency data only.
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <StatusChip value="ACTIVE" />
+                  <StatusChip value="VERIFIED" />
+                </Stack>
+              </Stack>
               <QueryState isLoading={inventory.isLoading || map.isLoading} error={inventory.error || map.error}>
-                <TamLuMap markers={markers} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Public map uses campaign transparency data only. Backend area needs and route summaries are shown below when no coordinates are supplied.
-                </Typography>
+                <Box sx={{ position: "relative" }}>
+                  <TamLuMap markers={markers} height={500} />
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      position: { xs: "static", md: "absolute" },
+                      right: 16,
+                      top: 16,
+                      mt: { xs: 2, md: 0 },
+                      width: { xs: "100%", md: 280 },
+                      p: 2,
+                      borderRadius: 3,
+                      bgcolor: "rgba(255,255,255,.94)",
+                      backdropFilter: "blur(14px)",
+                    }}
+                  >
+                    <Stack spacing={1.25}>
+                      <Typography fontWeight={900}>Public layers</Typography>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2" fontWeight={800}>Warehouses</Typography>
+                        <Typography variant="body2" color="text.secondary">{markers.length}</Typography>
+                      </Stack>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2" fontWeight={800}>Routes</Typography>
+                        <Typography variant="body2" color="text.secondary">{map.data?.activeRoutes.length ?? 0}</Typography>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                        Raw SOS locations are intentionally excluded from public map views.
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                </Box>
               </QueryState>
             </SectionPaper>
           </Grid>

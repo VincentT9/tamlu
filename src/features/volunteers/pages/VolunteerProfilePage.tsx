@@ -1,4 +1,4 @@
-import { Alert, Button, Stack, TextField } from "@mui/material";
+import { Alert, Box, Button, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { volunteerApi } from "@/features/volunteers/api";
@@ -28,17 +28,38 @@ export function VolunteerProfilePage() {
     <>
       <PageHeader title="Volunteer Profile" description="Register skills and availability so coordinators can add you to rescue missions." />
       <QueryState isLoading={profile.isLoading} error={undefined}>
-        <SectionPaper>
-          {profile.error ? <Alert severity="info">No volunteer profile yet. Create one below.</Alert> : null}
-          {save.error ? <Alert severity="error" sx={{ mt: 2 }}>{getErrorMessage(save.error)}</Alert> : null}
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            {profile.data ? <StatusChip value={profile.data.status} /> : null}
-            <TextField label="Skills" value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
-            <TextField label="Experience" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value })} multiline minRows={3} />
-            <TextField label="Available areas" value={form.availableAreas} onChange={(event) => setForm({ ...form, availableAreas: event.target.value })} />
-            <Button variant="contained" onClick={() => save.mutate()} disabled={save.isPending}>Save profile</Button>
-          </Stack>
-        </SectionPaper>
+        <Grid container spacing={2.5}>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 4, height: "100%" }}>
+              <Stack spacing={2}>
+                <Box sx={{ display: "grid", placeItems: "center", width: 56, height: 56, borderRadius: 4, bgcolor: "primary.light", color: "primary.main", fontWeight: 900 }}>
+                  TL
+                </Box>
+                <Box>
+                  <Typography variant="h5" fontWeight={900}>Volunteer readiness</Typography>
+                  <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
+                    Keep your skills and coverage areas current so coordinators can match you with the safest useful assignment.
+                  </Typography>
+                </Box>
+                {profile.data ? <StatusChip value={profile.data.status} /> : <Alert severity="info">No volunteer profile yet. Create one below.</Alert>}
+              </Stack>
+            </Paper>
+          </Grid>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <SectionPaper>
+              {save.error ? <Alert severity="error">{getErrorMessage(save.error)}</Alert> : null}
+              <Stack spacing={2} sx={{ mt: save.error ? 2 : 0 }}>
+                <Typography variant="h6" fontWeight={900}>Skills and availability</Typography>
+                <TextField label="Skills" value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
+                <TextField label="Experience" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value })} multiline minRows={3} />
+                <TextField label="Available areas" value={form.availableAreas} onChange={(event) => setForm({ ...form, availableAreas: event.target.value })} />
+                <Box>
+                  <Button variant="contained" onClick={() => save.mutate()} disabled={save.isPending}>Save profile</Button>
+                </Box>
+              </Stack>
+            </SectionPaper>
+          </Grid>
+        </Grid>
       </QueryState>
     </>
   );

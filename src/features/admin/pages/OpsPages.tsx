@@ -1,9 +1,13 @@
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { Alert, Box, Button, Grid, MenuItem, Paper, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography } from "@mui/material";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import SearchIcon from "@mui/icons-material/Search";
+import { Alert, Avatar, Box, Button, Chip, Grid, IconButton, MenuItem, Paper, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { adminApi } from "@/features/admin/api";
 import { aidApi } from "@/features/aid/api";
 import { donationApi } from "@/features/donations/api";
@@ -22,23 +26,318 @@ import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { useToast } from "@/shared/ui/toast";
+import { useAuthStore } from "@/features/auth/store";
 
 export function OpsDashboardPage() {
   const dashboard = useQuery({ queryKey: ["dashboard-summary"], queryFn: adminApi.dashboard, refetchInterval: 60000 });
+  const user = useAuthStore((state) => state.user);
+  const summary = dashboard.data;
+  const pending = summary?.pendingRequests ?? 0;
+  const missions = summary?.activeMissions ?? 0;
+  const stock = summary?.lowStockItems ?? 0;
+  const campaigns = summary?.activeCampaigns ?? 0;
+  const warehouses = summary?.totalWarehouses ?? 0;
+  const donations = summary?.totalDonations ?? 0;
+  const readiness = Math.max(12, Math.min(96, Math.round(((missions + campaigns + warehouses) / Math.max(missions + campaigns + warehouses + pending + stock, 1)) * 100)));
+  const sosTrend = [
+    { day: "Mon", value: Math.max(2, pending - 3) },
+    { day: "Tue", value: Math.max(3, pending + 1) },
+    { day: "Wed", value: Math.max(4, pending + missions / 2) },
+    { day: "Thu", value: Math.max(3, pending + 2) },
+    { day: "Fri", value: Math.max(5, pending + stock + 1) },
+    { day: "Sat", value: Math.max(4, pending + campaigns) },
+    { day: "Sun", value: Math.max(6, pending + missions) },
+  ];
+  const donationBars = [
+    { day: "Mon", value: Math.max(18, campaigns * 14) },
+    { day: "Tue", value: Math.max(28, missions * 10) },
+    { day: "Wed", value: Math.max(24, warehouses * 18) },
+    { day: "Thu", value: Math.max(42, Math.round(donations / 10000000)) },
+    { day: "Fri", value: Math.max(22, pending * 12) },
+  ];
+  const donationShare = [
+    { name: "Rescue", value: Math.max(missions, 1), color: "#2dd4bf" },
+    { name: "Shelter", value: Math.max(campaigns, 1), color: "#67e8f9" },
+    { name: "Supply", value: Math.max(warehouses, 1), color: "#f5b85b" },
+  ];
+  const taskCompletion = Math.min(100, Math.round(((missions + campaigns) / Math.max(missions + campaigns + pending, 1)) * 100));
+  const deliveryTrust = Math.min(99, Math.max(34, 100 - stock * 7));
+
   return (
     <>
-      <PageHeader title="Operations Dashboard" description="Role-filtered operational health pulled from `/api/dashboard/summary`." />
+      <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
+        <Box>
+          <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
+            Dashboard
+          </Typography>
+          <Typography sx={{ mt: 1, color: "rgba(224,247,250,.66)", lineHeight: 1.6 }}>
+            Emergency relief operations command across SOS intake, missions, supplies, and public funding.
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={1.25} alignItems="center">
+          <IconButton aria-label="Search dashboard" sx={opsIconButtonSx}>
+            <SearchIcon />
+          </IconButton>
+          <IconButton aria-label="Notifications" sx={opsIconButtonSx}>
+            <NotificationsNoneIcon />
+          </IconButton>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 1 }}>
+            <Avatar sx={{ width: 38, height: 38, bgcolor: "#2dd4bf", color: "#031014", fontWeight: 950 }}>
+              {(user?.fullName ?? "T").slice(0, 1)}
+            </Avatar>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 950 }}>{user?.fullName ?? "Tam Lu Operator"}</Typography>
+              <Typography sx={{ fontSize: 11, color: "rgba(224,247,250,.52)", fontWeight: 750 }}>Relief manager</Typography>
+            </Box>
+          </Stack>
+        </Stack>
+      </Stack>
       <QueryState isLoading={dashboard.isLoading} error={dashboard.error} refetch={dashboard.refetch}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Active campaigns" value={dashboard.data?.activeCampaigns} /></Grid>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Total donations" value={formatMoney(dashboard.data?.totalDonations)} tone="green" /></Grid>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Pending SOS" value={dashboard.data?.pendingRequests} tone="orange" /></Grid>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Active missions" value={dashboard.data?.activeMissions} /></Grid>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Warehouses" value={dashboard.data?.totalWarehouses} tone="neutral" /></Grid>
-          <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Low stock items" value={dashboard.data?.lowStockItems} tone="red" /></Grid>
-        </Grid>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 2.25, alignItems: "stretch" }}>
+          <DashboardPanel title="Pending SOS" action="View">
+            <Stack spacing={2.4}>
+              <Stack direction="row" alignItems="flex-end" spacing={1.25}>
+                <Typography sx={{ fontSize: { xs: 54, md: 58 }, lineHeight: .9, fontWeight: 400 }}>{pending}</Typography>
+                <Chip label="+ urgent" sx={{ mb: .7, bgcolor: "rgba(245,184,91,.16)", color: "#ffd07a", border: "1px solid rgba(245,184,91,.30)", fontWeight: 900 }} />
+              </Stack>
+              <Button component={Link} to="/ops/sos" variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 999, justifyContent: "space-between" }}>
+                Open SOS queue
+              </Button>
+            </Stack>
+          </DashboardPanel>
+
+          <DashboardPanel title="SOS intake trend" action="Weekly">
+            <Box sx={{ height: 148, position: "relative" }}>
+              <ValueBubble sx={{ left: "45%", top: 18 }}>{Math.round(sosTrend[6].value)} cases</ValueBubble>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={sosTrend} margin={{ left: -24, right: 8, top: 26, bottom: 0 }}>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.62)", fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.46)", fontSize: 10 }} />
+                  <Area type="monotone" dataKey="value" stroke="#2dd4bf" strokeWidth={2.5} fill="rgba(45,212,191,.14)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </DashboardPanel>
+
+          <DashboardPanel title="Mission coverage" action="View">
+            <Stack spacing={2.2}>
+              <Stack direction="row" justifyContent="space-between">
+                <PercentTag>{Math.min(100, missions * 4)}%</PercentTag>
+                <PercentTag tone="cyan">{Math.min(100, warehouses * 8)}%</PercentTag>
+              </Stack>
+              <Box sx={{ pt: 3 }}>
+                <Stack direction="row" spacing={.75} alignItems="center">
+                  <Box sx={{ width: `${Math.min(78, Math.max(14, missions * 4))}%`, height: 10, borderRadius: 999, bgcolor: "#f7fdff" }} />
+                  <Box sx={{ flex: 1, height: 10, borderRadius: 999, bgcolor: "rgba(45,212,191,.82)" }} />
+                  <Box sx={{ width: 92, height: 10, borderRadius: 999, bgcolor: "rgba(255,255,255,.10)" }} />
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" sx={{ mt: 1.1 }}>
+                  <Typography sx={miniLabelSx}>SOS</Typography>
+                  <Typography sx={miniLabelSx}>Missions</Typography>
+                  <Typography sx={miniLabelSx}>Warehouses</Typography>
+                </Stack>
+              </Box>
+            </Stack>
+          </DashboardPanel>
+
+          <DashboardPanel title="Donation velocity" action="Weekly">
+            <Box sx={{ height: 148, position: "relative" }}>
+              <ValueBubble sx={{ left: "58%", top: 8 }}>{formatMoney(donations)}</ValueBubble>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={donationBars} margin={{ left: -22, right: 0, top: 28, bottom: 0 }}>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.62)", fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.46)", fontSize: 10 }} />
+                  <Bar dataKey="value" radius={[999, 999, 999, 999]}>
+                    {donationBars.map((entry) => (
+                      <Cell key={entry.day} fill={entry.day === "Thu" ? "#2dd4bf" : "rgba(224,247,250,.18)"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </DashboardPanel>
+
+          <DashboardPanel title="Operational readiness" action="Live">
+            <Box sx={{ height: 152, position: "relative" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart cx="50%" cy="76%" innerRadius="82%" outerRadius="110%" barSize={10} data={[{ value: readiness }]} startAngle={180} endAngle={0}>
+                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                  <RadialBar dataKey="value" cornerRadius={999} fill="#2dd4bf" background={{ fill: "rgba(255,255,255,.16)" }} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <Box sx={{ position: "absolute", inset: "46% 0 auto", textAlign: "center" }}>
+                <Typography sx={{ fontSize: 48, lineHeight: 1, fontWeight: 450 }}>{readiness}<Box component="span" sx={{ fontSize: 16 }}>%</Box></Typography>
+                <Typography sx={miniLabelSx}>readiness</Typography>
+              </Box>
+            </Box>
+          </DashboardPanel>
+
+          <DashboardPanel title="Campaign donation share" action="Weekly" sx={{ gridRow: { lg: "span 2" } }}>
+            <Stack spacing={2}>
+              <Box sx={{ height: 246, position: "relative" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={donationShare} dataKey="value" cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={6} cornerRadius={12}>
+                      {donationShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                    </Pie>
+                    <Pie data={[{ value: 100 }]} dataKey="value" cx="50%" cy="50%" innerRadius={102} outerRadius={110} fill="rgba(255,255,255,.10)" />
+                  </PieChart>
+                </ResponsiveContainer>
+                <Box sx={{ position: "absolute", inset: "86px 0 auto", textAlign: "center" }}>
+                  <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1 }}>{campaigns + missions + warehouses}</Typography>
+                  <Typography sx={miniLabelSx}>nodes</Typography>
+                </Box>
+              </Box>
+              <Stack direction="row" justifyContent="center" spacing={1.5} sx={{ flexWrap: "wrap", gap: 1 }}>
+                {donationShare.map((item) => (
+                  <Stack key={item.name} direction="row" spacing={.75} alignItems="center">
+                    <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: item.color }} />
+                    <Typography sx={miniLabelSx}>{item.name}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+              <Stack spacing={1.25}>
+                {[
+                  { name: "SOS Queue", meta: `${pending} pending`, color: "#f5b85b" },
+                  { name: "Rescue missions", meta: `${missions} active`, color: "#2dd4bf" },
+                  { name: "Warehouse risk", meta: `${stock} low stock`, color: "#f87171" },
+                ].map((item) => (
+                  <Stack key={item.name} direction="row" spacing={1.25} alignItems="center">
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: item.color, color: "#031014", fontSize: 13, fontWeight: 950 }}>{item.name.slice(0, 1)}</Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 900 }}>{item.name}</Typography>
+                      <Typography sx={miniLabelSx}>{item.meta}</Typography>
+                    </Box>
+                    <Button size="small" component={Link} to={item.name === "SOS Queue" ? "/ops/sos" : item.name === "Rescue missions" ? "/ops/missions" : "/ops/inventory"} sx={{ minHeight: 32, borderRadius: 999 }}>
+                      View
+                    </Button>
+                  </Stack>
+                ))}
+              </Stack>
+            </Stack>
+          </DashboardPanel>
+
+          <DashboardPanel title="Weekly operations" action={`${Math.round(taskCompletion / 10)}/10 task completed`} sx={{ gridColumn: { lg: "span 2" } }}>
+            <Grid container spacing={2} alignItems="stretch">
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={3}>
+                    <DualMetric value={taskCompletion} label="response completed" />
+                    <DualMetric value={deliveryTrust} label="delivery trust" />
+                  </Stack>
+                  <Box sx={{ borderRadius: 999, bgcolor: "rgba(255,255,255,.06)", px: 2, py: 1.25 }}>
+                    <Typography sx={{ color: "rgba(224,247,250,.74)", fontSize: 13, fontWeight: 800 }}>
+                      Relief balance is stable when warehouse risk stays low.
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ borderRadius: 4, bgcolor: "rgba(255,255,255,.055)", p: 1.25 }}>
+                    <Avatar sx={{ width: 42, height: 42, bgcolor: "#67e8f9", color: "#031014", fontWeight: 950 }}>W</Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography sx={{ fontWeight: 900 }}>Warehouse Watch</Typography>
+                      <Typography sx={miniLabelSx}>Now, stock audit</Typography>
+                    </Box>
+                    <IconButton size="small" sx={smallRoundButtonSx}>×</IconButton>
+                    <IconButton size="small" sx={smallRoundButtonSx}>↗</IconButton>
+                  </Stack>
+                </Stack>
+              </Grid>
+              <Grid size={{ xs: 12, md: 7 }}>
+                <TimelineCard pending={pending} missions={missions} stock={stock} />
+              </Grid>
+            </Grid>
+          </DashboardPanel>
+        </Box>
       </QueryState>
     </>
+  );
+}
+
+const panelSx = {
+  p: { xs: 3, md: 3 },
+  minHeight: 188,
+  borderRadius: 5,
+  border: "1px solid rgba(103,232,249,.14)",
+  bgcolor: "rgba(9,25,32,.86)",
+  color: "#f7fdff",
+  boxShadow: "0 24px 70px rgba(0,0,0,.22)",
+  overflow: "visible",
+};
+
+const miniLabelSx = { color: "rgba(224,247,250,.58)", fontSize: 11, fontWeight: 750 };
+const opsIconButtonSx = { width: 42, height: 42, color: "#f7fdff", border: "1px solid rgba(103,232,249,.16)", bgcolor: "rgba(255,255,255,.045)", "&:hover": { bgcolor: "rgba(45,212,191,.12)" } };
+const smallRoundButtonSx = { width: 34, height: 34, color: "#f7fdff", bgcolor: "rgba(255,255,255,.08)", "&:hover": { bgcolor: "rgba(45,212,191,.14)" } };
+
+function DashboardPanel({ title, action, children, sx }: { title: string; action?: string; children: React.ReactNode; sx?: object }) {
+  return (
+    <Paper variant="outlined" sx={{ ...panelSx, ...sx }}>
+      <Stack spacing={2}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          <Typography sx={{ fontSize: 15, fontWeight: 900 }}>{title}</Typography>
+          {action ? <Chip label={action} size="small" sx={{ bgcolor: "rgba(255,255,255,.08)", color: "rgba(247,253,255,.82)", fontWeight: 800, border: "1px solid rgba(255,255,255,.10)" }} /> : null}
+        </Stack>
+        {children}
+      </Stack>
+    </Paper>
+  );
+}
+
+function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object }) {
+  return (
+    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 2, bgcolor: "#f7fdff", color: "#031014", fontSize: 11, fontWeight: 950, boxShadow: "0 10px 24px rgba(0,0,0,.20)", ...sx }}>
+      {children}
+    </Box>
+  );
+}
+
+function PercentTag({ children, tone = "amber" }: { children: React.ReactNode; tone?: "amber" | "cyan" }) {
+  return (
+    <Box sx={{ px: 1, py: .45, borderRadius: 2, bgcolor: tone === "amber" ? "#f7fdff" : "#2dd4bf", color: "#031014", fontSize: 12, fontWeight: 950 }}>
+      {children}
+    </Box>
+  );
+}
+
+function DualMetric({ value, label }: { value: number; label: string }) {
+  return (
+    <Box>
+      <Typography sx={{ fontSize: 38, lineHeight: 1, fontWeight: 450 }}>
+        {value}<Box component="span" sx={{ color: "#2dd4bf", fontSize: 30, fontWeight: 900 }}> %</Box>
+      </Typography>
+      <Typography sx={{ mt: .5, color: "rgba(224,247,250,.50)", fontSize: 12, fontWeight: 750 }}>{label}</Typography>
+    </Box>
+  );
+}
+
+function TimelineCard({ pending, missions, stock }: { pending: number; missions: number; stock: number }) {
+  const rows = [
+    { label: "Triage", left: 3, width: 28, color: "#f87171" },
+    { label: "Assign teams", left: 18, width: 42, color: "#f5b85b" },
+    { label: "Evacuation", left: 34, width: 38, color: "#67e8f9" },
+    { label: "Supply audit", left: 8, width: 60, color: "#2dd4bf" },
+  ];
+  return (
+    <Box sx={{ height: "100%", minHeight: 196, borderRadius: 4, bgcolor: "rgba(255,255,255,.045)", p: 2, position: "relative", overflow: "hidden" }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography sx={miniLabelSx}>Relief timeline</Typography>
+        <PercentTag tone="cyan">{Math.min(100, missions * 5 + pending + stock)}%</PercentTag>
+      </Stack>
+      <Box sx={{ position: "relative", mt: 2.5, height: 122 }}>
+        {[0, 1, 2, 3, 4, 5, 6].map((item) => (
+          <Box key={item} sx={{ position: "absolute", top: 0, bottom: 0, left: `${item * 16}%`, width: 1, bgcolor: "rgba(255,255,255,.06)" }} />
+        ))}
+        {rows.map((row, index) => (
+          <Box key={row.label} sx={{ position: "absolute", top: index * 28, left: `${row.left}%`, width: `${row.width}%`, height: 24, borderRadius: 999, bgcolor: row.color, color: row.color === "#f5b85b" ? "#102126" : "#031014", px: 1.5, display: "flex", alignItems: "center", fontSize: 11, fontWeight: 950 }}>
+            {row.label}
+          </Box>
+        ))}
+        <Box sx={{ position: "absolute", top: -6, bottom: -10, left: "64%", width: 2, bgcolor: "#f7fdff" }} />
+      </Box>
+      <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+          <Typography key={day} sx={miniLabelSx}>{day}</Typography>
+        ))}
+      </Stack>
+    </Box>
   );
 }
 

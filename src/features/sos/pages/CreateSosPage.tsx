@@ -1,7 +1,7 @@
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import SosIcon from "@mui/icons-material/Sos";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Box, Button, FormControlLabel, Grid, MenuItem, Stack, Switch, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, FormControlLabel, Grid, Paper, MenuItem, Stack, Switch, TextField, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -101,6 +101,9 @@ export function CreateSosPage() {
       />
       <SectionPaper>
         {mutation.error ? <Alert severity="error">{getErrorMessage(mutation.error)}</Alert> : null}
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          If there is immediate danger, submit the request with the best location you have. Coordinators can refine details after intake.
+        </Alert>
         <Stack component="form" spacing={2.5} sx={{ mt: mutation.error ? 2 : 0 }} onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -136,13 +139,20 @@ export function CreateSosPage() {
               <TextField fullWidth label="Address" {...form.register("address")} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 2 }}>
+              <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 4, p: 2, bgcolor: "#f8fcff" }}>
                 <Stack spacing={1.5}>
-                  <Typography fontWeight={900}>Map picker preview</Typography>
-                  <TamLuMap markers={mapMarkers} />
-                  <Typography variant="body2" color="text.secondary">
-                    Use current GPS or enter coordinates manually, then confirm the marker before submitting.
-                  </Typography>
+                  <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1}>
+                    <Box>
+                      <Typography fontWeight={900}>Rescue location preview</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Use current GPS or enter coordinates manually, then confirm the marker before submitting.
+                      </Typography>
+                    </Box>
+                    <Button variant="outlined" startIcon={<MyLocationIcon />} onClick={useLocation}>
+                      Use current GPS
+                    </Button>
+                  </Stack>
+                  <TamLuMap markers={mapMarkers} height={360} />
                 </Stack>
               </Box>
             </Grid>
@@ -151,13 +161,15 @@ export function CreateSosPage() {
             </Grid>
             {(["hasElderly", "hasChildren", "hasInjured", "hasDisabled"] as const).map((name) => (
               <Grid size={{ xs: 6, md: 2 }} key={name}>
-                <Controller
-                  control={form.control}
-                  name={name}
-                  render={({ field }) => (
-                    <FormControlLabel control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />} label={name.replace("has", "")} />
-                  )}
-                />
+                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 3, boxShadow: "none", height: "100%" }}>
+                  <Controller
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />} label={name.replace("has", "")} />
+                    )}
+                  />
+                </Paper>
               </Grid>
             ))}
             {!isAuthenticated ? (
@@ -171,6 +183,7 @@ export function CreateSosPage() {
               </>
             ) : null}
             <Grid size={{ xs: 12 }}>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, boxShadow: "none" }}>
               <Stack spacing={1}>
                 <Typography fontWeight={800}>Evidence media</Typography>
                 <Button component="label" variant="outlined">
@@ -181,6 +194,7 @@ export function CreateSosPage() {
                   {files?.length ? `${files.length} file(s) selected. Backend limit is 5 files, 50MB each.` : "Photos or videos help coordinators verify the situation."}
                 </Typography>
               </Stack>
+              </Paper>
             </Grid>
           </Grid>
           <Box>

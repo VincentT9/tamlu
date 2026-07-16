@@ -1,4 +1,4 @@
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Skeleton, Stack, Typography } from "@mui/material";
 import { getErrorMessage } from "@/shared/api/client";
 
 interface QueryStateProps {
@@ -14,8 +14,10 @@ interface QueryStateProps {
 export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, refetch, children }: QueryStateProps) {
   if (isLoading) {
     return (
-      <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 220 }}>
-        <CircularProgress />
+      <Stack spacing={1.25} sx={{ minHeight: 220, py: 2 }} aria-label="Loading content">
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.10)" }} />
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.08)" }} />
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.06)" }} />
       </Stack>
     );
   }
@@ -39,11 +41,26 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
 
   if (empty) {
     return (
-      <Box sx={{ py: 6, textAlign: "center" }}>
+      <Box sx={{ py: 7, px: 2, textAlign: "center", color: "#f7fdff" }}>
+        <Box
+          aria-hidden="true"
+          sx={{
+            mx: "auto",
+            mb: 2,
+            width: 56,
+            height: 56,
+            borderRadius: 4,
+            border: "1px solid",
+            borderColor: "rgba(103,232,249,.20)",
+            bgcolor: "rgba(45,212,191,.12)",
+          }}
+        />
         <Typography variant="h6" fontWeight={800}>
           {emptyTitle ?? "No data yet"}
         </Typography>
-        <Typography color="text.secondary">{emptyText ?? "When data is available, it will appear here."}</Typography>
+        <Typography sx={{ mt: 0.5, color: "rgba(224,247,250,.62)" }}>
+          {emptyText ?? "When data is available, it will appear here."}
+        </Typography>
       </Box>
     );
   }

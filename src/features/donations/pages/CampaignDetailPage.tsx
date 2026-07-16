@@ -1,6 +1,6 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PaidIcon from "@mui/icons-material/Paid";
-import { Button, Grid, LinearProgress, Stack, Typography } from "@mui/material";
+import { Box, Button, Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
@@ -47,15 +47,23 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
         <Grid size={{ xs: 12, lg: 8 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <img
-                src={campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"}
-                alt={campaign.name}
-                style={{ width: "100%", maxHeight: 380, objectFit: "cover", borderRadius: 8 }}
-              />
+              <Box sx={{ position: "relative", overflow: "hidden", borderRadius: 4 }}>
+                <img
+                  src={campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"}
+                  alt={campaign.name}
+                  style={{ width: "100%", maxHeight: 420, objectFit: "cover", display: "block" }}
+                />
+                <Box sx={{ position: "absolute", inset: "auto 0 0 0", p: 2.5, background: "linear-gradient(180deg, transparent, rgba(3,23,36,.78))", color: "white" }}>
+                  <Typography fontWeight={900} sx={{ color: "white" }}>{campaign.affectedArea}</Typography>
+                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,.78)" }}>
+                    {formatDate(campaign.startDate)} to {formatDate(campaign.endDate)}
+                  </Typography>
+                </Box>
+              </Box>
               <Stack direction="row" spacing={1} alignItems="center">
                 <StatusChip value={campaign.status} />
                 <Typography color="text.secondary">
-                  {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
+                  Public campaign window
                 </Typography>
               </Stack>
               <LinearProgress variant="determinate" value={Math.min(progress, 100)} sx={{ height: 10, borderRadius: 8 }} />
@@ -70,6 +78,20 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
             <MetricCard label="Income" value={formatMoney(data.ledgerSummary.totalIncome)} tone="green" />
             <MetricCard label="Expense" value={formatMoney(data.ledgerSummary.totalExpense)} tone="orange" />
             <MetricCard label="Remaining balance" value={formatMoney(data.ledgerSummary.balance)} />
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 4 }}>
+              <Stack spacing={1.5}>
+                <Typography variant="h6" fontWeight={900}>Why this is trusted</Typography>
+                {["Public ledger", "Inventory movement", "Field evidence"].map((item) => (
+                  <Stack key={item} direction="row" spacing={1.25} alignItems="center">
+                    <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "success.main" }} />
+                    <Typography fontWeight={800}>{item}</Typography>
+                  </Stack>
+                ))}
+                <Button component={Link} to={`/campaigns/${campaign.id}/transparency`} variant="outlined" startIcon={<AccountBalanceIcon />}>
+                  View audit trail
+                </Button>
+              </Stack>
+            </Paper>
           </Stack>
         </Grid>
       </Grid>

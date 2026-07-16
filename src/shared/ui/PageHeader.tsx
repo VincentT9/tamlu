@@ -12,27 +12,30 @@ export function PageHeader({ title, eyebrow, description, actions }: PageHeaderP
   return (
     <Stack
       direction={{ xs: "column", md: "row" }}
-      spacing={2}
+      spacing={2.5}
       alignItems={{ xs: "flex-start", md: "center" }}
       justifyContent="space-between"
-      sx={{ mb: 3 }}
+      sx={{
+        mb: 3,
+        px: { xs: 0, md: 0.5 },
+      }}
     >
       <Box>
         {eyebrow ? (
-          <Typography variant="overline" color="primary" fontWeight={800}>
+          <Typography variant="overline" sx={{ color: "#67e8f9", fontWeight: 950, letterSpacing: 1.2 }}>
             {eyebrow}
           </Typography>
         ) : null}
-        <Typography variant="h4" fontWeight={900} letterSpacing={0}>
+        <Typography variant="h4" fontWeight={950} letterSpacing={0} sx={{ lineHeight: 1.04, color: "#f7fdff" }}>
           {title}
         </Typography>
         {description ? (
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5, maxWidth: 820 }}>
+          <Typography variant="body1" sx={{ mt: 1, maxWidth: 820, lineHeight: 1.65, color: "rgba(224,247,250,.66)" }}>
             {description}
           </Typography>
         ) : null}
       </Box>
-      {actions}
+      {actions ? <Box sx={{ width: { xs: "100%", md: "auto" } }}>{actions}</Box> : null}
     </Stack>
   );
 }

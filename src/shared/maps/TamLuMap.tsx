@@ -18,11 +18,11 @@ interface TamLuMapProps {
 }
 
 const colors: Record<NonNullable<MapMarker["type"]>, string> = {
-  sos: "#d32f2f",
+  sos: "#c62828",
   warehouse: "#0b6fb3",
   shelter: "#197f5b",
   team: "#e87624",
-  route: "#6b4eff",
+  route: "#38aae8",
   area: "#52616f",
 };
 
@@ -30,9 +30,9 @@ function markerIcon(type: MapMarker["type"]) {
   const color = colors[type ?? "area"];
   return L.divIcon({
     className: "tamlu-marker",
-    html: `<span style="display:block;width:18px;height:18px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></span>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
+    html: `<span style="display:block;width:22px;height:22px;border-radius:999px;background:${color};border:4px solid white;box-shadow:0 10px 24px rgba(6,47,79,.28),0 0 0 5px ${color}24"></span>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
   });
 }
 
@@ -42,7 +42,16 @@ export function TamLuMap({ markers, center = [16.4637, 107.5909], height = 440 }
   );
 
   return (
-    <Box sx={{ height, overflow: "hidden", borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+    <Box
+      sx={{
+        height,
+        overflow: "hidden",
+        borderRadius: 3,
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,.65)",
+      }}
+    >
       <MapContainer center={center} zoom={10} scrollWheelZoom style={{ height: "100%", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

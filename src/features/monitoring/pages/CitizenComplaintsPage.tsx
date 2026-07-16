@@ -1,4 +1,4 @@
-import { Alert, Button, Grid, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { monitoringApi } from "@/features/monitoring/api";
@@ -30,6 +30,8 @@ export function CitizenComplaintsPage() {
           <SectionPaper>
             {create.error ? <Alert severity="error">{getErrorMessage(create.error)}</Alert> : null}
             <Stack spacing={2} sx={{ mt: create.error ? 2 : 0 }}>
+              <Typography variant="h6" fontWeight={900}>Submit a report</Typography>
+              <Alert severity="info">Reports help coordinators protect aid integrity and resolve community concerns.</Alert>
               <TextField label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               <TextField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} multiline minRows={4} />
               <TextField select label="Type" value={form.complaintType} onChange={(e) => setForm({ ...form, complaintType: e.target.value })}>
@@ -44,7 +46,7 @@ export function CitizenComplaintsPage() {
           <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
             <Stack spacing={1.5}>
               {rows.data?.data.map((item) => (
-                <SectionPaper key={item.id}>
+                <Paper key={item.id} variant="outlined" sx={{ p: 2.25, borderRadius: 3 }}>
                   <Stack spacing={0.5}>
                     <Stack direction="row" justifyContent="space-between">
                       <Typography fontWeight={900}>{item.title}</Typography>
@@ -53,7 +55,7 @@ export function CitizenComplaintsPage() {
                     <Typography color="text.secondary">{item.description}</Typography>
                     <Typography variant="caption">{formatDate(item.createdAt)}</Typography>
                   </Stack>
-                </SectionPaper>
+                </Paper>
               ))}
             </Stack>
           </QueryState>
