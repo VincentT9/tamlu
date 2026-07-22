@@ -20,28 +20,28 @@ export function VolunteerProfilePage() {
   const save = useMutation({
     mutationFn: () => (profile.data ? volunteerApi.updateMy(form) : volunteerApi.create(form)),
     onSuccess: () => {
-      showToast("Volunteer profile saved.", "success");
+      showToast("Hồ sơ tình nguyện viên đã được lưu.", "success");
       queryClient.invalidateQueries({ queryKey: ["my-volunteer-profile"] });
     },
   });
   return (
     <>
-      <PageHeader title="Volunteer Profile" description="Register skills and availability so coordinators can add you to rescue missions." />
+      <PageHeader title="Hồ sơ tình nguyện viên" description="Cập nhật kỹ năng và khu vực có thể hỗ trợ để điều phối viên phân công nhiệm vụ phù hợp." />
       <QueryState isLoading={profile.isLoading} error={undefined}>
         <Grid container spacing={2.5}>
           <Grid size={{ xs: 12, lg: 4 }}>
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 4, height: "100%" }}>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 0, height: "100%" }}>
               <Stack spacing={2}>
-                <Box sx={{ display: "grid", placeItems: "center", width: 56, height: 56, borderRadius: 4, bgcolor: "primary.light", color: "primary.main", fontWeight: 900 }}>
-                  TL
+                <Box sx={{ display: "grid", placeItems: "center", width: 64, height: 64, borderRadius: 2, bgcolor: "#ffffff", border: "1px solid var(--color-border)", overflow: "hidden" }}>
+                  <Box component="img" src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" sx={{ width: 58, height: 58, objectFit: "contain" }} />
                 </Box>
                 <Box>
-                  <Typography variant="h5" fontWeight={900}>Volunteer readiness</Typography>
+                  <Typography variant="h5" fontWeight={900}>Mức sẵn sàng tình nguyện</Typography>
                   <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
-                    Keep your skills and coverage areas current so coordinators can match you with the safest useful assignment.
+                    Hãy giữ thông tin kỹ năng và khu vực hỗ trợ luôn chính xác để được phân công nhiệm vụ an toàn, phù hợp.
                   </Typography>
                 </Box>
-                {profile.data ? <StatusChip value={profile.data.status} /> : <Alert severity="info">No volunteer profile yet. Create one below.</Alert>}
+                {profile.data ? <StatusChip value={profile.data.status} /> : <Alert severity="info">Bạn chưa có hồ sơ tình nguyện. Vui lòng tạo hồ sơ bên dưới.</Alert>}
               </Stack>
             </Paper>
           </Grid>
@@ -49,12 +49,12 @@ export function VolunteerProfilePage() {
             <SectionPaper>
               {save.error ? <Alert severity="error">{getErrorMessage(save.error)}</Alert> : null}
               <Stack spacing={2} sx={{ mt: save.error ? 2 : 0 }}>
-                <Typography variant="h6" fontWeight={900}>Skills and availability</Typography>
-                <TextField label="Skills" value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
-                <TextField label="Experience" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value })} multiline minRows={3} />
-                <TextField label="Available areas" value={form.availableAreas} onChange={(event) => setForm({ ...form, availableAreas: event.target.value })} />
+                <Typography variant="h6" fontWeight={900}>Kỹ năng và khả năng tham gia</Typography>
+                <TextField label="Kỹ năng" value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
+                <TextField label="Kinh nghiệm" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value })} multiline minRows={3} />
+                <TextField label="Khu vực có thể hỗ trợ" value={form.availableAreas} onChange={(event) => setForm({ ...form, availableAreas: event.target.value })} />
                 <Box>
-                  <Button variant="contained" onClick={() => save.mutate()} disabled={save.isPending}>Save profile</Button>
+                  <Button variant="contained" onClick={() => save.mutate()} disabled={save.isPending}>Lưu hồ sơ</Button>
                 </Box>
               </Stack>
             </SectionPaper>

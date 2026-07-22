@@ -10,13 +10,13 @@ export function Input({ label, error, className, id, ...props }: InputProps) {
   const inputId = id ?? props.name;
 
   return (
-    <label className="block text-sm font-semibold text-white/82" htmlFor={inputId}>
+    <label className="block text-sm font-semibold text-[var(--color-green-800)]" htmlFor={inputId}>
       {label ? <span className="mb-1.5 block">{label}</span> : null}
       <input
         id={inputId}
         className={clsx(
-          "h-11 w-full rounded-[14px] border border-cyan-200/20 bg-white/[0.055] px-3 text-white outline-none transition placeholder:text-white/34 focus:border-[#67e8f9] focus:ring-4 focus:ring-cyan-300/15",
-          error && "border-red-400 focus:border-red-400 focus:ring-red-400/15",
+          "h-11 w-full rounded-[14px] border border-[var(--color-border)] bg-white px-3 text-[var(--color-text)] outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-green-600)] focus:ring-4 focus:ring-[rgba(77,141,22,.14)]",
+          error && "border-red-500 text-red-700 focus:border-red-500 focus:ring-red-500/15",
           className,
         )}
         {...props}

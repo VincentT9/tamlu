@@ -18,7 +18,7 @@ import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
-import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS } from "@/shared/constants/statuses";
+import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
 import { PageHeader } from "@/shared/ui/PageHeader";
@@ -40,25 +40,25 @@ export function OpsDashboardPage() {
   const donations = summary?.totalDonations ?? 0;
   const readiness = Math.max(12, Math.min(96, Math.round(((missions + campaigns + warehouses) / Math.max(missions + campaigns + warehouses + pending + stock, 1)) * 100)));
   const sosTrend = [
-    { day: "Mon", value: Math.max(2, pending - 3) },
-    { day: "Tue", value: Math.max(3, pending + 1) },
-    { day: "Wed", value: Math.max(4, pending + missions / 2) },
-    { day: "Thu", value: Math.max(3, pending + 2) },
-    { day: "Fri", value: Math.max(5, pending + stock + 1) },
-    { day: "Sat", value: Math.max(4, pending + campaigns) },
-    { day: "Sun", value: Math.max(6, pending + missions) },
+    { day: "T2", value: Math.max(2, pending - 3) },
+    { day: "T3", value: Math.max(3, pending + 1) },
+    { day: "T4", value: Math.max(4, pending + missions / 2) },
+    { day: "T5", value: Math.max(3, pending + 2) },
+    { day: "T6", value: Math.max(5, pending + stock + 1) },
+    { day: "T7", value: Math.max(4, pending + campaigns) },
+    { day: "CN", value: Math.max(6, pending + missions) },
   ];
   const donationBars = [
-    { day: "Mon", value: Math.max(18, campaigns * 14) },
-    { day: "Tue", value: Math.max(28, missions * 10) },
-    { day: "Wed", value: Math.max(24, warehouses * 18) },
-    { day: "Thu", value: Math.max(42, Math.round(donations / 10000000)) },
-    { day: "Fri", value: Math.max(22, pending * 12) },
+    { day: "T2", value: Math.max(18, campaigns * 14) },
+    { day: "T3", value: Math.max(28, missions * 10) },
+    { day: "T4", value: Math.max(24, warehouses * 18) },
+    { day: "T5", value: Math.max(42, Math.round(donations / 10000000)) },
+    { day: "T6", value: Math.max(22, pending * 12) },
   ];
   const donationShare = [
-    { name: "Rescue", value: Math.max(missions, 1), color: "#2dd4bf" },
-    { name: "Shelter", value: Math.max(campaigns, 1), color: "#67e8f9" },
-    { name: "Supply", value: Math.max(warehouses, 1), color: "#f5b85b" },
+    { name: "Cứu hộ", value: Math.max(missions, 1), color: "var(--color-green-700)" },
+    { name: "Trú tạm", value: Math.max(campaigns, 1), color: "var(--color-green-600)" },
+    { name: "Nhu yếu phẩm", value: Math.max(warehouses, 1), color: "var(--color-green-200)" },
   ];
   const taskCompletion = Math.min(100, Math.round(((missions + campaigns) / Math.max(missions + campaigns + pending, 1)) * 100));
   const deliveryTrust = Math.min(99, Math.max(34, 100 - stock * 7));
@@ -68,58 +68,58 @@ export function OpsDashboardPage() {
       <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
         <Box>
           <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
-            Dashboard
+            Bảng điều phối
           </Typography>
-          <Typography sx={{ mt: 1, color: "rgba(224,247,250,.66)", lineHeight: 1.6 }}>
-            Emergency relief operations command across SOS intake, missions, supplies, and public funding.
+          <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
+            Trung tâm điều phối cứu trợ khẩn cấp cho tiếp nhận SOS, nhiệm vụ, kho hàng và nguồn quỹ công khai.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1.25} alignItems="center">
-          <IconButton aria-label="Search dashboard" sx={opsIconButtonSx}>
+          <IconButton aria-label="Tìm kiếm trong bảng điều phối" sx={opsIconButtonSx}>
             <SearchIcon />
           </IconButton>
-          <IconButton aria-label="Notifications" sx={opsIconButtonSx}>
+          <IconButton aria-label="Thông báo" sx={opsIconButtonSx}>
             <NotificationsNoneIcon />
           </IconButton>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 1 }}>
-            <Avatar sx={{ width: 38, height: 38, bgcolor: "#2dd4bf", color: "#031014", fontWeight: 950 }}>
+            <Avatar sx={{ width: 38, height: 38, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 950 }}>
               {(user?.fullName ?? "T").slice(0, 1)}
             </Avatar>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 950 }}>{user?.fullName ?? "Tam Lu Operator"}</Typography>
-              <Typography sx={{ fontSize: 11, color: "rgba(224,247,250,.52)", fontWeight: 750 }}>Relief manager</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 950 }}>{user?.fullName ?? "Điều phối viên Tâm Lũ"}</Typography>
+              <Typography sx={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 750 }}>Quản lý cứu trợ</Typography>
             </Box>
           </Stack>
         </Stack>
       </Stack>
       <QueryState isLoading={dashboard.isLoading} error={dashboard.error} refetch={dashboard.refetch}>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 2.25, alignItems: "stretch" }}>
-          <DashboardPanel title="Pending SOS" action="View">
+          <DashboardPanel title="SOS đang chờ" action="Xem">
             <Stack spacing={2.4}>
               <Stack direction="row" alignItems="flex-end" spacing={1.25}>
                 <Typography sx={{ fontSize: { xs: 54, md: 58 }, lineHeight: .9, fontWeight: 400 }}>{pending}</Typography>
-                <Chip label="+ urgent" sx={{ mb: .7, bgcolor: "rgba(245,184,91,.16)", color: "#ffd07a", border: "1px solid rgba(245,184,91,.30)", fontWeight: 900 }} />
+                <Chip label="+ khẩn cấp" sx={{ mb: .7, bgcolor: "rgba(245,184,91,.16)", color: "#ffd07a", border: "1px solid rgba(245,184,91,.30)", fontWeight: 900 }} />
               </Stack>
-              <Button component={Link} to="/ops/sos" variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 999, justifyContent: "space-between" }}>
-                Open SOS queue
+              <Button component={Link} to="/ops/sos" variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 0, justifyContent: "space-between" }}>
+                Mở hàng đợi SOS
               </Button>
             </Stack>
           </DashboardPanel>
 
-          <DashboardPanel title="SOS intake trend" action="Weekly">
+          <DashboardPanel title="Xu hướng tiếp nhận SOS" action="Theo tuần">
             <Box sx={{ height: 148, position: "relative" }}>
-              <ValueBubble sx={{ left: "45%", top: 18 }}>{Math.round(sosTrend[6].value)} cases</ValueBubble>
+              <ValueBubble sx={{ left: "45%", top: 18 }}>{Math.round(sosTrend[6].value)} ca</ValueBubble>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={sosTrend} margin={{ left: -24, right: 8, top: 26, bottom: 0 }}>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.62)", fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.46)", fontSize: 10 }} />
-                  <Area type="monotone" dataKey="value" stroke="#2dd4bf" strokeWidth={2.5} fill="rgba(45,212,191,.14)" dot={false} />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} />
+                  <Area type="monotone" dataKey="value" stroke="var(--color-green-700)" strokeWidth={2.5} fill="rgba(61,107,31,.12)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </Box>
           </DashboardPanel>
 
-          <DashboardPanel title="Mission coverage" action="View">
+          <DashboardPanel title="Mức phủ nhiệm vụ" action="Xem">
             <Stack spacing={2.2}>
               <Stack direction="row" justifyContent="space-between">
                 <PercentTag>{Math.min(100, missions * 4)}%</PercentTag>
@@ -127,29 +127,29 @@ export function OpsDashboardPage() {
               </Stack>
               <Box sx={{ pt: 3 }}>
                 <Stack direction="row" spacing={.75} alignItems="center">
-                  <Box sx={{ width: `${Math.min(78, Math.max(14, missions * 4))}%`, height: 10, borderRadius: 999, bgcolor: "#f7fdff" }} />
-                  <Box sx={{ flex: 1, height: 10, borderRadius: 999, bgcolor: "rgba(45,212,191,.82)" }} />
-                  <Box sx={{ width: 92, height: 10, borderRadius: 999, bgcolor: "rgba(255,255,255,.10)" }} />
+                  <Box sx={{ width: `${Math.min(78, Math.max(14, missions * 4))}%`, height: 10, borderRadius: 0, bgcolor: "var(--color-green-700)" }} />
+                  <Box sx={{ flex: 1, height: 10, borderRadius: 0, bgcolor: "var(--color-green-200)" }} />
+                  <Box sx={{ width: 92, height: 10, borderRadius: 0, bgcolor: "var(--color-green-100)" }} />
                 </Stack>
                 <Stack direction="row" justifyContent="space-between" sx={{ mt: 1.1 }}>
                   <Typography sx={miniLabelSx}>SOS</Typography>
-                  <Typography sx={miniLabelSx}>Missions</Typography>
-                  <Typography sx={miniLabelSx}>Warehouses</Typography>
+                  <Typography sx={miniLabelSx}>Nhiệm vụ</Typography>
+                  <Typography sx={miniLabelSx}>Kho hàng</Typography>
                 </Stack>
               </Box>
             </Stack>
           </DashboardPanel>
 
-          <DashboardPanel title="Donation velocity" action="Weekly">
+          <DashboardPanel title="Tốc độ quyên góp" action="Theo tuần">
             <Box sx={{ height: 148, position: "relative" }}>
               <ValueBubble sx={{ left: "58%", top: 8 }}>{formatMoney(donations)}</ValueBubble>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={donationBars} margin={{ left: -22, right: 0, top: 28, bottom: 0 }}>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.62)", fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "rgba(224,247,250,.46)", fontSize: 10 }} />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} />
                   <Bar dataKey="value" radius={[999, 999, 999, 999]}>
                     {donationBars.map((entry) => (
-                      <Cell key={entry.day} fill={entry.day === "Thu" ? "#2dd4bf" : "rgba(224,247,250,.18)"} />
+                      <Cell key={entry.day} fill={entry.day === "Thu" ? "var(--color-green-700)" : "var(--color-green-200)"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -157,22 +157,22 @@ export function OpsDashboardPage() {
             </Box>
           </DashboardPanel>
 
-          <DashboardPanel title="Operational readiness" action="Live">
+          <DashboardPanel title="Sẵn sàng vận hành" action="Trực tiếp">
             <Box sx={{ height: 152, position: "relative" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart cx="50%" cy="76%" innerRadius="82%" outerRadius="110%" barSize={10} data={[{ value: readiness }]} startAngle={180} endAngle={0}>
                   <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                  <RadialBar dataKey="value" cornerRadius={999} fill="#2dd4bf" background={{ fill: "rgba(255,255,255,.16)" }} />
+                  <RadialBar dataKey="value" cornerRadius={0} fill="var(--color-green-700)" background={{ fill: "var(--color-green-200)" }} />
                 </RadialBarChart>
               </ResponsiveContainer>
               <Box sx={{ position: "absolute", inset: "46% 0 auto", textAlign: "center" }}>
                 <Typography sx={{ fontSize: 48, lineHeight: 1, fontWeight: 450 }}>{readiness}<Box component="span" sx={{ fontSize: 16 }}>%</Box></Typography>
-                <Typography sx={miniLabelSx}>readiness</Typography>
+                <Typography sx={miniLabelSx}>mức sẵn sàng</Typography>
               </Box>
             </Box>
           </DashboardPanel>
 
-          <DashboardPanel title="Campaign donation share" action="Weekly" sx={{ gridRow: { lg: "span 2" } }}>
+          <DashboardPanel title="Tỷ trọng quyên góp theo chiến dịch" action="Theo tuần" sx={{ gridRow: { lg: "span 2" } }}>
             <Stack spacing={2}>
               <Box sx={{ height: 246, position: "relative" }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -180,12 +180,12 @@ export function OpsDashboardPage() {
                     <Pie data={donationShare} dataKey="value" cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={6} cornerRadius={12}>
                       {donationShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                     </Pie>
-                    <Pie data={[{ value: 100 }]} dataKey="value" cx="50%" cy="50%" innerRadius={102} outerRadius={110} fill="rgba(255,255,255,.10)" />
+                    <Pie data={[{ value: 100 }]} dataKey="value" cx="50%" cy="50%" innerRadius={102} outerRadius={110} fill="var(--color-green-200)" />
                   </PieChart>
                 </ResponsiveContainer>
                 <Box sx={{ position: "absolute", inset: "86px 0 auto", textAlign: "center" }}>
                   <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1 }}>{campaigns + missions + warehouses}</Typography>
-                  <Typography sx={miniLabelSx}>nodes</Typography>
+                  <Typography sx={miniLabelSx}>điểm điều phối</Typography>
                 </Box>
               </Box>
               <Stack direction="row" justifyContent="center" spacing={1.5} sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -198,18 +198,18 @@ export function OpsDashboardPage() {
               </Stack>
               <Stack spacing={1.25}>
                 {[
-                  { name: "SOS Queue", meta: `${pending} pending`, color: "#f5b85b" },
-                  { name: "Rescue missions", meta: `${missions} active`, color: "#2dd4bf" },
-                  { name: "Warehouse risk", meta: `${stock} low stock`, color: "#f87171" },
+                  { name: "Hàng đợi SOS", meta: `${pending} đang chờ`, color: "var(--color-cream-100)", route: "/ops/sos" },
+                  { name: "Nhiệm vụ cứu hộ", meta: `${missions} đang hoạt động`, color: "var(--color-green-700)", route: "/ops/missions" },
+                  { name: "Rủi ro kho hàng", meta: `${stock} mặt hàng thiếu`, color: "#f87171", route: "/ops/inventory" },
                 ].map((item) => (
                   <Stack key={item.name} direction="row" spacing={1.25} alignItems="center">
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: item.color, color: "#031014", fontSize: 13, fontWeight: 950 }}>{item.name.slice(0, 1)}</Avatar>
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: item.color, color: item.color === "var(--color-green-700)" ? "#ffffff" : "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>{item.name.slice(0, 1)}</Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography sx={{ fontSize: 13, fontWeight: 900 }}>{item.name}</Typography>
                       <Typography sx={miniLabelSx}>{item.meta}</Typography>
                     </Box>
-                    <Button size="small" component={Link} to={item.name === "SOS Queue" ? "/ops/sos" : item.name === "Rescue missions" ? "/ops/missions" : "/ops/inventory"} sx={{ minHeight: 32, borderRadius: 999 }}>
-                      View
+                    <Button size="small" component={Link} to={item.route} sx={{ minHeight: 32, borderRadius: 0 }}>
+                      Xem
                     </Button>
                   </Stack>
                 ))}
@@ -217,24 +217,24 @@ export function OpsDashboardPage() {
             </Stack>
           </DashboardPanel>
 
-          <DashboardPanel title="Weekly operations" action={`${Math.round(taskCompletion / 10)}/10 task completed`} sx={{ gridColumn: { lg: "span 2" } }}>
+          <DashboardPanel title="Vận hành trong tuần" action={`${Math.round(taskCompletion / 10)}/10 việc hoàn tất`} sx={{ gridColumn: { lg: "span 2" } }}>
             <Grid container spacing={2} alignItems="stretch">
               <Grid size={{ xs: 12, md: 5 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={3}>
-                    <DualMetric value={taskCompletion} label="response completed" />
-                    <DualMetric value={deliveryTrust} label="delivery trust" />
+                    <DualMetric value={taskCompletion} label="phản hồi hoàn tất" />
+                    <DualMetric value={deliveryTrust} label="độ tin cậy bàn giao" />
                   </Stack>
-                  <Box sx={{ borderRadius: 999, bgcolor: "rgba(255,255,255,.06)", px: 2, py: 1.25 }}>
-                    <Typography sx={{ color: "rgba(224,247,250,.74)", fontSize: 13, fontWeight: 800 }}>
-                      Relief balance is stable when warehouse risk stays low.
+                  <Box sx={{ borderRadius: 0, bgcolor: "var(--color-surface-muted)", px: 2, py: 1.25, border: "1px solid var(--color-border)" }}>
+                    <Typography sx={{ color: "var(--color-text-muted)", fontSize: 13, fontWeight: 800 }}>
+                      Cân bằng cứu trợ ổn định khi rủi ro kho hàng duy trì ở mức thấp.
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ borderRadius: 4, bgcolor: "rgba(255,255,255,.055)", p: 1.25 }}>
-                    <Avatar sx={{ width: 42, height: 42, bgcolor: "#67e8f9", color: "#031014", fontWeight: 950 }}>W</Avatar>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 1.25, border: "1px solid var(--color-border)" }}>
+                    <Avatar sx={{ width: 42, height: 42, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 950 }}>W</Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontWeight: 900 }}>Warehouse Watch</Typography>
-                      <Typography sx={miniLabelSx}>Now, stock audit</Typography>
+                      <Typography sx={{ fontWeight: 900 }}>Theo dõi kho hàng</Typography>
+                      <Typography sx={miniLabelSx}>Hiện tại, kiểm kê tồn kho</Typography>
                     </Box>
                     <IconButton size="small" sx={smallRoundButtonSx}>×</IconButton>
                     <IconButton size="small" sx={smallRoundButtonSx}>↗</IconButton>
@@ -255,17 +255,17 @@ export function OpsDashboardPage() {
 const panelSx = {
   p: { xs: 3, md: 3 },
   minHeight: 188,
-  borderRadius: 5,
-  border: "1px solid rgba(103,232,249,.14)",
-  bgcolor: "rgba(9,25,32,.86)",
-  color: "#f7fdff",
-  boxShadow: "0 24px 70px rgba(0,0,0,.22)",
+  borderRadius: 0,
+  border: "1px solid var(--color-border)",
+  bgcolor: "var(--color-surface)",
+  color: "var(--color-text)",
+  boxShadow: "var(--shadow-surface)",
   overflow: "visible",
 };
 
-const miniLabelSx = { color: "rgba(224,247,250,.58)", fontSize: 11, fontWeight: 750 };
-const opsIconButtonSx = { width: 42, height: 42, color: "#f7fdff", border: "1px solid rgba(103,232,249,.16)", bgcolor: "rgba(255,255,255,.045)", "&:hover": { bgcolor: "rgba(45,212,191,.12)" } };
-const smallRoundButtonSx = { width: 34, height: 34, color: "#f7fdff", bgcolor: "rgba(255,255,255,.08)", "&:hover": { bgcolor: "rgba(45,212,191,.14)" } };
+const miniLabelSx = { color: "var(--color-text-muted)", fontSize: 11, fontWeight: 750 };
+const opsIconButtonSx = { width: 42, height: 42, color: "var(--color-green-700)", border: "1px solid var(--color-border)", bgcolor: "#ffffff", borderRadius: 0, "&:hover": { bgcolor: "var(--color-green-50)" } };
+const smallRoundButtonSx = { width: 34, height: 34, color: "var(--color-green-700)", bgcolor: "#ffffff", borderRadius: 0, "&:hover": { bgcolor: "var(--color-green-50)" } };
 
 function DashboardPanel({ title, action, children, sx }: { title: string; action?: string; children: React.ReactNode; sx?: object }) {
   return (
@@ -273,7 +273,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
       <Stack spacing={2}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
           <Typography sx={{ fontSize: 15, fontWeight: 900 }}>{title}</Typography>
-          {action ? <Chip label={action} size="small" sx={{ bgcolor: "rgba(255,255,255,.08)", color: "rgba(247,253,255,.82)", fontWeight: 800, border: "1px solid rgba(255,255,255,.10)" }} /> : null}
+          {action ? <Chip label={action} size="small" sx={{ bgcolor: "var(--color-green-50)", color: "var(--color-green-800)", fontWeight: 800, border: "1px solid var(--color-border)", borderRadius: 0 }} /> : null}
         </Stack>
         {children}
       </Stack>
@@ -283,7 +283,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
 
 function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object }) {
   return (
-    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 2, bgcolor: "#f7fdff", color: "#031014", fontSize: 11, fontWeight: 950, boxShadow: "0 10px 24px rgba(0,0,0,.20)", ...sx }}>
+    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 0, bgcolor: "#ffffff", color: "var(--color-green-800)", fontSize: 11, fontWeight: 950, boxShadow: "none", border: "1px solid var(--color-border)", ...sx }}>
       {children}
     </Box>
   );
@@ -291,52 +291,153 @@ function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object 
 
 function PercentTag({ children, tone = "amber" }: { children: React.ReactNode; tone?: "amber" | "cyan" }) {
   return (
-    <Box sx={{ px: 1, py: .45, borderRadius: 2, bgcolor: tone === "amber" ? "#f7fdff" : "#2dd4bf", color: "#031014", fontSize: 12, fontWeight: 950 }}>
+    <Box sx={{ px: 1, py: .45, borderRadius: 0, bgcolor: tone === "amber" ? "#ffffff" : "var(--color-green-700)", color: tone === "amber" ? "var(--color-green-800)" : "#ffffff", fontSize: 12, fontWeight: 950 }}>
       {children}
     </Box>
   );
+}
+
+const shipmentStatusOrder = Object.values(SHIPMENT_STATUS);
+
+function getShipmentStepState(current: string, next: string) {
+  const currentIndex = shipmentStatusOrder.indexOf(current as (typeof shipmentStatusOrder)[number]);
+  const nextIndex = shipmentStatusOrder.indexOf(next as (typeof shipmentStatusOrder)[number]);
+  if (nextIndex < currentIndex) return "past";
+  if (nextIndex === currentIndex) return "current";
+  return "next";
+}
+
+function shipmentStepButtonSx(state: "past" | "current" | "next") {
+  const shared = {
+    minWidth: 0,
+    px: 1,
+    py: .5,
+    fontSize: 12,
+    lineHeight: 1.25,
+    whiteSpace: "nowrap",
+    textAlign: "center",
+    bgcolor: "transparent",
+    boxShadow: "none",
+    border: 0,
+    flex: "0 0 auto",
+  };
+
+  if (state === "past") {
+    return {
+      ...shared,
+      color: "var(--color-text-muted)",
+      "&.Mui-disabled": {
+        bgcolor: "transparent",
+        color: "var(--color-text-muted)",
+        opacity: 1,
+      },
+    };
+  }
+
+  if (state === "current") {
+    return {
+      ...shared,
+      position: "relative",
+      color: "var(--color-green-800)",
+      fontWeight: 950,
+      "&.Mui-disabled": {
+        bgcolor: "transparent",
+        color: "var(--color-green-800)",
+        opacity: 1,
+      },
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        left: 8,
+        right: 8,
+        bottom: 2,
+        height: 2,
+        bgcolor: "var(--color-green-700)",
+      },
+    };
+  }
+
+  return {
+    ...shared,
+    color: "var(--color-green-600)",
+    fontWeight: 800,
+    "&:hover": {
+      bgcolor: "var(--color-green-50)",
+      color: "var(--color-green-800)",
+    },
+  };
 }
 
 function DualMetric({ value, label }: { value: number; label: string }) {
   return (
     <Box>
       <Typography sx={{ fontSize: 38, lineHeight: 1, fontWeight: 450 }}>
-        {value}<Box component="span" sx={{ color: "#2dd4bf", fontSize: 30, fontWeight: 900 }}> %</Box>
+        {value}<Box component="span" sx={{ color: "var(--color-green-700)", fontSize: 30, fontWeight: 900 }}> %</Box>
       </Typography>
-      <Typography sx={{ mt: .5, color: "rgba(224,247,250,.50)", fontSize: 12, fontWeight: 750 }}>{label}</Typography>
+      <Typography sx={{ mt: .5, color: "var(--color-text-muted)", fontSize: 12, fontWeight: 750 }}>{label}</Typography>
     </Box>
   );
 }
 
 function TimelineCard({ pending, missions, stock }: { pending: number; missions: number; stock: number }) {
   const rows = [
-    { label: "Triage", left: 3, width: 28, color: "#f87171" },
-    { label: "Assign teams", left: 18, width: 42, color: "#f5b85b" },
-    { label: "Evacuation", left: 34, width: 38, color: "#67e8f9" },
-    { label: "Supply audit", left: 8, width: 60, color: "#2dd4bf" },
+    { label: "Phân loại", start: 2, span: 26, color: "#f87171" },
+    { label: "Phân đội", start: 18, span: 34, color: "var(--color-cream-100)" },
+    { label: "Sơ tán", start: 36, span: 30, color: "var(--color-green-600)" },
+    { label: "Kiểm kê", start: 8, span: 56, color: "var(--color-green-700)" },
   ];
   return (
-    <Box sx={{ height: "100%", minHeight: 196, borderRadius: 4, bgcolor: "rgba(255,255,255,.045)", p: 2, position: "relative", overflow: "hidden" }}>
+    <Box sx={{ height: "100%", minHeight: 196, maxWidth: "100%", borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography sx={miniLabelSx}>Relief timeline</Typography>
+        <Typography sx={miniLabelSx}>Tiến độ cứu trợ</Typography>
         <PercentTag tone="cyan">{Math.min(100, missions * 5 + pending + stock)}%</PercentTag>
       </Stack>
-      <Box sx={{ position: "relative", mt: 2.5, height: 122 }}>
-        {[0, 1, 2, 3, 4, 5, 6].map((item) => (
-          <Box key={item} sx={{ position: "absolute", top: 0, bottom: 0, left: `${item * 16}%`, width: 1, bgcolor: "rgba(255,255,255,.06)" }} />
-        ))}
+      <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "76px minmax(0, 1fr)", columnGap: 1.5, rowGap: 1, position: "relative", maxWidth: "100%" }}>
+        <Box aria-hidden="true" sx={{ gridColumn: 2, gridRow: "1 / span 4", position: "relative", overflow: "hidden", borderRadius: 0 }}>
+          {[0, 1, 2, 3, 4, 5, 6].map((item) => (
+            <Box key={item} sx={{ position: "absolute", top: 0, bottom: 0, left: `${item * 16.66}%`, width: 1, bgcolor: "var(--color-green-100)" }} />
+          ))}
+          <Box sx={{ position: "absolute", top: 0, bottom: 0, left: "64%", width: 2, bgcolor: "var(--color-green-700)", opacity: .9 }} />
+        </Box>
         {rows.map((row, index) => (
-          <Box key={row.label} sx={{ position: "absolute", top: index * 28, left: `${row.left}%`, width: `${row.width}%`, height: 24, borderRadius: 999, bgcolor: row.color, color: row.color === "#f5b85b" ? "#102126" : "#031014", px: 1.5, display: "flex", alignItems: "center", fontSize: 11, fontWeight: 950 }}>
-            {row.label}
+          <Box key={row.label} sx={{ display: "contents" }}>
+            <Typography sx={{ ...miniLabelSx, alignSelf: "center", color: "var(--color-green-800)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {row.label}
+            </Typography>
+            <Box sx={{ height: 24, position: "relative", overflow: "hidden", borderRadius: 0 }}>
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: `${row.start}%`,
+                  width: `${Math.min(row.span, 98 - row.start)}%`,
+                  top: 0,
+                  bottom: 0,
+                  borderRadius: 0,
+                  bgcolor: row.color,
+                  color: row.color === "var(--color-green-700)" ? "#ffffff" : "var(--color-green-800)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  px: 1,
+                  fontSize: 11,
+                  fontWeight: 950,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {row.label}
+              </Box>
+            </Box>
           </Box>
         ))}
-        <Box sx={{ position: "absolute", top: -6, bottom: -10, left: "64%", width: 2, bgcolor: "#f7fdff" }} />
       </Box>
-      <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+      <Box sx={{ display: "grid", gridTemplateColumns: "76px minmax(0, 1fr)", columnGap: 1.5, mt: 1 }}>
+        <Box />
+        <Stack direction="row" justifyContent="space-between" sx={{ minWidth: 0 }}>
+        {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((day) => (
           <Typography key={day} sx={miniLabelSx}>{day}</Typography>
         ))}
-      </Stack>
+        </Stack>
+      </Box>
     </Box>
   );
 }
@@ -346,6 +447,7 @@ export function OpsSosPage() {
   const showToast = useToast((state) => state.showToast);
   const [status, setStatus] = useState("");
   const cases = useQuery({ queryKey: ["ops-sos", status], queryFn: () => sosApi.coordinatorList({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
+  const sortedCases = [...(cases.data?.data ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   const verify = useMutation({
     mutationFn: ({ id, result }: { id: string; result: "APPROVED" | "REJECTED" }) => sosApi.verify(id, { result }),
     onSuccess: () => {
@@ -363,18 +465,33 @@ export function OpsSosPage() {
 
   return (
     <>
-      <PageHeader title="SOS Management" description="Verify emergency requests and move cases through the backend state machine." />
+      <PageHeader title="Quản lý SOS" description="Xác minh yêu cầu khẩn cấp và cập nhật trạng thái xử lý cứu hộ." />
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 2 }}>
-        <TextField select label="Status" value={status} onChange={(event) => setStatus(event.target.value)} sx={{ minWidth: 220 }}>
-          <MenuItem value="">All</MenuItem>
-          {Object.values(SOS_STATUS).map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+        <TextField select label="Trạng thái" value={status} onChange={(event) => setStatus(event.target.value)} sx={{ minWidth: 220 }}>
+          <MenuItem value="">Tất cả</MenuItem>
+          {Object.values(SOS_STATUS).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
         </TextField>
       </Stack>
       <QueryState isLoading={cases.isLoading} error={cases.error} empty={!cases.data?.data.length} refetch={cases.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Case</TableCell><TableCell>People</TableCell><TableCell>Priority</TableCell><TableCell>Status</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
-          {cases.data?.data.map((item) => (
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Yêu cầu</TableCell><TableCell>Số người</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {sortedCases.map((item) => (
             <TableRow key={item.id}>
-              <TableCell><Typography fontWeight={800}>{item.title}</Typography><Typography variant="body2" color="text.secondary">{item.contactName} - {item.contactPhone}</Typography></TableCell>
+              <TableCell>
+                <Typography
+                  component={Link}
+                  to={`/citizen/sos/${item.id}`}
+                  fontWeight={800}
+                  sx={{
+                    color: "var(--color-green-800)",
+                    textDecoration: "none",
+                    "&:hover": { color: "var(--color-green-700)", textDecoration: "underline" },
+                  }}
+                >
+                  {item.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">{item.contactName} - {item.contactPhone}</Typography>
+                <Typography variant="caption" color="text.secondary">Tạo lúc {formatDate(item.createdAt)}</Typography>
+              </TableCell>
               <TableCell>{item.numPeople}</TableCell>
               <TableCell><StatusChip value={item.priorityLevel} /></TableCell>
               <TableCell><StatusChip value={item.status} /></TableCell>
@@ -382,11 +499,11 @@ export function OpsSosPage() {
                 <Stack direction="row" spacing={1}>
                   {item.status === SOS_STATUS.pending ? (
                     <>
-                      <Button size="small" startIcon={<CheckIcon />} onClick={() => verify.mutate({ id: item.id, result: "APPROVED" })}>Verify</Button>
-                      <Button size="small" color="error" startIcon={<CloseIcon />} onClick={() => verify.mutate({ id: item.id, result: "REJECTED" })}>Reject</Button>
+                      <Button size="small" startIcon={<CheckIcon />} onClick={() => verify.mutate({ id: item.id, result: "APPROVED" })}>Xác minh</Button>
+                      <Button size="small" color="error" startIcon={<CloseIcon />} onClick={() => verify.mutate({ id: item.id, result: "REJECTED" })}>Từ chối</Button>
                     </>
                   ) : null}
-                  {item.status === SOS_STATUS.verified ? <Button size="small" onClick={() => updateStatus.mutate({ id: item.id, next: SOS_STATUS.assigned })}>Mark assigned</Button> : null}
+                  {item.status === SOS_STATUS.verified ? <Button size="small" onClick={() => updateStatus.mutate({ id: item.id, next: SOS_STATUS.assigned })}>Đánh dấu đã phân công</Button> : null}
                 </Stack>
               </TableCell>
             </TableRow>
@@ -407,11 +524,12 @@ export function OpsMissionsPage() {
     title: "",
   });
   const missions = useQuery({ queryKey: ["ops-missions"], queryFn: () => missionApi.coordinatorList({ page: 1, limit: 50 }), refetchInterval: 30000 });
+  const verifiedCases = useQuery({ queryKey: ["ops-sos", SOS_STATUS.verified, "mission-select"], queryFn: () => sosApi.coordinatorList({ status: SOS_STATUS.verified, page: 1, limit: 50 }), refetchInterval: 30000 });
   const teams = useQuery({ queryKey: ["rescue-teams"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }) });
   const create = useMutation({
     mutationFn: () => missionApi.create({ ...form, vehicleIds: [] }),
     onSuccess: () => {
-      showToast("Mission created.", "success");
+      showToast("Nhiệm vụ đã được tạo.", "success");
       setForm({ emergencyCaseId: "", rescueTeamId: "", priority: PRIORITY.high, title: "" });
       queryClient.invalidateQueries({ queryKey: ["ops-missions"] });
     },
@@ -419,30 +537,57 @@ export function OpsMissionsPage() {
 
   return (
     <>
-      <PageHeader title="Mission Assignment" description="Create rescue missions from verified SOS cases and monitor mission progress." />
+      <PageHeader title="Phân công nhiệm vụ" description="Tạo nhiệm vụ cứu hộ từ SOS đã xác minh và theo dõi tiến độ nhiệm vụ." />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Assign mission</Typography>
-              <TextField label="Emergency case ID" value={form.emergencyCaseId} onChange={(e) => setForm({ ...form, emergencyCaseId: e.target.value })} />
-              <TextField label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <TextField select label="Rescue team" value={form.rescueTeamId} onChange={(e) => setForm({ ...form, rescueTeamId: e.target.value })}>
-                <MenuItem value="" disabled>{teams.isLoading ? "Loading rescue teams..." : "Select rescue team"}</MenuItem>
+              <Typography variant="h6" fontWeight={900}>Phân công nhiệm vụ</Typography>
+              <TextField
+                select
+                label="Mã yêu cầu khẩn cấp"
+                value={form.emergencyCaseId}
+                onChange={(e) => {
+                  const selectedCase = verifiedCases.data?.data.find((item) => item.id === e.target.value);
+                  setForm({
+                    ...form,
+                    emergencyCaseId: e.target.value,
+                    title: form.title || selectedCase?.title || "",
+                    priority: selectedCase?.priorityLevel || form.priority,
+                  });
+                }}
+              >
+                <MenuItem value="" disabled>
+                  {verifiedCases.isLoading ? "Đang tải yêu cầu khẩn cấp..." : "Chọn yêu cầu khẩn cấp đã xác minh"}
+                </MenuItem>
+                {(verifiedCases.data?.data ?? []).map((item) => (
+                  <MenuItem key={item.id} value={item.id}>
+                    <Stack spacing={0.25} sx={{ py: 0.5, minWidth: 0 }}>
+                      <Typography fontWeight={900} noWrap>{item.title}</Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {item.contactName} - {item.contactPhone} - {item.numPeople} người
+                      </Typography>
+                    </Stack>
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField label="Tiêu đề" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <TextField select label="Đội cứu hộ" value={form.rescueTeamId} onChange={(e) => setForm({ ...form, rescueTeamId: e.target.value })}>
+                <MenuItem value="" disabled>{teams.isLoading ? "Đang tải đội cứu hộ..." : "Chọn đội cứu hộ"}</MenuItem>
                 {(teams.data?.data ?? []).map((team) => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)}
               </TextField>
-              <TextField select label="Priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-                {Object.values(PRIORITY).map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+              <TextField select label="Mức ưu tiên" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+                {Object.values(PRIORITY).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
               </TextField>
               <Button variant="contained" startIcon={<AddIcon />} disabled={!form.emergencyCaseId || !form.rescueTeamId || create.isPending} onClick={() => create.mutate()}>
-                Create mission
+                Tạo nhiệm vụ
               </Button>
             </Stack>
           </SectionPaper>
         </Grid>
         <Grid size={{ xs: 12, lg: 8 }}>
           <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
-            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Mission</TableCell><TableCell>Team</TableCell><TableCell>Priority</TableCell><TableCell>Status</TableCell><TableCell>Updated</TableCell></TableRow></TableHead><TableBody>
+            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Đội</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Cập nhật</TableCell></TableRow></TableHead><TableBody>
               {missions.data?.data.map((mission) => (
                 <TableRow key={mission.id}>
                   <TableCell>{mission.code}</TableCell>
@@ -465,12 +610,12 @@ export function WarehousesPage() {
   const lowStock = useQuery({ queryKey: ["low-stock"], queryFn: inventoryApi.lowStock });
   return (
     <>
-      <PageHeader title="Warehouse & Inventory" description="Monitor warehouse coverage and low-stock risks." />
+      <PageHeader title="Kho hàng và tồn kho" description="Theo dõi độ phủ kho hàng và rủi ro thiếu hàng." />
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Warehouses" value={warehouses.data?.length ?? 0} /></Grid>
-        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Low stock" value={lowStock.data?.length ?? 0} tone="red" /></Grid>
+        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Kho hàng" value={warehouses.data?.length ?? 0} /></Grid>
+        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Sắp hết hàng" value={lowStock.data?.length ?? 0} tone="red" /></Grid>
         <Grid size={{ xs: 12 }}><QueryState isLoading={warehouses.isLoading} error={warehouses.error} empty={!warehouses.data?.length} refetch={warehouses.refetch}>
-          <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Name</TableCell><TableCell>Address</TableCell><TableCell>Manager</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>
+          <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên kho</TableCell><TableCell>Địa chỉ</TableCell><TableCell>Quản lý</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
             {warehouses.data?.map((warehouse) => (
               <TableRow key={warehouse.id}><TableCell>{warehouse.name}</TableCell><TableCell>{warehouse.address}</TableCell><TableCell>{warehouse.managerName}</TableCell><TableCell><StatusChip value={warehouse.status} /></TableCell></TableRow>
             ))}
@@ -490,16 +635,16 @@ export function InventoryPage() {
   const selectedItem = items.data?.data.find((item) => item.id === selectedItemId) ?? items.data?.data[0];
   return (
     <>
-      <PageHeader title="Inventory Items" description="Inspect stock, reservation, and low stock thresholds by warehouse." />
+      <PageHeader title="Mặt hàng tồn kho" description="Kiểm tra tồn kho, số lượng giữ chỗ và ngưỡng cảnh báo theo từng kho." />
       <Stack spacing={2}>
-        <TextField select label="Warehouse" value={selectedId} onChange={(event) => setWarehouseId(event.target.value)} sx={{ maxWidth: 420 }}>
-          <MenuItem value="" disabled>{warehouses.isLoading ? "Loading warehouses..." : "Select warehouse"}</MenuItem>
+        <TextField select label="Kho hàng" value={selectedId} onChange={(event) => setWarehouseId(event.target.value)} sx={{ maxWidth: 420 }}>
+          <MenuItem value="" disabled>{warehouses.isLoading ? "Đang tải kho hàng..." : "Chọn kho hàng"}</MenuItem>
           {(warehouses.data ?? []).map((warehouse) => <MenuItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</MenuItem>)}
         </TextField>
         <QueryState isLoading={items.isLoading} error={items.error} empty={!items.data?.data.length} refetch={items.refetch}>
           <Grid container spacing={2.5}>
             <Grid size={{ xs: 12, lg: 8 }}>
-              <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Item</TableCell><TableCell>Quantity</TableCell><TableCell>Reserved</TableCell><TableCell>Minimum</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>
+              <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Mặt hàng</TableCell><TableCell>Số lượng</TableCell><TableCell>Đã giữ chỗ</TableCell><TableCell>Tối thiểu</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
                 {items.data?.data.map((item) => (
                   <TableRow key={item.id} hover selected={selectedItem?.id === item.id} onClick={() => setSelectedItemId(item.id)} sx={{ cursor: "pointer" }}><TableCell>{item.itemName}</TableCell><TableCell>{item.quantity} {item.unit}</TableCell><TableCell>{item.reservedQuantity}</TableCell><TableCell>{item.minQuantity}</TableCell><TableCell><StatusChip value={item.status} /></TableCell></TableRow>
                 ))}
@@ -508,37 +653,37 @@ export function InventoryPage() {
             <Grid size={{ xs: 12, lg: 4 }}>
               <SectionPaper>
                 <Stack spacing={1.5}>
-                  <Typography variant="h6" fontWeight={900}>{selectedItem?.itemName ?? "Item detail"}</Typography>
+                  <Typography variant="h6" fontWeight={900}>{selectedItem?.itemName ?? "Chi tiết mặt hàng"}</Typography>
                   {selectedItem ? (
                     <>
                       <StatusChip value={selectedItem.status} />
                       <Box>
-                        <Typography variant="body2" color="text.secondary">Warehouse</Typography>
+                        <Typography variant="body2" color="text.secondary">Kho hàng</Typography>
                         <Typography fontWeight={800}>{selectedItem.warehouseName}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="body2" color="text.secondary">Category</Typography>
-                        <Typography fontWeight={800}>{selectedItem.categoryName ?? "Uncategorized"}</Typography>
+                        <Typography variant="body2" color="text.secondary">Danh mục</Typography>
+                        <Typography fontWeight={800}>{selectedItem.categoryName ?? "Chưa phân loại"}</Typography>
                       </Box>
                       <Grid container spacing={1.5}>
                         <Grid size={6}>
                           <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5 }}>
-                            <Typography variant="caption" color="text.secondary">Available</Typography>
+                            <Typography variant="caption" color="text.secondary">Có sẵn</Typography>
                             <Typography fontWeight={900}>{selectedItem.quantity} {selectedItem.unit}</Typography>
                           </Box>
                         </Grid>
                         <Grid size={6}>
                           <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5 }}>
-                            <Typography variant="caption" color="text.secondary">Reserved</Typography>
+                            <Typography variant="caption" color="text.secondary">Đã giữ</Typography>
                             <Typography fontWeight={900}>{selectedItem.reservedQuantity}</Typography>
                           </Box>
                         </Grid>
                       </Grid>
-                      <Typography variant="body2" color="text.secondary">Minimum stock: {selectedItem.minQuantity} {selectedItem.unit}</Typography>
-                      <Typography variant="body2" color="text.secondary">Expiry: {selectedItem.expiryDate ? formatDate(selectedItem.expiryDate) : "No expiry date"}</Typography>
+                      <Typography variant="body2" color="text.secondary">Tồn tối thiểu: {selectedItem.minQuantity} {selectedItem.unit}</Typography>
+                      <Typography variant="body2" color="text.secondary">Hạn dùng: {selectedItem.expiryDate ? formatDate(selectedItem.expiryDate) : "Không có hạn dùng"}</Typography>
                     </>
                   ) : (
-                    <Typography color="text.secondary">Select an item to inspect stock details.</Typography>
+                    <Typography color="text.secondary">Chọn một mặt hàng để xem chi tiết tồn kho.</Typography>
                   )}
                 </Stack>
               </SectionPaper>
@@ -558,22 +703,35 @@ export function ShipmentsPage() {
   const update = useMutation({
     mutationFn: ({ id, next }: { id: string; next: string }) => inventoryApi.updateShipmentStatus(id, { status: next }),
     onSuccess: () => {
-      showToast("Shipment status updated.", "success");
+      showToast("Trạng thái vận chuyển đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
     },
   });
   return (
     <>
-      <PageHeader title="Shipment Management" description="Track delivery and update shipment status through the backend logistics state machine." />
-      <TextField select label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 220, mb: 2 }}>
-        <MenuItem value="">All</MenuItem>{Object.values(SHIPMENT_STATUS).map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+      <PageHeader title="Quản lý vận chuyển" description="Theo dõi giao nhận và cập nhật trạng thái vận chuyển trong quy trình hậu cần." />
+      <TextField select label="Trạng thái" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 220, mb: 2 }}>
+        <MenuItem value="">Tất cả</MenuItem>{Object.values(SHIPMENT_STATUS).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
       </TextField>
       <QueryState isLoading={shipments.isLoading} error={shipments.error} empty={!shipments.data?.data.length} refetch={shipments.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Shipment</TableCell><TableCell>From</TableCell><TableCell>Driver</TableCell><TableCell>Status</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Xuất phát</TableCell><TableCell>Tài xế</TableCell><TableCell>Trạng thái</TableCell><TableCell sx={{ minWidth: 520 }}>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {shipments.data?.data.map((shipment) => (
-            <TableRow key={shipment.id}><TableCell>{shipment.emergencyCaseTitle ?? shipment.id}</TableCell><TableCell>{shipment.warehouseName}</TableCell><TableCell>{shipment.driverName}</TableCell><TableCell><StatusChip value={shipment.status} /></TableCell><TableCell>
-              <Stack direction="row" spacing={1}>
-                {Object.values(SHIPMENT_STATUS).map((next) => <Button key={next} size="small" disabled={shipment.status === next || update.isPending} onClick={() => update.mutate({ id: shipment.id, next })}>{next}</Button>)}
+            <TableRow key={shipment.id}><TableCell>{shipment.emergencyCaseTitle ?? shipment.id}</TableCell><TableCell>{shipment.warehouseName}</TableCell><TableCell>{shipment.driverName}</TableCell><TableCell><StatusChip value={shipment.status} /></TableCell><TableCell sx={{ minWidth: 520, whiteSpace: "nowrap" }}>
+              <Stack direction="row" spacing={1.5} flexWrap="nowrap" useFlexGap sx={{ alignItems: "center", overflowX: "auto", pb: .25 }}>
+                {Object.values(SHIPMENT_STATUS).map((next) => {
+                  const stepState = getShipmentStepState(shipment.status, next);
+                  return (
+                    <Button
+                      key={next}
+                      size="small"
+                      disabled={stepState !== "next" || update.isPending}
+                      sx={shipmentStepButtonSx(stepState)}
+                      onClick={() => update.mutate({ id: shipment.id, next })}
+                    >
+                      {STATUS_LABELS[next]}
+                    </Button>
+                  );
+                })}
               </Stack>
             </TableCell></TableRow>
           ))}
@@ -590,17 +748,17 @@ export function CampaignAdminPage() {
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => donationApi.updateCampaignStatus(id, status),
     onSuccess: () => {
-      showToast("Campaign status updated.", "success");
+      showToast("Trạng thái chiến dịch đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["campaigns-admin"] });
     },
   });
 
   return (
     <>
-      <PageHeader title="Campaign Administration" description="Review campaign status and public donation progress." />
+      <PageHeader title="Quản trị chiến dịch" description="Theo dõi trạng thái chiến dịch và tiến độ quyên góp công khai." />
       <QueryState isLoading={campaigns.isLoading} error={campaigns.error} empty={!campaigns.data?.data.length} refetch={campaigns.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Name</TableCell><TableCell>Raised</TableCell><TableCell>Target</TableCell><TableCell>Status</TableCell><TableCell>Area</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
-          {campaigns.data?.data.map((campaign) => <TableRow key={campaign.id}><TableCell>{campaign.name}</TableCell><TableCell>{formatMoney(campaign.currentAmount)}</TableCell><TableCell>{formatMoney(campaign.targetAmount)}</TableCell><TableCell><StatusChip value={campaign.status} /></TableCell><TableCell>{campaign.affectedArea}</TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.active || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.active })}>Activate</Button><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.paused || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.paused })}>Pause</Button><Button size="small" color="error" disabled={campaign.status === CAMPAIGN_STATUS.closed || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.closed })}>Close</Button></Stack></TableCell></TableRow>)}
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên chiến dịch</TableCell><TableCell>Đã quyên góp</TableCell><TableCell>Mục tiêu</TableCell><TableCell>Trạng thái</TableCell><TableCell>Khu vực</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {campaigns.data?.data.map((campaign) => <TableRow key={campaign.id}><TableCell>{campaign.name}</TableCell><TableCell>{formatMoney(campaign.currentAmount)}</TableCell><TableCell>{formatMoney(campaign.targetAmount)}</TableCell><TableCell><StatusChip value={campaign.status} /></TableCell><TableCell>{campaign.affectedArea}</TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.active || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.active })}>Kích hoạt</Button><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.paused || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.paused })}>Tạm dừng</Button><Button size="small" color="error" disabled={campaign.status === CAMPAIGN_STATUS.closed || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.closed })}>Đóng</Button></Stack></TableCell></TableRow>)}
         </TableBody></Table></Paper>
       </QueryState>
     </>
@@ -615,12 +773,12 @@ export function ProcurementPage() {
     mutationFn: ({ id, type }: { id: string; type: "approve" | "pay" | "deliver" }) =>
       type === "approve" ? aidApi.approveProcurement(id) : type === "pay" ? aidApi.payProcurement(id, "BANK_TRANSFER") : aidApi.deliverProcurement(id),
     onSuccess: () => {
-      showToast("Procurement updated.", "success");
+      showToast("Hồ sơ mua sắm đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["procurements"] });
     },
   });
-  return <WorkflowTable title="Procurements" rows={procurements.data?.data ?? []} loading={procurements.isLoading} error={procurements.error} refetch={procurements.refetch} actions={(row) => (
-    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Approve</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "pay" })}>Pay</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Deliver</Button></Stack>
+  return <WorkflowTable title="Mua sắm cứu trợ" rows={procurements.data?.data ?? []} loading={procurements.isLoading} error={procurements.error} refetch={procurements.refetch} actions={(row) => (
+    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "pay" })}>Thanh toán</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Bàn giao</Button></Stack>
   )} />;
 }
 
@@ -632,12 +790,12 @@ export function AllocationPlansPage() {
     mutationFn: ({ id, type }: { id: string; type: "submit" | "approve" | "close" }) =>
       type === "submit" ? aidApi.submitAllocationPlan(id) : type === "approve" ? aidApi.approveAllocationPlan(id, { status: "APPROVED" }) : aidApi.closeAllocationPlan(id),
     onSuccess: () => {
-      showToast("Allocation plan updated.", "success");
+      showToast("Kế hoạch phân bổ đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["allocation-plans"] });
     },
   });
-  return <WorkflowTable title="Allocation Plans" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
-    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "submit" })}>Submit</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Approve</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "close" })}>Close</Button></Stack>
+  return <WorkflowTable title="Kế hoạch phân bổ" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
+    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "submit" })}>Gửi duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng</Button></Stack>
   )} />;
 }
 
@@ -648,11 +806,11 @@ export function DisbursementsPage() {
   const execute = useMutation({
     mutationFn: (id: string) => aidApi.executeDisbursement(id, { invoiceUrl: "https://example.com/invoice-placeholder.png", actualAmount: 0 }),
     onSuccess: () => {
-      showToast("Disbursement execution submitted.", "success");
+      showToast("Yêu cầu giải ngân đã được gửi.", "success");
       queryClient.invalidateQueries({ queryKey: ["disbursements"] });
     },
   });
-  return <WorkflowTable title="Disbursements" rows={rows.data?.data ?? []} loading={rows.isLoading} error={rows.error} refetch={rows.refetch} actions={(row) => <Button size="small" onClick={() => execute.mutate(row.id)}>Execute</Button>} />;
+  return <WorkflowTable title="Giải ngân" rows={rows.data?.data ?? []} loading={rows.isLoading} error={rows.error} refetch={rows.refetch} actions={(row) => <Button size="small" onClick={() => execute.mutate(row.id)}>Thực hiện</Button>} />;
 }
 
 interface WorkflowRow {
@@ -670,9 +828,9 @@ interface WorkflowRow {
 function WorkflowTable({ title, rows, loading, error, refetch, actions }: { title: string; rows: WorkflowRow[]; loading: boolean; error: unknown; refetch: () => void; actions: (row: WorkflowRow) => React.ReactNode }) {
   return (
     <>
-      <PageHeader title={title} description="Financial and aid workflow records backed by TamLu ERP endpoints." />
+      <PageHeader title={title} description="Hồ sơ tài chính và cứu trợ được đồng bộ từ hệ thống vận hành Tâm Lũ." />
       <QueryState isLoading={loading} error={error} empty={!rows.length} refetch={refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Record</TableCell><TableCell>Amount</TableCell><TableCell>Status</TableCell><TableCell>Created</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Bản ghi</TableCell><TableCell>Số tiền</TableCell><TableCell>Trạng thái</TableCell><TableCell>Ngày tạo</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {rows.map((row) => <TableRow key={row.id}><TableCell>{row.campaignName ?? row.areaName ?? row.itemName ?? row.id}</TableCell><TableCell>{formatMoney(row.totalAmount ?? row.totalPlannedAmount ?? row.amount ?? 0)}</TableCell><TableCell><StatusChip value={row.status} /></TableCell><TableCell>{formatDate(row.createdAt)}</TableCell><TableCell>{actions(row)}</TableCell></TableRow>)}
         </TableBody></Table></Paper>
       </QueryState>
@@ -688,29 +846,29 @@ export function UsersPage() {
   const approve = useMutation({
     mutationFn: ({ id, isApproved }: { id: string; isApproved: boolean }) => adminApi.approveUser(id, isApproved),
     onSuccess: () => {
-      showToast("User approval updated.", "success");
+      showToast("Phê duyệt người dùng đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
   });
   return (
     <>
-      <PageHeader title="User Management" description="Approve operational accounts and inspect role access." />
-      <TextField select label="Role" value={role} onChange={(e) => setRole(e.target.value)} sx={{ minWidth: 240, mb: 2 }}>
-        <MenuItem value="">All</MenuItem>{Object.values(ROLES).map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
+      <PageHeader title="Quản lý người dùng" description="Phê duyệt tài khoản vận hành và kiểm tra quyền truy cập theo vai trò." />
+      <TextField select label="Vai trò" value={role} onChange={(e) => setRole(e.target.value)} sx={{ minWidth: 240, mb: 2 }}>
+        <MenuItem value="">Tất cả</MenuItem>{Object.values(ROLES).map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
       </TextField>
       <QueryState isLoading={users.isLoading} error={users.error} empty={!users.data?.data.length} refetch={users.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Name</TableCell><TableCell>Email</TableCell><TableCell>Phone</TableCell><TableCell>Status</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
-          {users.data?.data.map((user) => <TableRow key={user.id}><TableCell>{user.fullName}</TableCell><TableCell>{user.email}</TableCell><TableCell>{user.phone}</TableCell><TableCell><StatusChip value={user.status} /></TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" onClick={() => approve.mutate({ id: user.id, isApproved: true })}>Approve</Button><Button size="small" color="error" onClick={() => approve.mutate({ id: user.id, isApproved: false })}>Reject</Button></Stack></TableCell></TableRow>)}
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Họ tên</TableCell><TableCell>Email</TableCell><TableCell>Số điện thoại</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {users.data?.data.map((user) => <TableRow key={user.id}><TableCell>{user.fullName}</TableCell><TableCell>{user.email}</TableCell><TableCell>{user.phone}</TableCell><TableCell><StatusChip value={user.status} /></TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" onClick={() => approve.mutate({ id: user.id, isApproved: true })}>Duyệt</Button><Button size="small" color="error" onClick={() => approve.mutate({ id: user.id, isApproved: false })}>Từ chối</Button></Stack></TableCell></TableRow>)}
         </TableBody></Table></Paper>
       </QueryState>
-      <Alert severity="info" sx={{ mt: 2 }}>Role IDs: {Object.entries(ROLE_IDS).map(([key, value]) => `${key}=${value}`).join(", ")}</Alert>
+      <Alert severity="info" sx={{ mt: 2 }}>Mã vai trò: {Object.entries(ROLE_IDS).map(([key, value]) => `${key}=${value}`).join(", ")}</Alert>
     </>
   );
 }
 
 export function VolunteersPage() {
   const rows = useQuery({ queryKey: ["volunteers"], queryFn: () => volunteerApi.coordinatorList({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Volunteers" query={rows} primaryKey="skills" />;
+  return <SimpleObjectList title="Tình nguyện viên" description="Danh sách kỹ năng, khu vực hỗ trợ và trạng thái phân công của tình nguyện viên." query={rows} primaryKey="skills" />;
 }
 
 export function OrganizationsPage() {
@@ -721,17 +879,17 @@ export function OrganizationsPage() {
   const verify = useMutation({
     mutationFn: ({ id, isVerified }: { id: string; isVerified: boolean }) => organizationApi.verify(id, isVerified),
     onSuccess: () => {
-      showToast("Organization verification updated.", "success");
+      showToast("Trạng thái xác minh tổ chức đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
     },
   });
 
   return (
     <>
-      <PageHeader title="Organizations" description="Review partner organizations and verification status." />
+      <PageHeader title="Tổ chức đối tác" description="Rà soát hồ sơ tổ chức phối hợp và trạng thái xác minh." />
       <QueryState isLoading={rows.isLoading} error={rows.error} empty={!list?.length} refetch={rows.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Name</TableCell><TableCell>Type</TableCell><TableCell>Trust</TableCell><TableCell>Status</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
-          {(list ?? []).map((org) => <TableRow key={org.id}><TableCell>{org.name}</TableCell><TableCell>{org.type}</TableCell><TableCell>{org.trustScore}</TableCell><TableCell><Stack direction="row" spacing={1}><StatusChip value={org.status} /><StatusChip value={org.isVerified ? "VERIFIED" : "PENDING"} /></Stack></TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" disabled={verify.isPending || org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: true })}>Approve</Button><Button size="small" color="error" disabled={verify.isPending || !org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: false })}>Reject</Button></Stack></TableCell></TableRow>)}
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên tổ chức</TableCell><TableCell>Loại hình</TableCell><TableCell>Điểm tin cậy</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {(list ?? []).map((org) => <TableRow key={org.id}><TableCell>{org.name}</TableCell><TableCell>{org.type}</TableCell><TableCell>{org.trustScore}</TableCell><TableCell><Stack direction="row" spacing={1}><StatusChip value={org.status} /><StatusChip value={org.isVerified ? "VERIFIED" : "PENDING"} /></Stack></TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" disabled={verify.isPending || org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: true })}>Duyệt</Button><Button size="small" color="error" disabled={verify.isPending || !org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: false })}>Hủy xác minh</Button></Stack></TableCell></TableRow>)}
         </TableBody></Table></Paper>
       </QueryState>
     </>
@@ -740,37 +898,43 @@ export function OrganizationsPage() {
 
 export function ComplaintsPage() {
   const rows = useQuery({ queryKey: ["admin-complaints"], queryFn: () => monitoringApi.adminComplaints({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Complaints" query={rows} primaryKey="title" />;
+  return <SimpleObjectList title="Khiếu nại" description="Theo dõi phản ánh của cộng đồng và các vấn đề cần điều phối xử lý." query={rows} primaryKey="title" />;
 }
 
 export function FraudPage() {
   const rows = useQuery({ queryKey: ["fraud-cases"], queryFn: () => monitoringApi.fraudCases({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Fraud Cases" query={rows} primaryKey="description" />;
+  return <SimpleObjectList title="Nghi vấn gian lận" description="Rà soát các tín hiệu bất thường trong chiến dịch, quyên góp và vận hành cứu trợ." query={rows} primaryKey="description" />;
 }
 
 export function AuditLogsPage() {
   const rows = useQuery({ queryKey: ["audit-logs"], queryFn: () => adminApi.auditLogs({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Audit Logs" query={rows} primaryKey="action" />;
+  return <SimpleObjectList title="Nhật ký kiểm toán" description="Lịch sử thao tác hệ thống phục vụ minh bạch và truy vết trách nhiệm." query={rows} primaryKey="action" />;
 }
 
-function SimpleObjectList({ title, query, primaryKey }: { title: string; query: { isLoading: boolean; error: unknown; data?: { data: unknown[] }; refetch: () => void }; primaryKey: string }) {
-  return <SimpleStaticList title={title} rows={query.data?.data ?? []} loading={query.isLoading} error={query.error} refetch={query.refetch} primaryKey={primaryKey} />;
+function SimpleObjectList({ title, description, query, primaryKey }: { title: string; description?: string; query: { isLoading: boolean; error: unknown; data?: { data: unknown[] }; refetch: () => void }; primaryKey: string }) {
+  return <SimpleStaticList title={title} description={description} rows={query.data?.data ?? []} loading={query.isLoading} error={query.error} refetch={query.refetch} primaryKey={primaryKey} />;
 }
 
-function SimpleStaticList({ title, rows, loading = false, error, refetch, primaryKey = "name" }: { title: string; rows: unknown[]; loading?: boolean; error?: unknown; refetch?: () => void; primaryKey?: string }) {
+function SimpleStaticList({ title, description = "Dữ liệu vận hành từ phân hệ tương ứng của hệ thống.", rows, loading = false, error, refetch, primaryKey = "name" }: { title: string; description?: string; rows: unknown[]; loading?: boolean; error?: unknown; refetch?: () => void; primaryKey?: string }) {
   return (
     <>
-      <PageHeader title={title} description="Operational records from the corresponding backend module." />
+      <PageHeader title={title} description={description} />
       <QueryState isLoading={loading} error={error} empty={!rows.length} refetch={refetch}>
-        <Grid container spacing={2}>
+        <Grid container spacing={2} alignItems="stretch">
           {rows.map((row, index) => {
             const record = row as Record<string, unknown>;
             return (
               <Grid size={{ xs: 12, md: 6, lg: 4 }} key={String(record.id ?? index)}>
-                <SectionPaper>
-                  <Stack spacing={1}>
-                    <Typography fontWeight={900}>{String(record[primaryKey] ?? record.name ?? record.id ?? "Record")}</Typography>
-                    {record.status ? <StatusChip value={String(record.status)} /> : null}
+                <SectionPaper sx={{ height: "100%" }}>
+                  <Stack spacing={1.5} sx={{ minHeight: 88, height: "100%", justifyContent: "space-between" }}>
+                    <Typography fontWeight={900} sx={{ lineHeight: 1.45 }}>
+                      {String(record[primaryKey] ?? record.name ?? record.id ?? "Bản ghi")}
+                    </Typography>
+                    {record.status ? (
+                      <Box sx={{ width: "100%", "& .MuiChip-root": { width: "100%", justifyContent: "center" } }}>
+                        <StatusChip value={String(record.status)} />
+                      </Box>
+                    ) : null}
                     <Typography variant="body2" color="text.secondary">{String(record.email ?? record.description ?? record.notes ?? "")}</Typography>
                   </Stack>
                 </SectionPaper>

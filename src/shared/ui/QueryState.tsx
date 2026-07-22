@@ -14,10 +14,10 @@ interface QueryStateProps {
 export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, refetch, children }: QueryStateProps) {
   if (isLoading) {
     return (
-      <Stack spacing={1.25} sx={{ minHeight: 220, py: 2 }} aria-label="Loading content">
-        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.10)" }} />
-        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.08)" }} />
-        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 4, bgcolor: "rgba(45,212,191,.06)" }} />
+      <Stack spacing={1.25} sx={{ minHeight: 220, py: 2 }} aria-label="Đang tải nội dung">
+        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-green-100)" }} />
+        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-green-50)" }} />
+        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-cream-100)" }} />
       </Stack>
     );
   }
@@ -29,7 +29,7 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
         action={
           refetch ? (
             <Button color="inherit" onClick={refetch}>
-              Retry
+              Thử lại
             </Button>
           ) : null
         }
@@ -41,7 +41,7 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
 
   if (empty) {
     return (
-      <Box sx={{ py: 7, px: 2, textAlign: "center", color: "#f7fdff" }}>
+      <Box sx={{ py: 7, px: 2, textAlign: "center", color: "var(--color-text)" }}>
         <Box
           aria-hidden="true"
           sx={{
@@ -49,17 +49,17 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
             mb: 2,
             width: 56,
             height: 56,
-            borderRadius: 4,
+            borderRadius: 0,
             border: "1px solid",
-            borderColor: "rgba(103,232,249,.20)",
-            bgcolor: "rgba(45,212,191,.12)",
+            borderColor: "var(--color-border)",
+            bgcolor: "var(--color-green-50)",
           }}
         />
         <Typography variant="h6" fontWeight={800}>
-          {emptyTitle ?? "No data yet"}
+          {emptyTitle ?? "Chưa có dữ liệu"}
         </Typography>
-        <Typography sx={{ mt: 0.5, color: "rgba(224,247,250,.62)" }}>
-          {emptyText ?? "When data is available, it will appear here."}
+        <Typography sx={{ mt: 0.5, color: "var(--color-text-muted)" }}>
+          {emptyText ?? "Khi có dữ liệu, thông tin sẽ hiển thị tại đây."}
         </Typography>
       </Box>
     );

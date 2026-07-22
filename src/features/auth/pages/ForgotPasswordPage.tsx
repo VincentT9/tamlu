@@ -11,12 +11,12 @@ import { useToast } from "@/shared/ui/toast";
 import { Button, Card, Input } from "@/components";
 
 const requestSchema = z.object({
-  email: z.string().email("Enter a valid email address."),
+  email: z.string().email("Vui lòng nhập địa chỉ email hợp lệ."),
 });
 
 const resetSchema = z.object({
-  otp: z.string().min(4, "Enter the OTP from your email."),
-  newPassword: z.string().min(6, "Password must be at least 6 characters."),
+  otp: z.string().min(4, "Vui lòng nhập mã OTP trong email."),
+  newPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự."),
 });
 
 type RequestForm = z.infer<typeof requestSchema>;
@@ -32,25 +32,25 @@ export function ForgotPasswordPage() {
     mutationFn: authApi.forgotPassword,
     onSuccess: (_, values) => {
       setEmail(values.email);
-      showToast("Password reset OTP sent.", "success");
+      showToast("Mã OTP đặt lại mật khẩu đã được gửi.", "success");
     },
   });
 
   const resetMutation = useMutation({
     mutationFn: (values: ResetForm) => authApi.resetPassword({ email, ...values }),
     onSuccess: () => {
-      showToast("Password reset successfully. You can sign in now.", "success");
+      showToast("Đặt lại mật khẩu thành công. Quý vị có thể đăng nhập.", "success");
       resetForm.reset();
     },
   });
 
   return (
-    <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_16%_4%,rgba(45,212,191,.18),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(245,184,91,.11),transparent_28%),linear-gradient(180deg,#031014_0%,#04181d_100%)] px-4 py-10 text-white">
-      <Card className="w-full max-w-md border-cyan-200/20 bg-[#061a22]/90">
+    <main className="grid min-h-[100dvh] place-items-center bg-[var(--color-cream-50)] px-4 py-10 text-[var(--color-text)]">
+      <Card className="w-full max-w-md border-[var(--color-border)] bg-[var(--color-bg-card)]">
         <div className="mb-6">
-          <p className="text-sm font-black uppercase tracking-wide text-[#67e8f9]">Account recovery</p>
-          <h1 className="mt-2 text-3xl font-black text-white">Reset password</h1>
-          <p className="mt-2 text-sm leading-6 text-white/62">Use your registered email to receive an OTP, then create a new password.</p>
+          <p className="text-sm font-black uppercase tracking-wide text-[var(--color-green-600)]">Khôi phục tài khoản</p>
+          <h1 className="mt-2 text-3xl font-black text-[var(--color-green-800)]">Đặt lại mật khẩu</h1>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">Sử dụng email đã đăng ký để nhận mã OTP, sau đó tạo mật khẩu mới.</p>
         </div>
 
         {requestMutation.error ? <Alert severity="error">{getErrorMessage(requestMutation.error)}</Alert> : null}
@@ -66,28 +66,28 @@ export function ForgotPasswordPage() {
               error={requestForm.formState.errors.email?.message}
             />
             <Button type="submit" className="w-full" disabled={requestMutation.isPending}>
-              Send reset OTP
+              Gửi mã OTP đặt lại
             </Button>
           </form>
         ) : (
           <form className="mt-4 space-y-4" onSubmit={resetForm.handleSubmit((values) => resetMutation.mutate(values))}>
-            <Alert severity="info">OTP sent to {email}.</Alert>
+            <Alert severity="info">Mã OTP đã được gửi đến {email}.</Alert>
             <Input label="OTP" {...resetForm.register("otp")} error={resetForm.formState.errors.otp?.message} />
             <Input
-              label="New password"
+              label="Mật khẩu mới"
               type="password"
               autoComplete="new-password"
               {...resetForm.register("newPassword")}
               error={resetForm.formState.errors.newPassword?.message}
             />
             <Button type="submit" className="w-full" disabled={resetMutation.isPending}>
-              Reset password
+              Đặt lại mật khẩu
             </Button>
           </form>
         )}
 
-        <Link to="/login" className="mt-5 block text-center text-sm font-bold text-[#67e8f9] hover:text-white">
-          Back to login
+        <Link to="/login" className="mt-5 block text-center text-sm font-bold text-[var(--color-green-700)] hover:text-[var(--color-green-800)]">
+          Quay lại đăng nhập
         </Link>
       </Card>
     </main>

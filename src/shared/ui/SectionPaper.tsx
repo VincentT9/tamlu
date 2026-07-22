@@ -1,20 +1,24 @@
 import { Paper } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 import type { ReactNode } from "react";
 
-export function SectionPaper({ children }: { children: ReactNode }) {
+export function SectionPaper({ children, sx }: { children: ReactNode; sx?: SxProps<Theme> }) {
   return (
     <Paper
       variant="outlined"
-      sx={{
-        p: { xs: 2.25, md: 3 },
-        borderRadius: 5,
-        borderColor: "rgba(103,232,249,.16)",
-        bgcolor: "rgba(6,26,34,.86)",
-        color: "#f7fdff",
-        boxShadow: "0 24px 80px rgba(0,0,0,.24)",
-        backdropFilter: "blur(18px)",
-        overflow: "hidden",
-      }}
+      sx={[
+        {
+          p: { xs: 2.25, md: 3 },
+          borderRadius: 3,
+          borderColor: "var(--color-border)",
+          bgcolor: "var(--color-surface)",
+          color: "var(--color-text)",
+          boxShadow: "var(--shadow-surface)",
+          backdropFilter: "blur(18px)",
+          overflow: "visible",
+        },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       {children}
     </Paper>

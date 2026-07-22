@@ -18,7 +18,7 @@ export function SheltersPage() {
   const checkIn = useMutation({
     mutationFn: () => postData(`/api/shelters/${form.shelterId}/check-in`, { personName: form.personName, numPeople: form.numPeople, householdId: null }),
     onSuccess: () => {
-      showToast("Shelter check-in recorded.", "success");
+      showToast("Đã ghi nhận người đến điểm trú tạm.", "success");
       queryClient.invalidateQueries({ queryKey: ["shelters"] });
     },
   });
@@ -28,7 +28,7 @@ export function SheltersPage() {
   const occupancyPct = totalCapacity ? Math.min((totalOccupancy / totalCapacity) * 100, 100) : 0;
   return (
     <>
-      <PageHeader title="Shelters" description="View shelter capacity and record citizen check-ins." />
+      <PageHeader title="Điểm trú tạm" description="Theo dõi sức chứa điểm trú tạm và ghi nhận người dân đến nơi an toàn." />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <QueryState isLoading={shelters.isLoading} error={shelters.error} refetch={shelters.refetch}>
@@ -43,15 +43,15 @@ export function SheltersPage() {
                   mt: { xs: 2, md: 0 },
                   width: { xs: "100%", md: 320 },
                   p: 2,
-                  borderRadius: 3,
-                  bgcolor: "rgba(255,255,255,.94)",
+                  borderRadius: 0,
+                  bgcolor: "var(--color-surface)",
                   backdropFilter: "blur(14px)",
                 }}
               >
                 <Stack spacing={1.25}>
-                  <Typography fontWeight={900}>Shelter capacity</Typography>
+                  <Typography fontWeight={900}>Sức chứa điểm trú tạm</Typography>
                   <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">People checked in</Typography>
+                    <Typography variant="body2" color="text.secondary">Người đã ghi nhận</Typography>
                     <Typography fontWeight={900}>{totalOccupancy}/{totalCapacity}</Typography>
                   </Stack>
                   <LinearProgress variant="determinate" value={occupancyPct} color={occupancyPct > 85 ? "warning" : "success"} />
@@ -63,14 +63,14 @@ export function SheltersPage() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Check in</Typography>
+              <Typography variant="h6" fontWeight={900}>Ghi nhận vào điểm trú</Typography>
               <Typography variant="body2" color="text.secondary">
-                Record arrivals so coordinators can monitor safe capacity and route families to available shelters.
+                Ghi nhận người đến nơi để điều phối viên theo dõi sức chứa an toàn và hướng dẫn gia đình đến điểm còn chỗ.
               </Typography>
-              <TextField label="Shelter ID" value={form.shelterId} onChange={(event) => setForm({ ...form, shelterId: event.target.value })} />
-              <TextField label="Person/household" value={form.personName} onChange={(event) => setForm({ ...form, personName: event.target.value })} />
-              <TextField label="People" type="number" value={form.numPeople} onChange={(event) => setForm({ ...form, numPeople: Number(event.target.value) })} />
-              <Button variant="contained" disabled={!form.shelterId || !form.personName || checkIn.isPending} onClick={() => checkIn.mutate()}>Check in</Button>
+              <TextField label="Mã điểm trú tạm" value={form.shelterId} onChange={(event) => setForm({ ...form, shelterId: event.target.value })} />
+              <TextField label="Người/hộ gia đình" value={form.personName} onChange={(event) => setForm({ ...form, personName: event.target.value })} />
+              <TextField label="Số người" type="number" value={form.numPeople} onChange={(event) => setForm({ ...form, numPeople: Number(event.target.value) })} />
+              <Button variant="contained" disabled={!form.shelterId || !form.personName || checkIn.isPending} onClick={() => checkIn.mutate()}>Ghi nhận</Button>
             </Stack>
           </SectionPaper>
         </Grid>
@@ -83,7 +83,7 @@ export function SheltersPage() {
                 <StatusChip value={shelter.status} />
                 <Box>
                   <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
-                    <Typography fontWeight={800}>Occupancy</Typography>
+                    <Typography fontWeight={800}>Số người lưu trú</Typography>
                     <Typography color="text.secondary">{shelter.currentOccupancy}/{shelter.capacity}</Typography>
                   </Stack>
                   <LinearProgress variant="determinate" value={shelter.capacity ? Math.min((shelter.currentOccupancy / shelter.capacity) * 100, 100) : 0} color={shelter.capacity && shelter.currentOccupancy / shelter.capacity > 0.85 ? "warning" : "success"} />

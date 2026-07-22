@@ -20,8 +20,8 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     return (
       <Box sx={{ p: 4 }}>
         <Stack spacing={2}>
-          <Alert severity="warning">You do not have access to this workspace.</Alert>
-          <Button href="/">Return home</Button>
+          <Alert severity="warning">Bạn không có quyền truy cập khu vực làm việc này.</Alert>
+          <Button href="/">Quay về trang chủ</Button>
         </Stack>
       </Box>
     );

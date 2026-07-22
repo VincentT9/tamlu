@@ -10,12 +10,12 @@ export const ROLES = {
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 export const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "Admin",
-  COORDINATOR: "Coordinator",
-  RESCUE_TEAM: "Rescue Team",
-  FINANCIAL_OFFICER: "Financial Officer",
-  CITIZEN: "Citizen",
-  DONOR: "Donor",
+  ADMIN: "Quản trị viên",
+  COORDINATOR: "Điều phối viên",
+  RESCUE_TEAM: "Đội cứu hộ",
+  FINANCIAL_OFFICER: "Nhân sự tài chính",
+  CITIZEN: "Người dân",
+  DONOR: "Nhà hảo tâm",
 };
 
 export const ROLE_IDS: Record<Role, number> = {

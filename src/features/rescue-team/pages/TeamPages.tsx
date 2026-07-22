@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import { aidApi } from "@/features/aid/api";
 import { inventoryApi } from "@/features/inventory/api";
 import { missionApi } from "@/features/missions/api";
-import { MISSION_STATUS, SHIPMENT_STATUS } from "@/shared/constants/statuses";
+import { MISSION_STATUS, SHIPMENT_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
 import { formatDate } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
@@ -23,21 +23,21 @@ export function TeamMissionsPage() {
   const accept = useMutation({
     mutationFn: async (id: string) => {
       const coords = await getCurrentCoords();
-      return missionApi.update(id, { status: MISSION_STATUS.enRoute, note: "Mission accepted by rescue team.", ...coords });
+      return missionApi.update(id, { status: MISSION_STATUS.enRoute, note: "Đội cứu hộ đã nhận nhiệm vụ.", ...coords });
     },
     onSuccess: () => {
-      showToast("Mission accepted.", "success");
+      showToast("Đã nhận nhiệm vụ.", "success");
       queryClient.invalidateQueries({ queryKey: ["team-missions"] });
     },
   });
 
   return (
     <>
-      <PageHeader title="Assigned Missions" description="Field mission queue for rescue teams." />
+      <PageHeader title="Nhiệm vụ được phân công" description="Danh sách nhiệm vụ hiện trường dành cho đội cứu hộ." />
       <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Mission</TableCell><TableCell>Priority</TableCell><TableCell>Status</TableCell><TableCell>Shelter</TableCell><TableCell /></TableRow></TableHead><TableBody>
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Điểm trú tạm</TableCell><TableCell /></TableRow></TableHead><TableBody>
           {missions.data?.data.map((mission) => (
-            <TableRow key={mission.id}><TableCell>{mission.code}</TableCell><TableCell><StatusChip value={mission.priority} /></TableCell><TableCell><StatusChip value={mission.status} /></TableCell><TableCell>{mission.destinationShelterName}</TableCell><TableCell align="right"><Stack direction="row" spacing={1} justifyContent="flex-end">{mission.status === MISSION_STATUS.assigned ? <Button size="small" variant="contained" onClick={() => accept.mutate(mission.id)} disabled={accept.isPending}>Accept</Button> : null}<Button component={Link} to={`/team/missions/${mission.id}`}>Open</Button></Stack></TableCell></TableRow>
+            <TableRow key={mission.id}><TableCell>{mission.code}</TableCell><TableCell><StatusChip value={mission.priority} /></TableCell><TableCell><StatusChip value={mission.status} /></TableCell><TableCell>{mission.destinationShelterName}</TableCell><TableCell align="right"><Stack direction="row" spacing={1} justifyContent="flex-end">{mission.status === MISSION_STATUS.assigned ? <Button size="small" variant="contained" onClick={() => accept.mutate(mission.id)} disabled={accept.isPending}>Nhận nhiệm vụ</Button> : null}<Button component={Link} to={`/team/missions/${mission.id}`}>Mở</Button></Stack></TableCell></TableRow>
           ))}
         </TableBody></Table></Paper>
       </QueryState>
@@ -67,7 +67,7 @@ export function TeamMissionDetailPage() {
   const update = useMutation({
     mutationFn: () => missionApi.update(id, { status, note, ...coords }),
     onSuccess: () => {
-      showToast("Mission update posted.", "success");
+      showToast("Đã gửi cập nhật nhiệm vụ.", "success");
       queryClient.invalidateQueries({ queryKey: ["team-mission", id] });
       queryClient.invalidateQueries({ queryKey: ["team-missions"] });
     },
@@ -75,7 +75,7 @@ export function TeamMissionDetailPage() {
   const complete = useMutation({
     mutationFn: () => missionApi.complete(id, { peopleRescued: 1, notes: note }),
     onSuccess: () => {
-      showToast("Mission completed.", "success");
+      showToast("Nhiệm vụ đã hoàn tất.", "success");
       queryClient.invalidateQueries({ queryKey: ["team-mission", id] });
     },
   });
@@ -86,7 +86,7 @@ export function TeamMissionDetailPage() {
 
   return (
     <>
-      <PageHeader title={mission.data?.code ?? "Mission Detail"} description="Update GPS and mission status as the field situation changes." />
+      <PageHeader title={mission.data?.code ?? "Chi tiết nhiệm vụ"} description="Cập nhật GPS và trạng thái nhiệm vụ khi tình hình hiện trường thay đổi." />
       <QueryState isLoading={mission.isLoading} error={mission.error} refetch={mission.refetch}>
         {mission.data ? (
           <Grid container spacing={2.5}>
@@ -107,16 +107,16 @@ export function TeamMissionDetailPage() {
             <Grid size={{ xs: 12, lg: 4 }}>
               <SectionPaper>
                 <Stack spacing={2}>
-                  <Typography variant="h6" fontWeight={900}>Post field update</Typography>
-                  <TextField select label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
-                    {Object.values(MISSION_STATUS).map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                  <Typography variant="h6" fontWeight={900}>Gửi cập nhật hiện trường</Typography>
+                  <TextField select label="Trạng thái" value={status} onChange={(event) => setStatus(event.target.value)}>
+                    {Object.values(MISSION_STATUS).map((item) => <MenuItem key={item} value={item}>{STATUS_LABELS[item]}</MenuItem>)}
                   </TextField>
-                  <TextField label="Latitude" type="number" value={coords.latitude} onChange={(event) => setCoords({ ...coords, latitude: Number(event.target.value) })} />
-                  <TextField label="Longitude" type="number" value={coords.longitude} onChange={(event) => setCoords({ ...coords, longitude: Number(event.target.value) })} />
-                  <TextField label="Note" multiline minRows={3} value={note} onChange={(event) => setNote(event.target.value)} />
-                  <Button startIcon={<GpsFixedIcon />} onClick={locate}>Use current GPS</Button>
-                  <Button variant="contained" onClick={() => update.mutate()} disabled={update.isPending}>Post update</Button>
-                  <Button color="success" startIcon={<DoneAllIcon />} onClick={() => complete.mutate()} disabled={complete.isPending}>Complete mission</Button>
+                  <TextField label="Vĩ độ" type="number" value={coords.latitude} onChange={(event) => setCoords({ ...coords, latitude: Number(event.target.value) })} />
+                  <TextField label="Kinh độ" type="number" value={coords.longitude} onChange={(event) => setCoords({ ...coords, longitude: Number(event.target.value) })} />
+                  <TextField label="Ghi chú" multiline minRows={3} value={note} onChange={(event) => setNote(event.target.value)} />
+                  <Button startIcon={<GpsFixedIcon />} onClick={locate}>Dùng GPS hiện tại</Button>
+                  <Button variant="contained" onClick={() => update.mutate()} disabled={update.isPending}>Gửi cập nhật</Button>
+                  <Button color="success" startIcon={<DoneAllIcon />} onClick={() => complete.mutate()} disabled={complete.isPending}>Hoàn tất nhiệm vụ</Button>
                 </Stack>
               </SectionPaper>
             </Grid>
@@ -134,18 +134,18 @@ export function TeamShipmentsPage() {
   const update = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => inventoryApi.updateShipmentStatus(id, { status }),
     onSuccess: () => {
-      showToast("Shipment updated.", "success");
+      showToast("Chuyến hàng đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["team-shipments"] });
     },
   });
   return (
     <>
-      <PageHeader title="Field Shipments" description="Advance assigned shipments from preparing through delivery." />
+      <PageHeader title="Chuyến hàng hiện trường" description="Cập nhật chuyến hàng được phân công từ khâu chuẩn bị đến bàn giao." />
       <QueryState isLoading={shipments.isLoading} error={shipments.error} empty={!shipments.data?.data.length} refetch={shipments.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Shipment</TableCell><TableCell>Status</TableCell><TableCell>Actions</TableCell></TableRow></TableHead><TableBody>
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {shipments.data?.data.map((shipment) => (
             <TableRow key={shipment.id}><TableCell>{shipment.emergencyCaseTitle ?? shipment.id}</TableCell><TableCell><StatusChip value={shipment.status} /></TableCell><TableCell><Stack direction="row" spacing={1}>
-              {[SHIPMENT_STATUS.shipped, SHIPMENT_STATUS.inTransit, SHIPMENT_STATUS.delivered].map((status) => <Button key={status} size="small" onClick={() => update.mutate({ id: shipment.id, status })}>{status}</Button>)}
+              {[SHIPMENT_STATUS.shipped, SHIPMENT_STATUS.inTransit, SHIPMENT_STATUS.delivered].map((status) => <Button key={status} size="small" onClick={() => update.mutate({ id: shipment.id, status })}>{STATUS_LABELS[status]}</Button>)}
             </Stack></TableCell></TableRow>
           ))}
         </TableBody></Table></Paper>
@@ -158,32 +158,43 @@ export function TeamAreaAssessmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [form, setForm] = useState({ campaignId: "", areaName: "", province: "", district: "", ward: "", householdsAffected: 1, floodSeverity: "HIGH", priorityLevel: "HIGH", notes: "" });
+  const fieldLabels: Record<keyof typeof form, string> = {
+    campaignId: "Mã chiến dịch",
+    areaName: "Tên khu vực",
+    province: "Tỉnh/Thành phố",
+    district: "Quận/Huyện",
+    ward: "Phường/Xã",
+    householdsAffected: "Số hộ bị ảnh hưởng",
+    floodSeverity: "Mức độ ngập lụt",
+    priorityLevel: "Mức ưu tiên",
+    notes: "Ghi chú",
+  };
   const rows = useQuery({ queryKey: ["area-assessments-team"], queryFn: () => aidApi.areaAssessments({ page: 1, limit: 50 }) });
   const create = useMutation({
     mutationFn: () => aidApi.createAreaAssessment(form),
     onSuccess: () => {
-      showToast("Area assessment created.", "success");
+      showToast("Đánh giá khu vực đã được tạo.", "success");
       queryClient.invalidateQueries({ queryKey: ["area-assessments-team"] });
     },
   });
   return (
     <>
-      <PageHeader title="Area Assessments" description="Report field needs for aid allocation planning." />
+      <PageHeader title="Đánh giá khu vực" description="Ghi nhận nhu cầu hiện trường để lập kế hoạch phân bổ cứu trợ." />
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>New assessment</Typography>
+              <Typography variant="h6" fontWeight={900}>Đánh giá mới</Typography>
               {Object.keys(form).map((key) => (
-                <TextField key={key} label={key} value={String(form[key as keyof typeof form])} onChange={(event) => setForm({ ...form, [key]: key === "householdsAffected" ? Number(event.target.value) : event.target.value })} />
+                <TextField key={key} label={fieldLabels[key as keyof typeof form]} value={String(form[key as keyof typeof form])} onChange={(event) => setForm({ ...form, [key]: key === "householdsAffected" ? Number(event.target.value) : event.target.value })} />
               ))}
-              <Button variant="contained" onClick={() => create.mutate()} disabled={!form.campaignId || create.isPending}>Submit</Button>
+              <Button variant="contained" onClick={() => create.mutate()} disabled={!form.campaignId || create.isPending}>Gửi</Button>
             </Stack>
           </SectionPaper>
         </Grid>
         <Grid size={{ xs: 12, lg: 8 }}>
           <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
-            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Area</TableCell><TableCell>Households</TableCell><TableCell>Priority</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>
+            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Khu vực</TableCell><TableCell>Hộ ảnh hưởng</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
               {rows.data?.data.map((row) => <TableRow key={row.id}><TableCell>{row.areaName}</TableCell><TableCell>{row.householdsAffected}</TableCell><TableCell><StatusChip value={row.priorityLevel} /></TableCell><TableCell><StatusChip value={row.status} /></TableCell></TableRow>)}
             </TableBody></Table></Paper>
           </QueryState>
@@ -196,8 +207,8 @@ export function TeamAreaAssessmentsPage() {
 export function TeamProofsPage() {
   return (
     <>
-      <PageHeader title="Proof Packages" description="Use the disbursement detail workflow to create proof packages, attach media URLs, geotags, and receiver signatures." />
-      <Alert severity="info">The backend exposes proof endpoints under disbursements. This page is intentionally a field checklist surface until a specific disbursement is selected.</Alert>
+      <PageHeader title="Bộ minh chứng" description="Tạo bộ minh chứng từ quy trình giải ngân, kèm liên kết media, vị trí và chữ ký người nhận." />
+      <Alert severity="info">Backend cung cấp endpoint minh chứng trong phân hệ giải ngân. Trang này tạm thời đóng vai trò checklist hiện trường cho đến khi chọn một khoản giải ngân cụ thể.</Alert>
     </>
   );
 }
@@ -206,7 +217,7 @@ export function TeamProfilePage() {
   const team = useQuery({ queryKey: ["my-team"], queryFn: missionApi.myTeam });
   return (
     <>
-      <PageHeader title="My Rescue Team" description="Current team profile returned by `/api/team/my-team`." />
+      <PageHeader title="Đội cứu hộ của tôi" description="Hồ sơ đội hiện tại được đồng bộ từ hệ thống." />
       <QueryState isLoading={team.isLoading} error={team.error} refetch={team.refetch}>
         <SectionPaper>
           <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{JSON.stringify(team.data, null, 2)}</pre>

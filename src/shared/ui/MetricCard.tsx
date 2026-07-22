@@ -9,11 +9,11 @@ interface MetricCardProps {
 }
 
 const tones = {
-  blue: "#67e8f9",
-  orange: "#f5b85b",
-  green: "#34d399",
+  blue: "var(--color-green-600)",
+  orange: "var(--brand-green)",
+  green: "var(--color-green-700)",
   red: "#f87171",
-  neutral: "rgba(224,247,250,.60)",
+  neutral: "var(--color-text-muted)",
 };
 
 export function MetricCard({ label, value, helper, tone = "blue" }: MetricCardProps) {
@@ -22,13 +22,13 @@ export function MetricCard({ label, value, helper, tone = "blue" }: MetricCardPr
       variant="outlined"
       sx={{
         position: "relative",
-        overflow: "hidden",
+        overflow: "visible",
         p: 2.75,
-        borderRadius: 5,
-        borderColor: "rgba(103,232,249,.16)",
-        bgcolor: "rgba(6,26,34,.86)",
-        color: "#f7fdff",
-        boxShadow: "0 24px 80px rgba(0,0,0,.22)",
+        borderRadius: 3,
+        borderColor: "var(--color-border)",
+        bgcolor: "var(--color-surface)",
+        color: "var(--color-text)",
+        boxShadow: "var(--shadow-surface)",
         backdropFilter: "blur(18px)",
         "&::before": {
           content: '""',
@@ -52,14 +52,14 @@ export function MetricCard({ label, value, helper, tone = "blue" }: MetricCardPr
       }}
     >
       <Stack spacing={0.75} sx={{ position: "relative" }}>
-        <Typography variant="body2" sx={{ color: "rgba(224,247,250,.62)", fontWeight: 850 }}>
+        <Typography variant="body2" sx={{ color: "var(--color-text-muted)", fontWeight: 850 }}>
           {label}
         </Typography>
-        <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.05, color: "#f7fdff" }}>
+        <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.05, color: "var(--color-green-800)" }}>
           {value}
         </Typography>
         {helper ? (
-          <Typography variant="caption" sx={{ lineHeight: 1.5, color: "rgba(224,247,250,.50)" }}>
+          <Typography variant="caption" sx={{ lineHeight: 1.5, color: "var(--color-text-muted)" }}>
             {helper}
           </Typography>
         ) : null}

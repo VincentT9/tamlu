@@ -8,19 +8,19 @@ import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
 
 const pageTheme = {
-  bg: "#031014",
-  panel: "rgba(6,26,34,.86)",
-  panelSoft: "rgba(255,255,255,.045)",
-  line: "rgba(103,232,249,.18)",
-  lineStrong: "rgba(45,212,191,.34)",
-  text: "#f7fdff",
-  muted: "rgba(224,247,250,.66)",
-  faint: "rgba(224,247,250,.48)",
-  water: "#2dd4bf",
-  waterSoft: "#67e8f9",
-  amber: "#f5b85b",
-  amberHover: "#ffd07a",
-  amberInk: "#102126",
+  bg: "var(--color-cream-50)",
+  panel: "var(--color-surface)",
+  panelSoft: "var(--color-green-50)",
+  line: "var(--color-border)",
+  lineStrong: "var(--color-border-strong)",
+  text: "var(--color-green-800)",
+  muted: "var(--color-text-muted)",
+  faint: "var(--color-text-muted)",
+  water: "var(--color-green-700)",
+  waterSoft: "var(--color-green-600)",
+  amber: "var(--color-green-700)",
+  amberHover: "var(--color-green-800)",
+  amberInk: "#ffffff",
 };
 
 export function CampaignListPage() {
@@ -38,16 +38,15 @@ export function CampaignListPage() {
         px: { xs: 2, md: 4 },
         py: { xs: 4, md: 6 },
         color: pageTheme.text,
-        background:
-          `radial-gradient(circle at 78% 0%, rgba(45,212,191,.18), transparent 30%), linear-gradient(180deg, ${pageTheme.bg} 0%, #04181d 100%)`,
+        background: pageTheme.bg,
         "& .MuiSkeleton-root": {
-          bgcolor: "rgba(45,212,191,.10)",
-          backgroundImage: "linear-gradient(90deg, rgba(45,212,191,.08), rgba(103,232,249,.18), rgba(45,212,191,.08))",
+          bgcolor: pageTheme.panel,
+          backgroundImage: "none",
         },
         "& .MuiAlert-root": {
-          borderRadius: 4,
-          bgcolor: "rgba(127,29,29,.22)",
-          color: pageTheme.text,
+          borderRadius: 3,
+          bgcolor: "#fff1f2",
+          color: "#b91c1c",
           border: "1px solid rgba(248,113,113,.28)",
         },
       }}
@@ -55,13 +54,13 @@ export function CampaignListPage() {
       <Box sx={{ mx: "auto", maxWidth: 1500 }}>
         <Stack spacing={1.4} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 820 }}>
           <Typography sx={{ color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
-            Public Donation Portal
+            Cổng ủng hộ công khai
           </Typography>
           <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
-            Active flood relief campaigns
+            Các chiến dịch cứu trợ lũ lụt đang hoạt động
           </Typography>
           <Typography sx={{ color: pageTheme.muted, fontSize: { xs: 16, md: 18 }, lineHeight: 1.65 }}>
-            Every donation is connected to public financial ledgers, inventory movement, and field evidence.
+            Mỗi khoản ủng hộ đều được liên kết với sổ tài chính công khai, luân chuyển hàng hóa và bằng chứng hiện trường.
           </Typography>
         </Stack>
       <QueryState isLoading={campaigns.isLoading} error={campaigns.error} empty={!campaigns.data?.data.length} refetch={campaigns.refetch}>
@@ -76,12 +75,12 @@ export function CampaignListPage() {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
-                    borderRadius: 5,
+                    overflow: "visible",
+                    borderRadius: 3,
                     borderColor: pageTheme.line,
                     bgcolor: pageTheme.panel,
                     color: pageTheme.text,
-                    boxShadow: "0 24px 80px rgba(0,0,0,.28)",
+                    boxShadow: "none",
                     backdropFilter: "blur(18px)",
                   }}
                 >
@@ -91,7 +90,7 @@ export function CampaignListPage() {
                     image={campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"}
                     alt={campaign.name}
                     sx={{
-                      bgcolor: "rgba(103,232,249,.10)",
+                      bgcolor: pageTheme.panel,
                       objectFit: "cover",
                       filter: "saturate(.78) contrast(1.03)",
                     }}
@@ -101,7 +100,7 @@ export function CampaignListPage() {
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <StatusChip value={campaign.status} />
                         <Typography variant="caption" sx={{ color: pageTheme.faint, fontWeight: 700 }}>
-                          Ends {formatDate(campaign.endDate)}
+                          Kết thúc {formatDate(campaign.endDate)}
                         </Typography>
                       </Stack>
                       <Typography variant="h6" fontWeight={950} sx={{ color: pageTheme.text, lineHeight: 1.25 }}>
@@ -120,12 +119,12 @@ export function CampaignListPage() {
                             mt: 1,
                             height: 8,
                             borderRadius: 999,
-                            bgcolor: "rgba(255,255,255,.12)",
-                            "& .MuiLinearProgress-bar": { bgcolor: pageTheme.amber },
+                            bgcolor: "var(--color-progress-track)",
+                            "& .MuiLinearProgress-bar": { bgcolor: "var(--color-progress-fill)" },
                           }}
                         />
                         <Typography variant="caption" sx={{ color: pageTheme.faint }}>
-                          Target {formatMoney(campaign.targetAmount)}
+                          Mục tiêu {formatMoney(campaign.targetAmount)}
                         </Typography>
                       </Box>
                     </Stack>
@@ -137,15 +136,15 @@ export function CampaignListPage() {
                       endIcon={<ArrowForwardIcon />}
                       sx={{
                         minHeight: 44,
-                        borderRadius: 999,
+                        borderRadius: 2,
                         px: 2,
                         color: pageTheme.waterSoft,
                         fontWeight: 900,
-                        "&:hover": { bgcolor: "rgba(45,212,191,.12)", color: pageTheme.text },
+                        "&:hover": { bgcolor: pageTheme.panel, color: pageTheme.text },
                         "&:focus-visible": { outline: `3px solid ${pageTheme.waterSoft}`, outlineOffset: 3 },
                       }}
                     >
-                      View
+                      Xem
                     </Button>
                     <Button
                       component={Link}
@@ -153,17 +152,17 @@ export function CampaignListPage() {
                       variant="contained"
                       sx={{
                         minHeight: 44,
-                        borderRadius: 999,
+                        borderRadius: 2,
                         px: 2.5,
                         bgcolor: pageTheme.amber,
                         color: pageTheme.amberInk,
                         fontWeight: 950,
-                        boxShadow: "0 14px 34px rgba(245,184,91,.20)",
+                        boxShadow: "none",
                         "&:hover": { bgcolor: pageTheme.amberHover, color: pageTheme.amberInk },
                         "&:focus-visible": { outline: `3px solid ${pageTheme.waterSoft}`, outlineOffset: 3 },
                       }}
                     >
-                      Donate
+                      Ủng hộ
                     </Button>
                   </CardActions>
                 </Card>

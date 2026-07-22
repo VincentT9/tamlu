@@ -40,25 +40,25 @@ export function ProfilePage() {
   const mutation = useMutation({
     mutationFn: (values: ProfileForm) => authApi.updateMe({ ...values, avatarUrl: values.avatarUrl || null }),
     onSuccess: () => {
-      showToast("Profile updated.", "success");
+      showToast("Hồ sơ đã được cập nhật.", "success");
       profile.refetch();
     },
   });
 
   return (
     <>
-      <PageHeader title="Profile" description="Keep your contact details current for rescue, donation, and coordination workflows." />
+      <PageHeader title="Hồ sơ cá nhân" description="Cập nhật thông tin liên hệ để phục vụ cứu hộ, ủng hộ và điều phối." />
       <QueryState isLoading={profile.isLoading} error={profile.error} refetch={profile.refetch}>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 7 }}>
             <SectionPaper>
               {mutation.error ? <Alert severity="error">{getErrorMessage(mutation.error)}</Alert> : null}
               <Stack component="form" spacing={2} sx={{ mt: mutation.error ? 2 : 0 }} onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
-                <TextField label="Full name" {...form.register("fullName")} error={Boolean(form.formState.errors.fullName)} helperText={form.formState.errors.fullName?.message} />
-                <TextField label="Phone" {...form.register("phone")} error={Boolean(form.formState.errors.phone)} helperText={form.formState.errors.phone?.message} />
-                <TextField label="Avatar URL" {...form.register("avatarUrl")} error={Boolean(form.formState.errors.avatarUrl)} helperText={form.formState.errors.avatarUrl?.message} />
+                <TextField label="Họ và tên" {...form.register("fullName")} error={Boolean(form.formState.errors.fullName)} helperText={form.formState.errors.fullName?.message} />
+                <TextField label="Số điện thoại" {...form.register("phone")} error={Boolean(form.formState.errors.phone)} helperText={form.formState.errors.phone?.message} />
+                <TextField label="Đường dẫn ảnh đại diện" {...form.register("avatarUrl")} error={Boolean(form.formState.errors.avatarUrl)} helperText={form.formState.errors.avatarUrl?.message} />
                 <Button type="submit" variant="contained" disabled={mutation.isPending}>
-                  Save profile
+                  Lưu hồ sơ
                 </Button>
               </Stack>
             </SectionPaper>

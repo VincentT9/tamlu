@@ -8,17 +8,17 @@ import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
 
 const pageTheme = {
-  bg: "#031014",
-  panel: "rgba(6,26,34,.88)",
-  panelSoft: "rgba(255,255,255,.045)",
-  line: "rgba(103,232,249,.18)",
-  lineStrong: "rgba(45,212,191,.34)",
-  text: "#f7fdff",
-  muted: "rgba(224,247,250,.66)",
-  faint: "rgba(224,247,250,.48)",
-  water: "#2dd4bf",
-  waterSoft: "#67e8f9",
-  amber: "#f5b85b",
+  bg: "var(--color-cream-50)",
+  panel: "var(--color-surface)",
+  panelSoft: "var(--color-green-50)",
+  line: "var(--color-border)",
+  lineStrong: "var(--color-border-strong)",
+  text: "var(--color-green-800)",
+  muted: "var(--color-text-muted)",
+  faint: "var(--color-text-muted)",
+  water: "var(--color-green-700)",
+  waterSoft: "var(--color-green-600)",
+  amber: "var(--color-cream-100)",
 };
 
 export function PublicReliefMapPage() {
@@ -58,16 +58,15 @@ export function PublicReliefMapPage() {
         px: { xs: 2, md: 4 },
         py: { xs: 4, md: 6 },
         color: pageTheme.text,
-        background:
-          `radial-gradient(circle at 70% 0%, rgba(45,212,191,.18), transparent 30%), linear-gradient(180deg, ${pageTheme.bg} 0%, #04181d 100%)`,
+        background: pageTheme.bg,
         "& .MuiSkeleton-root": {
-          bgcolor: "rgba(45,212,191,.10)",
-          backgroundImage: "linear-gradient(90deg, rgba(45,212,191,.08), rgba(103,232,249,.18), rgba(45,212,191,.08))",
+          bgcolor: pageTheme.panel,
+          backgroundImage: "none",
         },
         "& .MuiAlert-root.MuiAlert-standardError": {
-          borderRadius: 4,
-          bgcolor: "rgba(127,29,29,.22)",
-          color: pageTheme.text,
+          borderRadius: 3,
+          bgcolor: "#fff1f2",
+          color: "#b91c1c",
           border: "1px solid rgba(248,113,113,.28)",
         },
       }}
@@ -75,23 +74,23 @@ export function PublicReliefMapPage() {
       <Box sx={{ mx: "auto", maxWidth: 1500 }}>
         <Stack spacing={1.4} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 880 }}>
           <Typography sx={{ color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
-            Public Relief Map
+            Bản đồ cứu trợ công khai
           </Typography>
           <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
-            Verified campaign logistics
+            Luồng hậu cần của chiến dịch đã xác minh
           </Typography>
           <Typography sx={{ color: pageTheme.muted, fontSize: { xs: 16, md: 18 }, lineHeight: 1.65 }}>
-            This public map intentionally displays only backend-public transparency data. Raw SOS locations are not exposed by the current backend.
+            Bản đồ công khai chỉ hiển thị dữ liệu minh bạch được phép công bố. Vị trí SOS thô không được hiển thị ra bên ngoài.
           </Typography>
         </Stack>
       <Paper
         sx={{
           p: { xs: 2, md: 3 },
-          borderRadius: { xs: 4, md: 6 },
+          borderRadius: 3,
           border: `1px solid ${pageTheme.line}`,
           bgcolor: pageTheme.panel,
           color: pageTheme.text,
-          boxShadow: "0 30px 90px rgba(0,0,0,.32)",
+          boxShadow: "none",
           backdropFilter: "blur(18px)",
           overflow: "hidden",
         }}
@@ -102,15 +101,15 @@ export function PublicReliefMapPage() {
               <TextField
                 fullWidth
                 select
-                label="Campaign"
+                label="Chiến dịch"
                 value={selectedId}
                 onChange={(event) => setCampaignId(event.target.value)}
                 sx={{
                   "& .MuiInputLabel-root": { color: pageTheme.faint },
                   "& .MuiInputLabel-root.Mui-focused": { color: pageTheme.waterSoft },
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 4,
-                    bgcolor: "rgba(255,255,255,.06)",
+                    borderRadius: 2,
+                    bgcolor: "#ffffff",
                     color: pageTheme.text,
                     "& fieldset": { borderColor: pageTheme.line },
                     "&:hover fieldset": { borderColor: pageTheme.lineStrong },
@@ -120,7 +119,7 @@ export function PublicReliefMapPage() {
                 }}
               >
                 <MenuItem value="" disabled>
-                  {campaigns.isLoading ? "Loading campaigns..." : "No campaign selected"}
+                  {campaigns.isLoading ? "Đang tải chiến dịch..." : "Chưa chọn chiến dịch"}
                 </MenuItem>
                 {(campaigns.data?.data ?? []).map((campaign) => (
                   <MenuItem key={campaign.id} value={campaign.id}>
@@ -133,14 +132,14 @@ export function PublicReliefMapPage() {
               <Alert
                 severity="info"
                 sx={{
-                  borderRadius: 4,
+                  borderRadius: 2,
                   border: `1px solid ${pageTheme.line}`,
-                  bgcolor: "rgba(45,212,191,.10)",
+                  bgcolor: pageTheme.panel,
                   color: pageTheme.text,
                   "& .MuiAlert-icon": { color: pageTheme.waterSoft },
                 }}
               >
-                Public markers only show verified transparency data.
+                Các điểm đánh dấu công khai chỉ hiển thị dữ liệu minh bạch đã xác minh.
               </Alert>
             </Grid>
           </Grid>
@@ -148,11 +147,11 @@ export function PublicReliefMapPage() {
             <Box
               sx={{
                 position: "relative",
-                overflow: "hidden",
-                borderRadius: { xs: 4, md: 5 },
+                overflow: "visible",
+                borderRadius: 3,
                 border: `1px solid ${pageTheme.line}`,
                 bgcolor: pageTheme.panelSoft,
-                "& .leaflet-container": { borderRadius: { xs: 4, md: 5 } },
+                "& .leaflet-container": { borderRadius: 3 },
               }}
             >
               <TamLuMap markers={markers} height={560} />
@@ -165,24 +164,24 @@ export function PublicReliefMapPage() {
                   mt: { xs: 2, md: 0 },
                   width: { xs: "100%", md: 300 },
                   p: 2.25,
-                  borderRadius: 4,
-                  bgcolor: "rgba(6,26,34,.86)",
+                  borderRadius: 3,
+                  bgcolor: pageTheme.panel,
                   color: pageTheme.text,
                   borderColor: pageTheme.lineStrong,
                   backdropFilter: "blur(14px)",
-                  boxShadow: "0 20px 60px rgba(0,0,0,.32)",
+                  boxShadow: "none",
                 }}
               >
                 <Stack spacing={1.5}>
-                  <Typography fontWeight={900}>Map layers</Typography>
+                  <Typography fontWeight={900}>Lớp bản đồ</Typography>
                   {[
-                    { label: "Verified warehouses", color: pageTheme.waterSoft, value: markers.length },
-                    { label: "Active route summaries", color: pageTheme.amber, value: map.data?.activeRoutes.length ?? 0 },
-                    { label: "Public privacy filter", color: pageTheme.water, value: "On" },
+                    { label: "Kho hàng đã xác minh", color: pageTheme.waterSoft, value: markers.length },
+                    { label: "Tuyến phân phối đang hoạt động", color: pageTheme.amber, value: map.data?.activeRoutes.length ?? 0 },
+                    { label: "Bộ lọc bảo mật công khai", color: pageTheme.water, value: "Bật" },
                   ].map((item) => (
                     <Stack key={item.label} direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: item.color }} />
+                        <Box sx={{ width: 10, height: 10, borderRadius: 0, bgcolor: item.color }} />
                         <Typography variant="body2" fontWeight={800}>{item.label}</Typography>
                       </Stack>
                       <Typography variant="body2" sx={{ color: pageTheme.muted }}>{item.value}</Typography>
@@ -194,7 +193,7 @@ export function PublicReliefMapPage() {
           </QueryState>
           <Stack spacing={1}>
             <Typography variant="h6" fontWeight={900} sx={{ color: pageTheme.text }}>
-              Route summaries
+              Tóm tắt tuyến phân phối
             </Typography>
             {map.data?.activeRoutes.map((route) => (
               <Paper
@@ -202,7 +201,7 @@ export function PublicReliefMapPage() {
                 variant="outlined"
                 sx={{
                   p: { xs: 1.75, md: 2 },
-                  borderRadius: 4,
+                  borderRadius: 3,
                   borderColor: pageTheme.line,
                   bgcolor: pageTheme.panelSoft,
                   color: pageTheme.text,
@@ -210,7 +209,7 @@ export function PublicReliefMapPage() {
                 }}
               >
               <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1}>
-                <Typography fontWeight={800}>{route.sourceWarehouse} to field distribution</Typography>
+                <Typography fontWeight={800}>{route.sourceWarehouse} đến điểm phân phối hiện trường</Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <StatusChip value={route.status} />
                   <Button size="small" disabled sx={{ color: pageTheme.faint }}>

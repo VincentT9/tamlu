@@ -20,63 +20,65 @@ import { StatusChip } from "@/shared/ui/StatusChip";
 
 const fallbackCampaignImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=85";
-const heroRescueImageUrl = "/images/flood-rescue-boat.png";
+const heroRescueImageUrl = "/images/flood-family-rescue.png";
 
 const reliefTheme = {
-  bg: "#031014",
-  frame: "#061a22",
-  panel: "rgba(8,31,40,.78)",
-  panelSoft: "rgba(255,255,255,.045)",
-  line: "rgba(103,232,249,.16)",
-  lineStrong: "rgba(45,212,191,.34)",
-  text: "#f7fdff",
-  muted: "rgba(224,247,250,.68)",
-  faint: "rgba(224,247,250,.52)",
-  water: "#2dd4bf",
-  waterSoft: "#67e8f9",
-  amber: "#f5b85b",
-  amberHover: "#ffd07a",
-  amberInk: "#102126",
-  shadow: "rgba(45,212,191,.22)",
+  bg: "var(--color-cream-50)",
+  frame: "var(--color-cream-50)",
+  panel: "var(--color-surface)",
+  panelSoft: "var(--color-green-50)",
+  creamPanel: "var(--color-cream-100)",
+  line: "var(--color-border)",
+  lineStrong: "var(--color-border-strong)",
+  text: "var(--color-green-800)",
+  muted: "var(--color-text-muted)",
+  faint: "var(--color-text-muted)",
+  water: "var(--color-green-700)",
+  waterSoft: "var(--color-green-600)",
+  amber: "var(--color-green-700)",
+  amberHover: "var(--color-green-800)",
+  amberInk: "#ffffff",
+  shadow: "rgba(37,77,9,.08)",
 };
 
 const reliefShape = {
-  cardRadius: 5,
-  compactRadius: 4,
+  cardRadius: 3,
+  compactRadius: 2.5,
   cardPadding: { xs: 3, md: 3.5 },
   compactPadding: { xs: 2.5, md: 3 },
 };
 
 const primaryButtonSx = {
-  borderRadius: 999,
+  borderRadius: 2,
   bgcolor: reliefTheme.amber,
   color: reliefTheme.amberInk,
   fontWeight: 950,
-  boxShadow: "0 14px 40px rgba(245,184,91,.22)",
-  "&:hover": { bgcolor: reliefTheme.amberHover, color: reliefTheme.amberInk },
+  border: `1px solid ${reliefTheme.lineStrong}`,
+  boxShadow: "none",
+  "&:hover": { bgcolor: reliefTheme.amberHover, color: reliefTheme.amberInk, borderColor: reliefTheme.text },
   "&:focus-visible": { outline: `3px solid ${reliefTheme.waterSoft}`, outlineOffset: 3 },
   "&:active": { transform: "translateY(1px)" },
-  "&.Mui-disabled": { bgcolor: "rgba(245,184,91,.32)", color: "rgba(16,33,38,.76)" },
+  "&.Mui-disabled": { bgcolor: "var(--color-green-200)", color: "var(--color-text-muted)" },
 };
 
 const secondaryButtonSx = {
-  borderRadius: 999,
-  bgcolor: "rgba(6,42,48,.88)",
+  borderRadius: 2,
+  bgcolor: "#ffffff",
   color: reliefTheme.text,
   border: `1px solid ${reliefTheme.lineStrong}`,
   fontWeight: 900,
   boxShadow: "none",
-  "&:hover": { bgcolor: "rgba(45,212,191,.16)", borderColor: reliefTheme.waterSoft, color: reliefTheme.text },
+  "&:hover": { bgcolor: reliefTheme.panel, borderColor: reliefTheme.waterSoft, color: reliefTheme.text },
   "&:focus-visible": { outline: `3px solid ${reliefTheme.waterSoft}`, outlineOffset: 3 },
   "&:active": { transform: "translateY(1px)" },
-  "&.Mui-disabled": { bgcolor: "rgba(255,255,255,.06)", color: "rgba(247,253,255,.45)", borderColor: "rgba(255,255,255,.10)" },
+  "&.Mui-disabled": { bgcolor: "#ffffff", color: "var(--color-text-muted)", borderColor: "var(--color-border)" },
 };
 
 const glassCardSx = {
   border: `1px solid ${reliefTheme.line}`,
   bgcolor: reliefTheme.panel,
   color: reliefTheme.text,
-  boxShadow: "0 28px 80px rgba(0,0,0,.30)",
+  boxShadow: "none",
   backdropFilter: "blur(20px)",
   overflow: "visible",
 };
@@ -92,24 +94,62 @@ export function LandingPage() {
   const donateHref = featuredCampaign ? `/donor/donate/${featuredCampaign.id}` : "/campaigns";
 
   const heroStats = [
-    { value: "230+", label: "families reached this season", icon: <GroupsIcon fontSize="small" /> },
-    { value: campaigns.data?.totalCount ?? 0, label: "verified relief campaigns", icon: <ShieldOutlinedIcon fontSize="small" /> },
+    { value: "230+", label: "hộ gia đình được kết nối hỗ trợ trong mùa lũ", icon: <GroupsIcon fontSize="small" /> },
+    { value: campaigns.data?.totalCount ?? 0, label: "chiến dịch cứu trợ có thông tin xác minh", icon: <ShieldOutlinedIcon fontSize="small" /> },
   ];
 
   const metrics = [
-    { value: "18k+", label: "people helped", detail: "Rescue, food, shelter, and recovery support", icon: <WaterDropIcon /> },
-    { value: percent(progress), label: "funding progress", detail: `${formatMoney(totals?.raised)} publicly tracked`, icon: <ReceiptLongIcon /> },
-    { value: "98%", label: "verified delivery rate", detail: "Evidence-backed relief movement", icon: <LocalShippingIcon /> },
+    { value: "18k+", label: "người dân được hỗ trợ", detail: "Cứu hộ, nhu yếu phẩm, nơi trú tạm và phục hồi sinh kế", icon: <WaterDropIcon /> },
+    { value: percent(progress), label: "tiến độ gây quỹ", detail: `${formatMoney(totals?.raised)} được công khai theo dõi`, icon: <ReceiptLongIcon /> },
+    { value: "98%", label: "tỷ lệ bàn giao xác minh", detail: "Dòng cứu trợ có chứng từ và bằng chứng hiện trường", icon: <LocalShippingIcon /> },
+  ];
+
+  const topPageSections = [
+    {
+      title: "Về Tâm Lũ",
+      text: "Nền tảng công khai phục vụ điều phối cứu hộ, chiến dịch minh bạch và phục hồi cộng đồng sau thiên tai.",
+      action: "Xem sứ mệnh",
+      to: "/#mission",
+      icon: <ShieldOutlinedIcon />,
+    },
+    {
+      title: "Hoạt động cứu trợ",
+      text: "Kết nối đội phản ứng, tình nguyện viên, nhu yếu phẩm và điểm trú tạm đến đúng khu vực bị ảnh hưởng.",
+      action: "Xem hoạt động",
+      to: "/campaigns",
+      icon: <VolunteerActivismIcon />,
+    },
+    {
+      title: "Biểu mẫu khẩn cấp",
+      text: "Ghi nhận nhu cầu SOS, tình trạng hộ gia đình và thông tin hiện trường để điều phối nhanh hơn.",
+      action: "Gửi yêu cầu",
+      to: "/sos/new",
+      icon: <SosIcon />,
+    },
+    {
+      title: "Khu vực cứu trợ",
+      text: "Theo dõi điểm phân phối, tuyến hỗ trợ và dữ liệu minh bạch trên bản đồ cứu trợ.",
+      action: "Mở bản đồ",
+      to: "/relief-map",
+      icon: <LocalShippingIcon />,
+    },
+    {
+      title: "Đồng hành",
+      text: "Ủng hộ tài chính, đóng góp hiện vật hoặc đăng ký tình nguyện cho các chiến dịch đã xác minh.",
+      action: "Đồng hành ngay",
+      to: donateHref,
+      icon: <FavoriteIcon />,
+    },
   ];
 
   const reliefServices = [
-    { title: "Emergency Rescue", text: "Verified SOS context helps teams prioritize people in immediate danger.", icon: <SosIcon /> },
-    { title: "Food And Shelter", text: "Campaigns coordinate meals, clean water, blankets, and safe temporary housing.", icon: <Inventory2Icon /> },
-    { title: "Medical Aid", text: "Urgent medicine, hygiene kits, and field-care requests stay visible to coordinators.", icon: <MedicalServicesIcon /> },
-    { title: "Rebuilding Homes", text: "Recovery funds support families as they repair homes and restart daily life.", icon: <VolunteerActivismIcon /> },
+    { title: "Cứu hộ khẩn cấp", text: "Thông tin SOS đã xác minh giúp đội cứu hộ ưu tiên đúng trường hợp nguy cấp.", icon: <SosIcon /> },
+    { title: "Lương thực và nơi trú", text: "Chiến dịch điều phối suất ăn, nước sạch, chăn màn và điểm trú tạm an toàn.", icon: <Inventory2Icon /> },
+    { title: "Hỗ trợ y tế", text: "Nhu cầu thuốc men, vật tư vệ sinh và chăm sóc hiện trường được chuyển tới điều phối viên.", icon: <MedicalServicesIcon /> },
+    { title: "Tái thiết nhà cửa", text: "Nguồn phục hồi hỗ trợ gia đình sửa chữa nhà ở và ổn định đời sống sau lũ.", icon: <VolunteerActivismIcon /> },
   ];
 
-  const partners = ["Local Response", "Rescue Unit", "Shelter Network", "Medical Aid", "Volunteer Corps"];
+  const partners = ["Đội phản ứng địa phương", "Lực lượng cứu hộ", "Mạng lưới trú tạm", "Hỗ trợ y tế", "Tình nguyện viên"];
 
   return (
     <Box
@@ -125,11 +165,11 @@ export function LandingPage() {
           mx: "auto",
           maxWidth: 1500,
           overflow: "hidden",
-          borderRadius: { xs: 4, md: 7 },
+          borderRadius: { xs: 3, md: 5 },
           border: `1px solid ${reliefTheme.lineStrong}`,
           background:
             `radial-gradient(circle at 62% 12%, ${reliefTheme.shadow}, transparent 28%), linear-gradient(180deg, ${reliefTheme.frame} 0%, ${reliefTheme.bg} 100%)`,
-          boxShadow: "0 0 0 1px rgba(255,255,255,.035), 0 40px 140px rgba(0,0,0,.56)",
+          boxShadow: "none",
         }}
       >
         <Box
@@ -141,8 +181,10 @@ export function LandingPage() {
             pb: { xs: 7, md: 9, lg: 10 },
             position: "relative",
             overflow: "hidden",
-            display: "grid",
-            alignItems: "center",
+            borderRadius: { xs: 3, md: 5 },
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
           <Box
@@ -155,11 +197,11 @@ export function LandingPage() {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              objectPosition: { xs: "43% 50%", md: "44% 50%", xl: "42% 50%" },
+              objectPosition: { xs: "47% 50%", md: "53% 50%", xl: "55% 50%" },
               opacity: 1,
-              filter: "saturate(.76) contrast(1.02) brightness(.9)",
-              transform: { xs: "scale(1.72)", md: "scale(1.06)" },
-              transformOrigin: { xs: "43% 50%", md: "44% 50%" },
+              filter: "saturate(.86) contrast(.98) brightness(1.06)",
+              transform: { xs: "scale(1.48)", md: "scale(1.08)" },
+              transformOrigin: { xs: "47% 50%", md: "53% 50%" },
             }}
           />
           <Box
@@ -168,7 +210,7 @@ export function LandingPage() {
               position: "absolute",
               inset: 0,
               background:
-                "radial-gradient(circle at 56% 48%, rgba(3,16,20,.10) 0%, rgba(3,16,20,.24) 35%, rgba(3,16,20,.72) 73%, rgba(3,16,20,.97) 100%), linear-gradient(90deg, rgba(3,16,20,.98) 0%, rgba(3,16,20,.84) 37%, rgba(3,16,20,.48) 66%, rgba(3,16,20,.78) 100%), linear-gradient(180deg, rgba(3,16,20,.72) 0%, rgba(3,16,20,.22) 46%, rgba(3,16,20,.98) 100%)",
+                "radial-gradient(circle at 56% 48%, rgba(246,248,232,.08) 0%, rgba(246,248,232,.30) 42%, rgba(246,248,232,.82) 78%, rgba(246,248,232,.96) 100%), linear-gradient(90deg, rgba(246,248,232,.98) 0%, rgba(246,248,232,.88) 42%, rgba(246,248,232,.54) 68%, rgba(246,248,232,.84) 100%), linear-gradient(180deg, rgba(246,248,232,.80) 0%, rgba(246,248,232,.22) 46%, rgba(246,248,232,.96) 100%)",
             }}
           />
           <Box
@@ -179,7 +221,7 @@ export function LandingPage() {
               height: { xs: 360, md: 640 },
               borderRadius: "50%",
               background:
-                "radial-gradient(circle, rgba(45,212,191,.38) 0%, rgba(103,232,249,.14) 34%, transparent 68%)",
+                "radial-gradient(circle, rgba(247,249,216,.70) 0%, rgba(77,141,22,.08) 34%, transparent 68%)",
               filter: "blur(18px)",
             }}
           />
@@ -188,11 +230,11 @@ export function LandingPage() {
               <Stack spacing={3} sx={{ maxWidth: 720 }}>
                 <Chip
                   icon={<ShieldOutlinedIcon />}
-                  label="Verified flood relief campaign"
+                  label="Chiến dịch cứu trợ lũ lụt đã xác minh"
                   sx={{
                     alignSelf: "flex-start",
-                    border: "1px solid rgba(255,255,255,.16)",
-                    bgcolor: "rgba(255,255,255,.07)",
+                    border: `1px solid ${reliefTheme.lineStrong}`,
+                    bgcolor: reliefTheme.panel,
                     color: reliefTheme.text,
                     fontWeight: 800,
                     "& .MuiChip-icon": { color: reliefTheme.waterSoft },
@@ -209,17 +251,17 @@ export function LandingPage() {
                       color: reliefTheme.text,
                     }}
                   >
-                    Together We
+                    Kết nối
                     <Box component="span" sx={{ display: "block" }}>
-                      Rebuild After
+                      yêu thương
                     </Box>
                     <Box component="span" sx={{ display: "block", color: reliefTheme.waterSoft }}>
-                      The Flood
+                      cứu trợ sau lũ
                     </Box>
                   </Typography>
                 </Box>
                 <Typography sx={{ maxWidth: 560, color: reliefTheme.muted, fontSize: { xs: 16, md: 18 }, lineHeight: 1.7 }}>
-                  Your donation helps verified rescue teams, shelters, and volunteers move urgent aid to families with transparent public records.
+                  Tâm Lũ kết nối cộng đồng với các chiến dịch cứu trợ đã xác minh, giúp nguồn lực khẩn cấp đến đúng gia đình cần hỗ trợ và được theo dõi bằng hồ sơ công khai.
                 </Typography>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                   <Button
@@ -233,7 +275,7 @@ export function LandingPage() {
                       ...secondaryButtonSx,
                     }}
                   >
-                    See our work
+                    Xem chiến dịch
                   </Button>
                   <Button
                     component={Link}
@@ -247,7 +289,7 @@ export function LandingPage() {
                       ...primaryButtonSx,
                     }}
                   >
-                    Donate now
+                    Đồng hành ngay
                   </Button>
                 </Stack>
               </Stack>
@@ -263,13 +305,13 @@ export function LandingPage() {
                         borderRadius: reliefShape.compactRadius,
                         p: reliefShape.compactPadding,
                         minHeight: 122,
-                        bgcolor: "rgba(6,26,34,.78)",
-                        borderColor: "rgba(103,232,249,.22)",
-                        boxShadow: "0 24px 90px rgba(0,0,0,.36)",
+                        bgcolor: reliefTheme.panel,
+                        borderColor: reliefTheme.lineStrong,
+                        boxShadow: "none",
                       }}
                     >
                       <Stack spacing={1.25} alignItems="center" textAlign="center">
-                        <Box sx={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 2, bgcolor: "rgba(45,212,191,.14)", color: reliefTheme.waterSoft }}>
+                        <Box sx={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 1.5, bgcolor: "#ffffff", color: reliefTheme.waterSoft }}>
                           {item.icon}
                         </Box>
                         <Typography sx={{ fontSize: 36, lineHeight: 1, fontWeight: 950 }}>{item.value}</Typography>
@@ -282,13 +324,13 @@ export function LandingPage() {
                       ...glassCardSx,
                       borderRadius: reliefShape.compactRadius,
                       p: reliefShape.compactPadding,
-                      bgcolor: "rgba(6,26,34,.82)",
-                      borderColor: "rgba(103,232,249,.24)",
-                      boxShadow: "0 24px 90px rgba(0,0,0,.38)",
+                      bgcolor: reliefTheme.panel,
+                      borderColor: reliefTheme.lineStrong,
+                      boxShadow: "none",
                     }}
                   >
                     <Stack spacing={1.4} alignItems="center" textAlign="center">
-                      <Typography sx={{ fontSize: 13, color: reliefTheme.faint }}>Relief funding tracked</Typography>
+                      <Typography sx={{ fontSize: 13, color: reliefTheme.faint }}>Nguồn quỹ cứu trợ được công khai</Typography>
                       <Typography sx={{ fontSize: { xs: 24, sm: 28 }, lineHeight: 1.08, fontWeight: 950, overflowWrap: "anywhere" }}>{formatMoney(totals?.raised)}</Typography>
                       <LinearProgress
                         variant="determinate"
@@ -296,9 +338,9 @@ export function LandingPage() {
                         sx={{
                           height: 7,
                           borderRadius: 999,
-                          bgcolor: "rgba(255,255,255,.14)",
+                          bgcolor: "var(--color-progress-track)",
                           width: "100%",
-                          "& .MuiLinearProgress-bar": { bgcolor: reliefTheme.amber },
+                          "& .MuiLinearProgress-bar": { bgcolor: "var(--color-progress-fill)" },
                         }}
                       />
                       <Button
@@ -308,7 +350,7 @@ export function LandingPage() {
                         size="small"
                         sx={{ ...primaryButtonSx, minHeight: 40, width: "100%" }}
                       >
-                        Donate now
+                        Đồng hành ngay
                       </Button>
                     </Stack>
                   </Paper>
@@ -318,44 +360,118 @@ export function LandingPage() {
           </Grid>
         </Box>
 
-        <Grid container spacing={1.5} sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, pt: { xs: 5, md: 7 }, pb: { xs: 5, md: 8 }, bgcolor: reliefTheme.bg }}>
-          {metrics.map((item) => (
-            <Grid size={{ xs: 12, md: 4 }} key={item.label}>
-              <Paper
-                sx={{
-                  height: "100%",
-                  p: reliefShape.compactPadding,
-                  borderRadius: reliefShape.compactRadius,
-                  border: `1px solid ${reliefTheme.line}`,
-                  bgcolor: reliefTheme.panelSoft,
-                  color: reliefTheme.text,
-                  boxShadow: "none",
-                }}
-              >
-                <Stack spacing={1.25}>
-                  <Box sx={{ display: "grid", placeItems: "center", width: 42, height: 42, borderRadius: 2.5, bgcolor: "rgba(45,212,191,.12)", color: reliefTheme.waterSoft }}>
-                    {item.icon}
-                  </Box>
-                  <Typography sx={{ fontSize: { xs: 34, md: 42 }, fontWeight: 950, lineHeight: 1 }}>{item.value}</Typography>
-                  <Typography sx={{ fontWeight: 900 }}>{item.label}</Typography>
-                  <Typography sx={{ color: reliefTheme.faint, lineHeight: 1.55 }}>{item.detail}</Typography>
-                </Stack>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+        <Box
+          sx={{
+            px: { xs: 2, sm: 3, md: 6, lg: 8 },
+            py: { xs: 5, md: 7 },
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: "absolute",
+              inset: 0,
+              opacity: .1,
+              backgroundImage: `url(${heroRescueImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "55% 50%",
+            }}
+          />
+          <Typography
+            sx={{
+              position: "relative",
+              zIndex: 1,
+              mb: { xs: 1.5, md: 2 },
+              fontSize: 13,
+              fontWeight: 950,
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: reliefTheme.faint,
+            }}
+          >
+            Cổng thông tin cứu trợ cộng đồng
+          </Typography>
+          <Grid container spacing={1.5} sx={{ position: "relative", zIndex: 1, width: "100%", mb: { xs: 1.5, md: 2.5 } }}>
+            {topPageSections.map((item) => (
+              <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={item.title}>
+                <Paper
+                  sx={{
+                    height: "100%",
+                    p: { xs: 2.25, md: 2.5 },
+                    borderRadius: reliefShape.compactRadius,
+                    border: `1px solid ${reliefTheme.line}`,
+                    bgcolor: "var(--color-green-50)",
+                    color: reliefTheme.text,
+                    boxShadow: "none",
+                  }}
+                >
+                  <Stack spacing={1.25} sx={{ height: "100%" }}>
+                    <Box sx={{ display: "grid", placeItems: "center", width: 40, height: 40, borderRadius: 2, bgcolor: "#ffffff", color: reliefTheme.waterSoft }}>
+                      {item.icon}
+                    </Box>
+                    <Typography sx={{ fontSize: 19, fontWeight: 950, lineHeight: 1.15 }}>{item.title}</Typography>
+                    <Typography sx={{ color: reliefTheme.faint, lineHeight: 1.55, flex: 1 }}>{item.text}</Typography>
+                    <Button
+                      component={Link}
+                      to={item.to}
+                      endIcon={<ArrowForwardIcon />}
+                      sx={{
+                        alignSelf: "flex-start",
+                        px: 0,
+                        minWidth: "auto",
+                        color: reliefTheme.text,
+                        fontWeight: 950,
+                        "&:hover": { bgcolor: "transparent", color: "var(--color-green-700)" },
+                      }}
+                    >
+                      {item.action}
+                    </Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+          <Grid container spacing={1.5} sx={{ position: "relative", zIndex: 1, width: "100%", mt: { xs: 1.5, md: 2 } }}>
+            {metrics.map((item) => (
+              <Grid size={{ xs: 12, md: 4 }} key={item.label}>
+                <Paper
+                  sx={{
+                    height: "100%",
+                    p: { xs: 2.25, md: 2.5 },
+                    borderRadius: reliefShape.compactRadius,
+                    border: `1px solid ${reliefTheme.line}`,
+                    bgcolor: "var(--color-cream-100)",
+                    color: reliefTheme.text,
+                    boxShadow: "none",
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Box sx={{ display: "grid", placeItems: "center", width: 40, height: 40, borderRadius: 2, bgcolor: "#ffffff", color: reliefTheme.waterSoft }}>
+                      {item.icon}
+                    </Box>
+                    <Typography sx={{ fontSize: { xs: 30, md: 36 }, fontWeight: 950, lineHeight: 1 }}>{item.value}</Typography>
+                    <Typography sx={{ fontWeight: 900 }}>{item.label}</Typography>
+                    <Typography sx={{ color: reliefTheme.faint, lineHeight: 1.5 }}>{item.detail}</Typography>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
 
-        <Box sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 5, md: 8 } }}>
+        <Box id="mission" sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 5, md: 8 } }}>
           <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
             <Grid size={{ xs: 12, md: 5 }}>
-              <Chip label="Our mission" sx={{ mb: 2, bgcolor: "rgba(45,212,191,.14)", color: reliefTheme.waterSoft, fontWeight: 900 }} />
+              <Chip label="Sứ mệnh của chúng tôi" sx={{ mb: 2, bgcolor: reliefTheme.panel, color: reliefTheme.waterSoft, fontWeight: 900, borderRadius: 999 }} />
               <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.03, fontWeight: 950, letterSpacing: "-0.035em" }}>
-                We help communities <Box component="span" sx={{ color: reliefTheme.waterSoft }}>rescue</Box>, <Box component="span" sx={{ color: reliefTheme.waterSoft }}>recover</Box>, and <Box component="span" sx={{ color: reliefTheme.waterSoft }}>rebuild</Box> with public trust at the center.
+                Chúng tôi hỗ trợ cộng đồng <Box component="span" sx={{ color: reliefTheme.waterSoft }}>cứu hộ</Box>, <Box component="span" sx={{ color: reliefTheme.waterSoft }}>phục hồi</Box> và <Box component="span" sx={{ color: reliefTheme.waterSoft }}>tái thiết</Box> trên nền tảng niềm tin công khai.
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 7 }}>
               <Typography sx={{ color: reliefTheme.muted, fontSize: { xs: 17, md: 20 }, lineHeight: 1.75 }}>
-                Tam Lu connects donations to urgent field needs through verified campaigns, public ledgers, delivery evidence, and partner coordination. Supporters see how help moves. Operators see what still needs action. Families see a path back to safety.
+                Tâm Lũ kết nối nguồn đóng góp với nhu cầu thực địa khẩn cấp thông qua chiến dịch đã xác minh, sổ công khai, bằng chứng bàn giao và điều phối đối tác. Người ủng hộ theo dõi được dòng hỗ trợ. Đơn vị vận hành nắm được việc cần xử lý. Các gia đình có thêm con đường trở lại an toàn.
               </Typography>
             </Grid>
           </Grid>
@@ -363,26 +479,25 @@ export function LandingPage() {
 
         <Box sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 5, md: 8 } }}>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, lg: 7 }}>
+            <Grid size={{ xs: 12, lg: 6 }}>
               <Paper
                 sx={{
                   height: "100%",
-                  minHeight: 430,
+                  minHeight: { xs: 360, md: 390 },
                   p: reliefShape.cardPadding,
                   borderRadius: reliefShape.cardRadius,
                   border: `1px solid ${reliefTheme.line}`,
-                  bgcolor: "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04))",
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035))",
+                  bgcolor: reliefTheme.panel,
+                  background: reliefTheme.panel,
                   color: reliefTheme.text,
                   overflow: "hidden",
                   position: "relative",
                 }}
               >
                 <Stack spacing={2} sx={{ maxWidth: 520, position: "relative", zIndex: 1 }}>
-                  <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Operating with local relief partners</Typography>
-                  <Typography sx={{ fontSize: { xs: 28, md: 40 }, lineHeight: 1.06, fontWeight: 950 }}>
-                    Support families in flood-affected communities with accountable aid.
+                  <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Phối hợp cùng các đối tác cứu trợ địa phương</Typography>
+                  <Typography sx={{ fontSize: { xs: 28, md: 36 }, lineHeight: 1.08, fontWeight: 950 }}>
+                    Hỗ trợ các gia đình vùng lũ bằng nguồn lực minh bạch và có trách nhiệm.
                   </Typography>
                   <Button
                     component={Link}
@@ -390,24 +505,24 @@ export function LandingPage() {
                     variant="contained"
                     sx={{ alignSelf: "flex-start", ...primaryButtonSx }}
                   >
-                    Support now
+                    Hỗ trợ ngay
                   </Button>
                 </Stack>
                 <Box
                   role="img"
-                  aria-label="Relief supply handoff with calm water light and recovery glow"
+                  aria-label="Minh họa bàn giao hàng cứu trợ trong ánh sáng phục hồi"
                   sx={{
                     position: "absolute",
                     left: { xs: 18, md: 32 },
                     right: { xs: 18, md: 32 },
                     bottom: { xs: 18, md: 28 },
                     width: "auto",
-                    height: { xs: 190, md: 230 },
-                    borderRadius: 4,
-                    boxShadow: "0 26px 80px rgba(0,0,0,.48)",
+                    height: { xs: 160, md: 180 },
+                    borderRadius: 3,
+                    boxShadow: "none",
                     background:
-                      "radial-gradient(circle at 25% 28%, rgba(245,184,91,.48), transparent 18%), radial-gradient(circle at 72% 42%, rgba(103,232,249,.18), transparent 20%), linear-gradient(135deg, rgba(45,212,191,.20), rgba(3,16,20,.96) 58%), repeating-linear-gradient(90deg, rgba(103,232,249,.08) 0 1px, transparent 1px 34px)",
-                    overflow: "hidden",
+                      "linear-gradient(135deg, rgba(246,248,232,.86), rgba(238,242,206,.76)), repeating-linear-gradient(90deg, rgba(77,141,22,.10) 0 1px, transparent 1px 34px)",
+                    overflow: "visible",
                     "&::before": {
                       content: '""',
                       position: "absolute",
@@ -415,26 +530,26 @@ export function LandingPage() {
                       bottom: "24%",
                       width: "76%",
                       height: "30%",
-                      borderRadius: 3,
-                      background: "linear-gradient(90deg, rgba(255,255,255,.10), rgba(45,212,191,.28), rgba(245,184,91,.18))",
-                      border: "1px solid rgba(255,255,255,.12)",
+                      borderRadius: 2,
+                      background: "var(--color-green-100)",
+                      border: `1px solid ${reliefTheme.line}`,
                     },
                   }}
                 />
-                <Box aria-hidden="true" sx={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 80%, rgba(45,212,191,.20), transparent 38%)" }} />
+                <Box aria-hidden="true" sx={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 80%, rgba(247,249,216,.58), transparent 38%)" }} />
               </Paper>
             </Grid>
-            <Grid size={{ xs: 12, lg: 5 }}>
+            <Grid size={{ xs: 12, lg: 6 }}>
               <Stack spacing={2}>
-                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 5 }}>
-                  <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Families supported through verified campaigns</Typography>
+                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
+                  <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Gia đình được hỗ trợ qua các chiến dịch đã xác minh</Typography>
                   <Typography sx={{ mt: 1, fontSize: { xs: 64, md: 92 }, lineHeight: 1, fontWeight: 950 }}>500+</Typography>
-                  <Typography sx={{ mt: 1.5, color: reliefTheme.amberHover, letterSpacing: 1 }}>★★★★★</Typography>
+                  <Typography sx={{ mt: 1.5, color: reliefTheme.text, letterSpacing: 1 }}>5/5 mức độ tin cậy cộng đồng</Typography>
                 </Paper>
-                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 5 }}>
+                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Box
-                      aria-label="Relief volunteer avatar"
+                      aria-label="Ảnh đại diện tình nguyện viên cứu trợ"
                       role="img"
                       sx={{
                         display: "grid",
@@ -443,21 +558,21 @@ export function LandingPage() {
                         flex: "0 0 auto",
                         placeItems: "center",
                         borderRadius: reliefShape.compactRadius,
-                        bgcolor: "rgba(45,212,191,.14)",
+                        bgcolor: "#ffffff",
                         color: reliefTheme.waterSoft,
                         fontWeight: 950,
                         fontSize: 24,
-                        border: "1px solid rgba(255,255,255,.12)",
+                        border: `1px solid ${reliefTheme.line}`,
                       }}
                     >
                       MT
                     </Box>
                     <Box>
                       <Typography sx={{ fontSize: 18, lineHeight: 1.45, fontWeight: 800 }}>
-                        "People donated, and we could see supplies arrive. That gave our neighborhood hope."
+                        “Nguồn ủng hộ được ghi nhận rõ ràng, hàng cứu trợ đến đúng nơi. Điều đó giúp khu dân cư của chúng tôi có thêm hy vọng.”
                       </Typography>
                       <Typography sx={{ mt: 1, color: reliefTheme.faint, fontSize: 13 }}>
-                        Mai Tran, community volunteer
+                        Mai Trần, tình nguyện viên cộng đồng
                       </Typography>
                     </Box>
                   </Stack>
@@ -471,7 +586,7 @@ export function LandingPage() {
           <Grid container spacing={2} alignItems="center">
             <Grid size={{ xs: 12, md: 3 }}>
               <Typography sx={{ color: reliefTheme.faint, fontWeight: 800, maxWidth: 210 }}>
-                Supported by our partner organizations
+                Được hỗ trợ bởi các tổ chức và lực lượng đối tác
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 9 }}>
@@ -483,9 +598,9 @@ export function LandingPage() {
                         display: "grid",
                         minHeight: 62,
                         placeItems: "center",
-                        borderRadius: 3,
+                        borderRadius: 2,
                         border: `1px solid ${reliefTheme.line}`,
-                        color: "rgba(224,247,250,.55)",
+                        color: reliefTheme.faint,
                         fontWeight: 950,
                         letterSpacing: ".01em",
                       }}
@@ -501,9 +616,9 @@ export function LandingPage() {
 
         <Box id="our-work" sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 6, md: 9 } }}>
           <Stack spacing={2} sx={{ maxWidth: 720, mb: 4 }}>
-            <Chip label="Relief services" sx={{ alignSelf: "flex-start", bgcolor: "rgba(45,212,191,.14)", color: reliefTheme.waterSoft, fontWeight: 900 }} />
+            <Chip label="Dịch vụ cứu trợ" sx={{ alignSelf: "flex-start", bgcolor: reliefTheme.panel, color: reliefTheme.waterSoft, fontWeight: 900, borderRadius: 999 }} />
             <Typography sx={{ fontSize: { xs: 38, md: 60 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-0.04em" }}>
-              End-to-end support for the first hours and the long recovery.
+              Hỗ trợ toàn trình từ những giờ đầu khẩn cấp đến giai đoạn phục hồi lâu dài.
             </Typography>
           </Stack>
           <Grid container spacing={2}>
@@ -516,17 +631,17 @@ export function LandingPage() {
                     borderRadius: reliefShape.cardRadius,
                     minHeight: { xs: 184, md: 196 },
                     border: `1px solid ${reliefTheme.line}`,
-                    bgcolor: index === 0 ? "rgba(45,212,191,.10)" : reliefTheme.panelSoft,
+                    bgcolor: reliefTheme.panelSoft,
                     color: reliefTheme.text,
                     boxShadow: "none",
                   }}
                 >
                   <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Box sx={{ display: "grid", placeItems: "center", width: 46, height: 46, borderRadius: 3, bgcolor: "rgba(45,212,191,.12)", color: reliefTheme.waterSoft }}>
+                      <Box sx={{ display: "grid", placeItems: "center", width: 46, height: 46, borderRadius: 2, bgcolor: "#ffffff", color: reliefTheme.waterSoft }}>
                         {service.icon}
                       </Box>
-                      <Typography sx={{ color: "rgba(255,255,255,.28)", fontWeight: 950 }}>{String(index + 1).padStart(2, "0")}</Typography>
+                      <Typography sx={{ color: "var(--color-text-muted)", fontWeight: 950, opacity: .62 }}>{String(index + 1).padStart(2, "0")}</Typography>
                     </Stack>
                     <Typography sx={{ fontSize: 24, fontWeight: 950 }}>{service.title}</Typography>
                     <Typography sx={{ color: reliefTheme.faint, lineHeight: 1.65 }}>{service.text}</Typography>
@@ -550,13 +665,13 @@ export function LandingPage() {
           >
             <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2.5} alignItems={{ md: "center" }}>
               <Box>
-                <Typography sx={{ fontSize: { xs: 28, md: 36 }, fontWeight: 950, lineHeight: 1.1 }}>Active flood relief campaigns</Typography>
-                <Typography sx={{ mt: 1, color: "rgba(255,255,255,.62)", maxWidth: 650 }}>
-                  Choose a campaign, review its public ledger, and support the response with confidence.
+                <Typography sx={{ fontSize: { xs: 28, md: 36 }, fontWeight: 950, lineHeight: 1.1 }}>Các chiến dịch cứu trợ lũ lụt đang hoạt động</Typography>
+                <Typography sx={{ mt: 1, color: reliefTheme.muted, maxWidth: 650 }}>
+                  Lựa chọn chiến dịch, xem sổ công khai và đồng hành cùng hoạt động cứu trợ bằng sự tin tưởng.
                 </Typography>
               </Box>
-              <Button component={Link} to="/campaigns" endIcon={<ArrowForwardIcon />} sx={{ alignSelf: { xs: "stretch", md: "center" }, borderRadius: 999, color: reliefTheme.waterSoft, fontWeight: 950 }}>
-                View all campaigns
+              <Button component={Link} to="/campaigns" endIcon={<ArrowForwardIcon />} sx={{ alignSelf: { xs: "stretch", md: "center" }, borderRadius: 2, color: reliefTheme.waterSoft, fontWeight: 950 }}>
+                Xem tất cả chiến dịch
               </Button>
             </Stack>
             <Box sx={{ mt: 3 }}>
@@ -564,8 +679,8 @@ export function LandingPage() {
                 isLoading={campaigns.isLoading}
                 error={campaigns.error}
                 empty={!campaigns.data?.data.length}
-                emptyTitle="No active campaigns yet"
-                emptyText="Verified campaigns will appear here when coordinators publish them."
+                emptyTitle="Chưa có chiến dịch đang hoạt động"
+                emptyText="Các chiến dịch đã xác minh sẽ hiển thị khi điều phối viên công bố."
                 refetch={campaigns.refetch}
               >
                 <Grid container spacing={2}>
@@ -576,10 +691,10 @@ export function LandingPage() {
                         <Paper
                           sx={{
                             height: "100%",
-                            overflow: "hidden",
+                            overflow: "visible",
                             borderRadius: reliefShape.cardRadius,
                             border: `1px solid ${reliefTheme.line}`,
-                            bgcolor: "rgba(3,16,20,.72)",
+                            bgcolor: reliefTheme.panel,
                             color: reliefTheme.text,
                             boxShadow: "none",
                           }}
@@ -591,7 +706,7 @@ export function LandingPage() {
                               width: "100%",
                               height: 180,
                               backgroundImage:
-                                `linear-gradient(180deg, rgba(3,16,20,.10), rgba(3,16,20,.72)), url(${campaign.coverImageUrl || fallbackCampaignImage})`,
+                                `linear-gradient(180deg, rgba(246,248,232,.08), rgba(246,248,232,.78)), url(${campaign.coverImageUrl || fallbackCampaignImage})`,
                               backgroundSize: "cover",
                               backgroundPosition: "center",
                             }}
@@ -608,17 +723,17 @@ export function LandingPage() {
                             <LinearProgress
                               variant="determinate"
                               value={Math.min(campaignProgress, 100)}
-                              sx={{ height: 7, borderRadius: 999, bgcolor: "rgba(255,255,255,.12)", "& .MuiLinearProgress-bar": { bgcolor: reliefTheme.amber } }}
+                              sx={{ height: 7, borderRadius: 999, bgcolor: "var(--color-progress-track)", "& .MuiLinearProgress-bar": { bgcolor: "var(--color-progress-fill)" } }}
                             />
                             <Stack direction="row" justifyContent="space-between" spacing={1}>
                               <Typography fontWeight={950}>{formatMoney(campaign.currentAmount)}</Typography>
-                              <Typography variant="body2" sx={{ color: reliefTheme.faint }}>Target {formatMoney(campaign.targetAmount)}</Typography>
+                              <Typography variant="body2" sx={{ color: reliefTheme.faint }}>Mục tiêu {formatMoney(campaign.targetAmount)}</Typography>
                             </Stack>
                             <Button component={Link} to={`/campaigns/${campaign.id}`} variant="contained" fullWidth sx={{ ...secondaryButtonSx, minHeight: 46 }}>
-                              Open campaign
+                              Xem chiến dịch
                             </Button>
                             <Button component={Link} to={`/donor/donate/${campaign.id}`} variant="contained" fullWidth sx={{ ...primaryButtonSx, minHeight: 46 }}>
-                              Donate now
+                              Ủng hộ ngay
                             </Button>
                           </Stack>
                         </Paper>
@@ -637,7 +752,7 @@ export function LandingPage() {
               p: { xs: 3.25, md: 5 },
               borderRadius: reliefShape.cardRadius,
               border: `1px solid ${reliefTheme.lineStrong}`,
-              background: "linear-gradient(135deg, rgba(45,212,191,.15), rgba(255,255,255,.045) 48%, rgba(245,184,91,.08))",
+              background: reliefTheme.panel,
               color: reliefTheme.text,
               boxShadow: "none",
             }}
@@ -645,16 +760,16 @@ export function LandingPage() {
             <Grid container spacing={3} alignItems="center">
               <Grid size={{ xs: 12, md: 8 }}>
                 <Typography sx={{ fontSize: { xs: 34, md: 54 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-0.04em" }}>
-                  Help turns faster when communities act together.
+                  Sự hỗ trợ đến nhanh hơn khi cộng đồng cùng hành động.
                 </Typography>
                 <Typography sx={{ mt: 2, color: reliefTheme.muted, maxWidth: 700, lineHeight: 1.7 }}>
-                  Donate, volunteer, or share a verified campaign so rescue teams and relief coordinators can focus on the people waiting for support.
+                  Ủng hộ, tham gia tình nguyện hoặc chia sẻ chiến dịch đã xác minh để đội cứu hộ và điều phối viên tập trung hỗ trợ những người đang cần giúp đỡ.
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <Stack spacing={1.5}>
                   <Button component={Link} to={donateHref} variant="contained" size="large" startIcon={<FavoriteIcon />} sx={primaryButtonSx}>
-                    Donate now
+                    Ủng hộ ngay
                   </Button>
                   <Button
                     component={Link}
@@ -666,7 +781,7 @@ export function LandingPage() {
                       ...secondaryButtonSx,
                     }}
                   >
-                    Join relief effort
+                    Tham gia cứu trợ
                   </Button>
                 </Stack>
               </Grid>

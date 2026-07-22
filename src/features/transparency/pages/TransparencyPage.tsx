@@ -12,7 +12,7 @@ import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
 
-const colors = ["#0b6fb3", "#e87624", "#197f5b", "#536575"];
+const colors = ["var(--color-green-700)", "var(--color-green-600)", "var(--color-green-200)", "var(--color-cream-100)"];
 
 export function TransparencyPage() {
   const { id = "" } = useParams();
@@ -44,9 +44,9 @@ export function TransparencyPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Public Audit Portal"
-        title={financials.data?.campaignName ?? "Campaign transparency"}
-        description="Trace money in, money out, stock movement, routes, and field proof from one public view."
+        eyebrow="Cổng kiểm toán công khai"
+        title={financials.data?.campaignName ?? "Minh bạch chiến dịch"}
+        description="Theo dõi nguồn thu, khoản chi, luân chuyển hàng hóa, tuyến phân phối và minh chứng hiện trường trong một màn hình công khai."
         actions={
           <Stack direction="row" spacing={1}>
             <Button startIcon={<DownloadIcon />} onClick={() => exportReport("csv")}>
@@ -61,18 +61,18 @@ export function TransparencyPage() {
       <QueryState isLoading={financials.isLoading} error={financials.error} refetch={financials.refetch}>
         <Grid container spacing={2.5}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <MetricCard label="Total income" value={formatMoney(financials.data?.totalIncome)} tone="green" />
+            <MetricCard label="Tổng thu" value={formatMoney(financials.data?.totalIncome)} tone="green" />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <MetricCard label="Total expense" value={formatMoney(financials.data?.totalExpense)} tone="orange" />
+            <MetricCard label="Tổng chi" value={formatMoney(financials.data?.totalExpense)} tone="orange" />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <MetricCard label="Remaining balance" value={formatMoney(financials.data?.remainingBalance)} />
+            <MetricCard label="Số dư còn lại" value={formatMoney(financials.data?.remainingBalance)} />
           </Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
             <SectionPaper>
               <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
-                Spending breakdown
+                Cơ cấu chi tiêu
               </Typography>
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer>
@@ -91,16 +91,16 @@ export function TransparencyPage() {
           <Grid size={{ xs: 12, lg: 7 }}>
             <SectionPaper>
               <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
-                Public ledger
+                Sổ thu chi công khai
               </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Balance</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Date</TableCell>
+                    <TableCell>Loại giao dịch</TableCell>
+                    <TableCell>Số tiền</TableCell>
+                    <TableCell>Số dư</TableCell>
+                    <TableCell>Mô tả</TableCell>
+                    <TableCell>Ngày</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -122,10 +122,10 @@ export function TransparencyPage() {
               <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1.5} sx={{ mb: 2 }}>
                 <Box>
                   <Typography variant="h6" fontWeight={900}>
-                    Verified logistics map
+                    Bản đồ hậu cần đã xác minh
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Public map uses campaign transparency data only.
+                    Bản đồ công khai chỉ sử dụng dữ liệu minh bạch của chiến dịch.
                   </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -145,23 +145,23 @@ export function TransparencyPage() {
                       mt: { xs: 2, md: 0 },
                       width: { xs: "100%", md: 280 },
                       p: 2,
-                      borderRadius: 3,
-                      bgcolor: "rgba(255,255,255,.94)",
+                      borderRadius: 0,
+                      bgcolor: "var(--color-surface)",
                       backdropFilter: "blur(14px)",
                     }}
                   >
                     <Stack spacing={1.25}>
-                      <Typography fontWeight={900}>Public layers</Typography>
+                      <Typography fontWeight={900}>Lớp dữ liệu công khai</Typography>
                       <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" fontWeight={800}>Warehouses</Typography>
+                        <Typography variant="body2" fontWeight={800}>Kho hàng</Typography>
                         <Typography variant="body2" color="text.secondary">{markers.length}</Typography>
                       </Stack>
                       <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="body2" fontWeight={800}>Routes</Typography>
+                        <Typography variant="body2" fontWeight={800}>Tuyến phân phối</Typography>
                         <Typography variant="body2" color="text.secondary">{map.data?.activeRoutes.length ?? 0}</Typography>
                       </Stack>
                       <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5 }}>
-                        Raw SOS locations are intentionally excluded from public map views.
+                        Vị trí SOS thô được loại khỏi bản đồ công khai để bảo vệ an toàn và quyền riêng tư.
                       </Typography>
                     </Stack>
                   </Paper>
@@ -172,7 +172,7 @@ export function TransparencyPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <SectionPaper>
               <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
-                Inventory movement
+                Luân chuyển hàng cứu trợ
               </Typography>
               {inventory.data?.transactionHistory.slice(0, 10).map((tx) => (
                 <Stack key={tx.id} direction="row" justifyContent="space-between" sx={{ py: 1, borderBottom: "1px solid", borderColor: "divider" }}>
@@ -190,7 +190,7 @@ export function TransparencyPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <SectionPaper>
               <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
-                Evidence vault
+                Kho minh chứng
               </Typography>
               <QueryState isLoading={evidence.isLoading} error={evidence.error}>
                 <Stack spacing={1.5}>
@@ -201,14 +201,14 @@ export function TransparencyPage() {
                         <StatusChip value={invoice.expenseCategory} />
                       </Stack>
                       <Typography>{formatMoney(invoice.amount)}</Typography>
-                      {invoice.invoiceUrl ? <Button href={invoice.invoiceUrl} target="_blank">Open invoice</Button> : null}
+                      {invoice.invoiceUrl ? <Button href={invoice.invoiceUrl} target="_blank">Mở hóa đơn</Button> : null}
                     </Paper>
                   ))}
                   {evidence.data?.deliveryProofs.map((proof) => (
                     <Paper variant="outlined" key={proof.id} sx={{ p: 1.5 }}>
                       <Typography fontWeight={800}>{proof.disbursementItem}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {proof.photos.length} photos, {proof.signatures.length} signatures
+                        {proof.photos.length} ảnh, {proof.signatures.length} chữ ký
                       </Typography>
                     </Paper>
                   ))}

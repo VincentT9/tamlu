@@ -28,11 +28,11 @@ export function LoginPage() {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       if (!data.token) {
-        showToast(data.message ?? "Your account is waiting for admin approval.", "warning");
+        showToast(data.message ?? "Tài khoản của quý vị đang chờ quản trị viên phê duyệt.", "warning");
         return;
       }
       setSession({ token: data.token, user: data.user, roles: data.roles });
-      showToast("Welcome back to TamLu.", "success");
+      showToast("Chào mừng quý vị quay lại Tâm Lũ.", "success");
       const from = (location.state as { from?: string } | null)?.from;
       navigate(from ?? defaultRoute(data.roles), { replace: true });
     },
@@ -45,10 +45,9 @@ export function LoginPage() {
         display: "grid",
         placeItems: "center",
         p: { xs: 2, md: 4 },
-        bgcolor: "#031014",
-        color: "#f7fdff",
-        background:
-          "radial-gradient(circle at 16% 4%, rgba(45,212,191,.18), transparent 30%), radial-gradient(circle at 82% 12%, rgba(245,184,91,.11), transparent 28%), linear-gradient(180deg, #031014 0%, #04181d 100%)",
+        bgcolor: "var(--color-cream-50)",
+        color: "var(--color-text)",
+        background: "var(--color-cream-50)",
       }}
     >
       <Paper
@@ -59,11 +58,11 @@ export function LoginPage() {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1.08fr .92fr" },
           overflow: "hidden",
-          borderRadius: { xs: 5, md: 7 },
-          borderColor: "rgba(103,232,249,.20)",
-          bgcolor: "rgba(6,26,34,.88)",
-          color: "#f7fdff",
-          boxShadow: "0 40px 120px rgba(0,0,0,.45)",
+          borderRadius: 3,
+          borderColor: "var(--color-border)",
+          bgcolor: "var(--color-surface)",
+          color: "var(--color-text)",
+          boxShadow: "var(--shadow-surface)",
         }}
       >
         <Box
@@ -76,62 +75,62 @@ export function LoginPage() {
             justifyContent: "space-between",
             overflow: "hidden",
             backgroundImage:
-              "linear-gradient(90deg, rgba(3,16,20,.86), rgba(3,16,20,.42)), url(/images/flood-rescue-boat.png)",
+              "linear-gradient(90deg, rgba(246,248,232,.92), rgba(246,248,232,.54)), url(/images/flood-rescue-boat.png)",
             backgroundSize: "cover",
             backgroundPosition: "43% 50%",
           }}
         >
           <Box sx={{ position: "relative", zIndex: 1 }}>
             <Stack direction="row" spacing={1.25} alignItems="center">
-              <Box sx={{ display: "grid", placeItems: "center", width: 42, height: 42, borderRadius: "50%", bgcolor: "#2dd4bf", color: "#031014", fontWeight: 950 }}>
-                TL
+              <Box sx={{ display: "grid", placeItems: "center", width: 48, height: 48, borderRadius: 2, bgcolor: "#ffffff", border: "1px solid var(--color-border)", overflow: "hidden" }}>
+                <Box component="img" src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" sx={{ width: 44, height: 44, objectFit: "contain" }} />
               </Box>
               <Box>
-                <Typography fontWeight={950}>Tam Lu Relief</Typography>
-                <Typography variant="caption" sx={{ color: "rgba(224,247,250,.62)", fontWeight: 750 }}>
-                  Flood rescue and recovery
+                <Typography fontWeight={950}>Tâm Lũ</Typography>
+                <Typography variant="caption" sx={{ color: "var(--color-text-muted)", fontWeight: 750 }}>
+                  Kết nối yêu thương, cứu trợ lũ lụt
                 </Typography>
               </Box>
             </Stack>
           </Box>
           <Stack spacing={2} sx={{ position: "relative", zIndex: 1, maxWidth: 500 }}>
             <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
-              Trusted access for relief operators.
+              Truy cập bảo mật cho lực lượng cứu trợ.
             </Typography>
-            <Typography sx={{ color: "rgba(224,247,250,.72)", lineHeight: 1.65 }}>
-              Coordinate rescue activity, donation transparency, and community recovery from one protected workspace.
+            <Typography sx={{ color: "var(--color-text-muted)", lineHeight: 1.65 }}>
+              Điều phối cứu hộ, minh bạch quyên góp và phục hồi cộng đồng trong một không gian làm việc được bảo vệ.
             </Typography>
           </Stack>
         </Box>
         <Stack spacing={2.5} sx={{ p: { xs: 3, sm: 4, md: 5 }, justifyContent: "center" }}>
           <Stack spacing={1}>
-            <Box sx={{ display: "grid", placeItems: "center", width: 48, height: 48, borderRadius: 3, bgcolor: "rgba(45,212,191,.12)", color: "#67e8f9" }}>
+            <Box sx={{ display: "grid", placeItems: "center", width: 48, height: 48, borderRadius: 2, bgcolor: "var(--color-green-50)", color: "var(--color-green-700)", border: "1px solid var(--color-border)" }}>
               <LockOpenIcon />
             </Box>
             <Typography variant="h4" fontWeight={950}>
-              Sign in
+              Đăng nhập
             </Typography>
-            <Typography sx={{ color: "rgba(224,247,250,.66)" }}>Access rescue coordination, donation records, and citizen services.</Typography>
+            <Typography sx={{ color: "var(--color-text-muted)" }}>Truy cập điều phối cứu hộ, hồ sơ đóng góp và dịch vụ công dân.</Typography>
           </Stack>
           {mutation.error ? <Alert severity="error">{getErrorMessage(mutation.error)}</Alert> : null}
           <Stack component="form" spacing={2} onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
             <TextField label="Email" type="email" {...form.register("email")} error={Boolean(form.formState.errors.email)} helperText={form.formState.errors.email?.message} />
-            <TextField label="Password" type="password" {...form.register("password")} error={Boolean(form.formState.errors.password)} helperText={form.formState.errors.password?.message} />
+            <TextField label="Mật khẩu" type="password" {...form.register("password")} error={Boolean(form.formState.errors.password)} helperText={form.formState.errors.password?.message} />
             <Button type="submit" variant="contained" size="large" disabled={mutation.isPending}>
-              Sign in
+              Đăng nhập
             </Button>
           </Stack>
           <Stack direction="row" justifyContent="space-between">
-            <MuiLink component={Link} to="/register" sx={{ color: "#67e8f9", fontWeight: 800 }}>
-              Create account
+            <MuiLink component={Link} to="/register" sx={{ color: "var(--color-green-700)", fontWeight: 800 }}>
+              Tạo tài khoản
             </MuiLink>
-            <MuiLink component={Link} to="/forgot-password" sx={{ color: "#67e8f9", fontWeight: 800 }}>
-              Forgot password?
+            <MuiLink component={Link} to="/forgot-password" sx={{ color: "var(--color-green-700)", fontWeight: 800 }}>
+              Quên mật khẩu?
             </MuiLink>
           </Stack>
-          <MuiLink component={Link} to="/" textAlign="center" sx={{ color: "rgba(224,247,250,.62)", fontWeight: 800 }}>
+          <MuiLink component={Link} to="/" textAlign="center" sx={{ color: "var(--color-text-muted)", fontWeight: 800 }}>
             <ShieldOutlinedIcon sx={{ mr: .75, fontSize: 18, verticalAlign: "text-bottom" }} />
-            Continue public
+            Tiếp tục xem trang công khai
           </MuiLink>
         </Stack>
       </Paper>

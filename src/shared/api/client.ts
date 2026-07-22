@@ -68,16 +68,16 @@ export async function downloadBlob(url: string, params?: QueryParams): Promise<B
 
 export function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.isSuccess) {
-    throw { message: response.message ?? "Request failed", details: response } satisfies ApiErrorPayload;
+    throw { message: response.message ?? "Yêu cầu không thành công", details: response } satisfies ApiErrorPayload;
   }
   return response.data;
 }
 
 export function getErrorMessage(error: unknown): string {
   if (typeof error === "object" && error && "message" in error) {
-    return String((error as { message?: unknown }).message ?? "Something went wrong");
+    return String((error as { message?: unknown }).message ?? "Đã xảy ra lỗi");
   }
-  return "Something went wrong";
+  return "Đã xảy ra lỗi";
 }
 
 export function isBackendConnectionError(error: unknown): boolean {
@@ -93,7 +93,7 @@ function toApiError(error: AxiosError<ApiResponse<unknown>>): ApiErrorPayload {
   if (!error.response) {
     return {
       code: "BACKEND_CONNECTION_REFUSED",
-      message: `Cannot connect to TamLu backend at ${API_BASE_URL}. Start the backend server or set VITE_API_BASE_URL to the correct API URL.`,
+      message: `Không thể kết nối tới backend Tâm Lũ tại ${API_BASE_URL}. Vui lòng khởi động backend hoặc cấu hình VITE_API_BASE_URL đúng địa chỉ API.`,
       details: error,
     };
   }
@@ -103,7 +103,7 @@ function toApiError(error: AxiosError<ApiResponse<unknown>>): ApiErrorPayload {
     message:
       error.response?.data?.message ??
       error.message ??
-      "Unable to reach TamLu backend. Please check the server connection.",
+      "Không thể kết nối tới backend Tâm Lũ. Vui lòng kiểm tra kết nối máy chủ.",
     details: error.response?.data,
   };
 }

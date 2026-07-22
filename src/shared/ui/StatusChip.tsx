@@ -7,7 +7,7 @@ interface StatusChipProps {
 }
 
 export function StatusChip({ value, size = "small" }: StatusChipProps) {
-  if (!value) return <Chip size={size} variant="outlined" label="Unknown" sx={chipSx("neutral")} />;
+  if (!value) return <Chip size={size} variant="outlined" label="Không rõ" sx={chipSx("neutral")} />;
   const tone = toneForStatus(value);
   return (
     <Chip
@@ -30,17 +30,18 @@ function toneForStatus(value: string) {
 
 function chipSx(tone: string) {
   const tones: Record<string, { bg: string; color: string; border: string }> = {
-    water: { bg: "rgba(103,232,249,.12)", color: "#cffafe", border: "rgba(103,232,249,.26)" },
-    safe: { bg: "rgba(52,211,153,.14)", color: "#bbf7d0", border: "rgba(52,211,153,.28)" },
-    warning: { bg: "rgba(245,184,91,.16)", color: "#ffd07a", border: "rgba(245,184,91,.30)" },
-    critical: { bg: "rgba(248,113,113,.16)", color: "#fecaca", border: "rgba(248,113,113,.30)" },
-    neutral: { bg: "rgba(255,255,255,.075)", color: "rgba(247,253,255,.72)", border: "rgba(255,255,255,.14)" },
+    water: { bg: "var(--color-green-100)", color: "var(--color-green-800)", border: "var(--color-border)" },
+    safe: { bg: "var(--color-green-100)", color: "var(--color-green-800)", border: "var(--color-border)" },
+    warning: { bg: "var(--color-cream-100)", color: "var(--color-green-800)", border: "var(--color-border-strong)" },
+    critical: { bg: "#fff1f2", color: "#b91c1c", border: "#fecdd3" },
+    neutral: { bg: "#ffffff", color: "var(--color-text-muted)", border: "var(--color-border)" },
   };
   const selected = tones[tone] ?? tones.neutral;
   return {
     bgcolor: selected.bg,
     color: selected.color,
     border: `1px solid ${selected.border}`,
+    borderRadius: 0,
     fontWeight: 850,
     "& .MuiChip-label": { px: 1.15 },
   };

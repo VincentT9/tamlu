@@ -14,9 +14,9 @@ export function CitizenSosPage() {
   return (
     <>
       <PageHeader
-        title="My SOS Requests"
-        description="Track rescue status from pending verification through final confirmation."
-        actions={<Button component={Link} to="/sos/new" variant="contained" color="error">Create SOS</Button>}
+        title="Yêu cầu SOS của tôi"
+        description="Theo dõi trạng thái cứu hộ từ khi chờ xác minh đến khi xác nhận hoàn tất."
+        actions={<Button component={Link} to="/sos/new" variant="contained" color="error">Tạo SOS</Button>}
       />
       <QueryState isLoading={cases.isLoading} error={cases.error} empty={!cases.data?.data.length} refetch={cases.refetch}>
         <Grid container spacing={2}>
@@ -30,16 +30,16 @@ export function CitizenSosPage() {
                   </Stack>
                   <Stack spacing={0.5}>
                     <Typography fontWeight={900}>{item.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">{item.address || "No address provided"}</Typography>
+                    <Typography variant="body2" color="text.secondary">{item.address || "Chưa cung cấp địa chỉ"}</Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    {item.numPeople} people - Created {formatDate(item.createdAt)}
+                    {item.numPeople} người cần cứu hộ - Tạo lúc {formatDate(item.createdAt)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {item.description}
                   </Typography>
                   <Button component={Link} to={`/citizen/sos/${item.id}`} variant="outlined">
-                    Open case
+                    Xem chi tiết
                   </Button>
                 </Stack>
               </Card>

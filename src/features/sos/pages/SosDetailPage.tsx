@@ -22,7 +22,7 @@ export function SosDetailPage() {
   const confirm = useMutation({
     mutationFn: () => sosApi.confirm(id, note),
     onSuccess: () => {
-      showToast("Rescue confirmed. Thank you.", "success");
+      showToast("Đã xác nhận hoàn tất cứu hộ. Cảm ơn bạn.", "success");
       detail.refetch();
     },
   });
@@ -30,7 +30,7 @@ export function SosDetailPage() {
 
   return (
     <>
-      <PageHeader title={item?.title ?? "SOS Detail"} description={item?.description} />
+      <PageHeader title={item?.title ?? "Chi tiết SOS"} description={item?.description} />
       <QueryState isLoading={detail.isLoading} error={detail.error} refetch={detail.refetch}>
         {item ? (
           <Grid container spacing={2.5}>
@@ -41,13 +41,13 @@ export function SosDetailPage() {
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <StatusChip value={item.status} />
                     <StatusChip value={item.priorityLevel} />
-                    <Typography color="text.secondary">{item.numPeople} people</Typography>
+                    <Typography color="text.secondary">{item.numPeople} người cần hỗ trợ</Typography>
                   </Stack>
                   {item.status === SOS_STATUS.completed ? (
                     <Stack spacing={1}>
-                      <TextField label="Confirmation note" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
+                      <TextField label="Ghi chú xác nhận" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
                       <Button startIcon={<CheckCircleIcon />} variant="contained" color="success" onClick={() => confirm.mutate()} disabled={confirm.isPending}>
-                        Confirm rescue completed
+                        Xác nhận đã hoàn tất cứu hộ
                       </Button>
                     </Stack>
                   ) : null}
@@ -56,14 +56,14 @@ export function SosDetailPage() {
             </Grid>
             <Grid size={{ xs: 12, lg: 4 }}>
               <Stack spacing={2}>
-                <MetricCard label="Contact" value={item.contactName} helper={item.contactPhone} />
-                <MetricCard label="Location" value={item.address ?? "GPS location"} helper={`${item.latitude}, ${item.longitude}`} />
-                <MetricCard label="Created" value={formatDate(item.createdAt)} />
+                <MetricCard label="Liên hệ" value={item.contactName} helper={item.contactPhone} />
+                <MetricCard label="Vị trí" value={item.address ?? "Vị trí GPS"} helper={`${item.latitude}, ${item.longitude}`} />
+                <MetricCard label="Thời điểm tạo" value={formatDate(item.createdAt)} />
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <SectionPaper>
-                <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Status timeline</Typography>
+                <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Dòng thời gian trạng thái</Typography>
                 <Stack spacing={1.5}>
                   {item.statusLogs.map((log, index) => (
                     <Stack key={log.id} direction="row" spacing={1.5}>
@@ -83,7 +83,7 @@ export function SosDetailPage() {
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <SectionPaper>
-                <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Media</Typography>
+                <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Hình ảnh và tài liệu</Typography>
                 <ImageList cols={2} gap={8}>
                   {item.media.map((media) => (
                     <ImageListItem key={media.id}>

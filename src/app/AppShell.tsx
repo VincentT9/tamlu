@@ -47,20 +47,20 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Home", to: "/", icon: DashboardIcon },
-  { label: "Campaigns", to: "/campaigns", icon: CampaignIcon },
-  { label: "Relief Map", to: "/relief-map", icon: MapIcon },
-  { label: "Create SOS", to: "/sos/new", icon: SosIcon },
-  { label: "My SOS", to: "/citizen/sos", icon: FavoriteIcon, roles: [ROLES.citizen] },
-  { label: "Donations", to: "/donor/donations", icon: PaidIcon, roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin] },
-  { label: "Operations", to: "/ops", icon: AdminPanelSettingsIcon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
-  { label: "SOS Queue", to: "/ops/sos", icon: SosIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Missions", to: "/ops/missions", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Warehouses", to: "/ops/warehouses", icon: Inventory2Icon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
-  { label: "Shipments", to: "/ops/shipments", icon: LocalShippingIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Finance", to: "/ops/disbursements", icon: PaidIcon, roles: [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator] },
-  { label: "Users", to: "/ops/users", icon: PeopleIcon, roles: [ROLES.admin] },
-  { label: "Team Missions", to: "/team/missions", icon: VolunteerActivismIcon, roles: [ROLES.rescueTeam] },
+  { label: "Trang chủ", to: "/", icon: DashboardIcon },
+  { label: "Chiến dịch", to: "/campaigns", icon: CampaignIcon },
+  { label: "Bản đồ cứu trợ", to: "/relief-map", icon: MapIcon },
+  { label: "Tạo SOS", to: "/sos/new", icon: SosIcon },
+  { label: "SOS của tôi", to: "/citizen/sos", icon: FavoriteIcon, roles: [ROLES.citizen] },
+  { label: "Ủng hộ", to: "/donor/donations", icon: PaidIcon, roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin] },
+  { label: "Vận hành", to: "/ops", icon: AdminPanelSettingsIcon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
+  { label: "Hàng đợi SOS", to: "/ops/sos", icon: SosIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Nhiệm vụ", to: "/ops/missions", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Kho hàng", to: "/ops/warehouses", icon: Inventory2Icon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
+  { label: "Vận chuyển", to: "/ops/shipments", icon: LocalShippingIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Tài chính", to: "/ops/disbursements", icon: PaidIcon, roles: [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator] },
+  { label: "Người dùng", to: "/ops/users", icon: PeopleIcon, roles: [ROLES.admin] },
+  { label: "Nhiệm vụ đội cứu hộ", to: "/team/missions", icon: VolunteerActivismIcon, roles: [ROLES.rescueTeam] },
 ];
 
 const drawerWidth = 270;
@@ -83,10 +83,10 @@ export function AppShell() {
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h5" fontWeight={900} color="primary">
-          TamLu
+          Tâm Lũ
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Flood Relief Transparency
+          Minh bạch cứu trợ lũ lụt
         </Typography>
       </Box>
       <Divider />
@@ -129,12 +129,12 @@ export function AppShell() {
               </Box>
             </Stack>
             <Button color="inherit" variant="outlined" onClick={logout}>
-              Sign out
+              Đăng xuất
             </Button>
           </>
         ) : (
           <Button component={Link} to="/login" variant="contained">
-            Sign in
+            Đăng nhập
           </Button>
         )}
       </Stack>
@@ -151,7 +151,7 @@ export function AppShell() {
             </IconButton>
           ) : null}
           <Typography component={Link} to="/" variant="h6" fontWeight={900} color="primary" sx={{ flex: 1 }}>
-            TamLu
+            Tâm Lũ
           </Typography>
           <IconButton component={Link} to="/notifications">
             <Badge color="secondary" badgeContent={unread}>
