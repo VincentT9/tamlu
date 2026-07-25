@@ -34,7 +34,7 @@ export function LoginPage() {
       setSession({ token: data.token, user: data.user, roles: data.roles });
       showToast("Chào mừng quý vị quay lại Tâm Lũ.", "success");
       const from = (location.state as { from?: string } | null)?.from;
-      navigate(from ?? defaultRoute(data.roles), { replace: true });
+      navigate(resolveLoginRoute(data.roles, from), { replace: true });
     },
   });
 
@@ -82,9 +82,7 @@ export function LoginPage() {
         >
           <Box sx={{ position: "relative", zIndex: 1 }}>
             <Stack direction="row" spacing={1.25} alignItems="center">
-              <Box sx={{ display: "grid", placeItems: "center", width: 48, height: 48, borderRadius: 2, bgcolor: "#ffffff", border: "1px solid var(--color-border)", overflow: "hidden" }}>
-                <Box component="img" src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" sx={{ width: 44, height: 44, objectFit: "contain" }} />
-              </Box>
+              <Box component="img" src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" sx={{ width: 72, height: 72, objectFit: "contain" }} />
               <Box>
                 <Typography fontWeight={950}>Tâm Lũ</Typography>
                 <Typography variant="caption" sx={{ color: "var(--color-text-muted)", fontWeight: 750 }}>
@@ -138,9 +136,19 @@ export function LoginPage() {
   );
 }
 
+function resolveLoginRoute(roles: string[], from?: string) {
+  if (from && !isCitizenSosListRoute(from)) return from;
+  return defaultRoute(roles);
+}
+
+function isCitizenSosListRoute(path: string) {
+  return path === "/citizen/sos" || path.startsWith("/citizen/sos?");
+}
+
 function defaultRoute(roles: string[]) {
   if (roles.includes("RESCUE_TEAM")) return "/team/missions";
   if (roles.includes("ADMIN") || roles.includes("COORDINATOR") || roles.includes("FINANCIAL_OFFICER")) return "/ops";
   if (roles.includes("DONOR")) return "/donor/donations";
-  return "/citizen/sos";
+  if (roles.includes("CITIZEN") || roles.includes("VOLUNTEER")) return "/dashboard";
+  return "/dashboard";
 }

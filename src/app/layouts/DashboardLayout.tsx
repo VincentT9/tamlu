@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import clsx from "clsx";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import CrisisAlertOutlinedIcon from "@mui/icons-material/CrisisAlertOutlined";
@@ -28,11 +27,9 @@ interface DashboardNavItem {
 
 const dashboardNav: DashboardNavItem[] = [
   { label: "Tổng quan", to: "/dashboard", icon: <DashboardOutlinedIcon fontSize="small" /> },
-  { label: "SOS của tôi", to: "/citizen/sos", roles: [ROLES.citizen], icon: <CrisisAlertOutlinedIcon fontSize="small" />, badge: 4 },
-  { label: "Ủng hộ", to: "/donor/donations", roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin], icon: <CampaignOutlinedIcon fontSize="small" /> },
+  { label: "SOS của tôi", to: "/citizen/sos", roles: [ROLES.citizen, ROLES.volunteer], icon: <CrisisAlertOutlinedIcon fontSize="small" />, badge: 4 },
+  { label: "Ủng hộ", to: "/donor/donations", roles: [ROLES.donor, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin], icon: <CampaignOutlinedIcon fontSize="small" /> },
   { label: "Hồ sơ", to: "/profile", icon: <PersonOutlineOutlinedIcon fontSize="small" /> },
-  { label: "Vận hành", to: "/ops", roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer], icon: <DashboardOutlinedIcon fontSize="small" /> },
-  { label: "Nhiệm vụ", to: "/ops/missions", roles: [ROLES.admin, ROLES.coordinator], icon: <AssignmentOutlinedIcon fontSize="small" /> },
   { label: "Kho hàng", to: "/ops/inventory", roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer], icon: <Inventory2OutlinedIcon fontSize="small" />, badge: 3 },
   { label: "Vận chuyển", to: "/ops/shipments", roles: [ROLES.admin, ROLES.coordinator, ROLES.rescueTeam], icon: <LocalShippingOutlinedIcon fontSize="small" /> },
   { label: "Tài chính", to: "/ops/disbursements", roles: [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator], icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
@@ -51,9 +48,7 @@ export function DashboardLayout() {
     <aside className="flex h-full w-80 max-w-[86vw] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text)] shadow-none lg:w-full lg:max-w-none">
       <Link to="/" className="border-b border-[var(--color-border)] p-5">
         <span className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-[14px] bg-white ring-1 ring-[var(--color-border)]">
-            <img src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" className="h-11 w-11 object-contain" />
-          </span>
+          <img src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" className="h-16 w-16 object-contain" />
           <span>
             <span className="block text-xl font-black leading-5 text-[var(--color-green-800)]">Tâm Lũ</span>
             <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Bảng điều phối</span>

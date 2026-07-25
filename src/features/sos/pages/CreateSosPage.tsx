@@ -78,7 +78,7 @@ export function CreateSosPage() {
     },
     onSuccess: (sos) => {
       showToast("Yêu cầu SOS đã được gửi.", "success");
-      navigate(isAuthenticated ? `/citizen/sos/${sos.id}` : "/", { replace: true });
+      navigate(isAuthenticated ? "/citizen/sos" : "/", { state: isAuthenticated ? { createdSosId: sos.id } : undefined });
     },
   });
 
@@ -140,19 +140,48 @@ export function CreateSosPage() {
               <TextField fullWidth multiline minRows={4} label="Mô tả tình huống" {...form.register("description")} error={Boolean(form.formState.errors.description)} helperText={form.formState.errors.description?.message} />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField fullWidth select label="Mức độ khẩn cấp" {...form.register("urgencyLevel")} error={Boolean(form.formState.errors.urgencyLevel)}>
-                {urgencyLevels.map((level) => (
-                  <MenuItem key={level} value={level}>
-                    {urgencyLabels[level]}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Controller
+                control={form.control}
+                name="urgencyLevel"
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    select
+                    label="Mức độ khẩn cấp"
+                    value={field.value ?? "HIGH"}
+                    onChange={field.onChange}
+                    error={Boolean(form.formState.errors.urgencyLevel)}
+                  >
+                    {urgencyLevels.map((level) => (
+                      <MenuItem key={level} value={level}>
+                        {urgencyLabels[level]}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <TextField fullWidth label="Vĩ độ" type="number" {...form.register("latitude")} error={Boolean(form.formState.errors.latitude)} helperText={form.formState.errors.latitude?.message} />
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Vĩ độ"
+                type="number"
+                slotProps={{ htmlInput: { step: "any" } }}
+                {...form.register("latitude")}
+                error={Boolean(form.formState.errors.latitude)}
+                helperText={form.formState.errors.latitude?.message}
+              />
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <TextField fullWidth label="Kinh độ" type="number" {...form.register("longitude")} error={Boolean(form.formState.errors.longitude)} helperText={form.formState.errors.longitude?.message} />
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField
+                fullWidth
+                label="Kinh độ"
+                type="number"
+                slotProps={{ htmlInput: { step: "any" } }}
+                {...form.register("longitude")}
+                error={Boolean(form.formState.errors.longitude)}
+                helperText={form.formState.errors.longitude?.message}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
               <Button fullWidth variant="outlined" startIcon={<MyLocationIcon />} onClick={useLocation} sx={{ height: "100%" }}>
@@ -216,7 +245,17 @@ export function CreateSosPage() {
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0, boxShadow: "none" }}>
               <Stack spacing={1}>
                 <Typography fontWeight={800}>Hình ảnh hoặc video minh chứng</Typography>
-                <Button component="label" variant="outlined">
+                <Button
+                  component="label"
+                  variant="outlined"
+                  sx={{
+                    alignSelf: "flex-start",
+                    minHeight: 42,
+                    minWidth: 132,
+                    px: 2.5,
+                    bgcolor: "#ffffff",
+                  }}
+                >
                   Chọn tệp
                   <input hidden multiple type="file" accept="image/*,video/*" onChange={(event) => setFiles(event.target.files)} />
                 </Button>

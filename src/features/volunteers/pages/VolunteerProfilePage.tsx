@@ -32,9 +32,7 @@ export function VolunteerProfilePage() {
           <Grid size={{ xs: 12, lg: 4 }}>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 0, height: "100%" }}>
               <Stack spacing={2}>
-                <Box sx={{ display: "grid", placeItems: "center", width: 64, height: 64, borderRadius: 2, bgcolor: "#ffffff", border: "1px solid var(--color-border)", overflow: "hidden" }}>
-                  <Box component="img" src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" sx={{ width: 58, height: 58, objectFit: "contain" }} />
-                </Box>
+                <Box component="img" src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" sx={{ width: 96, height: 96, objectFit: "contain" }} />
                 <Box>
                   <Typography variant="h5" fontWeight={900}>Mức sẵn sàng tình nguyện</Typography>
                   <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>

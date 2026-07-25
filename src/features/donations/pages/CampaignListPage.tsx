@@ -32,8 +32,11 @@ export function CampaignListPage() {
   return (
     <Box
       sx={{
-        mx: "calc(50% - 50vw)",
+        mx: 0,
         mt: { xs: -1, md: -2 },
+        boxSizing: "border-box",
+        width: "100%",
+        overflowX: "hidden",
         minHeight: "calc(100dvh - 88px)",
         px: { xs: 2, md: 4 },
         py: { xs: 4, md: 6 },
@@ -52,8 +55,8 @@ export function CampaignListPage() {
       }}
     >
       <Box sx={{ mx: "auto", maxWidth: 1500 }}>
-        <Stack spacing={1.4} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 820 }}>
-          <Typography sx={{ color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
+        <Stack spacing={1.6} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 900 }}>
+          <Typography sx={{ display: "none", color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
             Cổng ủng hộ công khai
           </Typography>
           <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>

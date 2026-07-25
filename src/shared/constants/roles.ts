@@ -3,6 +3,7 @@ export const ROLES = {
   coordinator: "COORDINATOR",
   rescueTeam: "RESCUE_TEAM",
   financialOfficer: "FINANCIAL_OFFICER",
+  volunteer: "VOLUNTEER",
   citizen: "CITIZEN",
   donor: "DONOR",
 } as const;
@@ -14,6 +15,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   COORDINATOR: "Điều phối viên",
   RESCUE_TEAM: "Đội cứu hộ",
   FINANCIAL_OFFICER: "Nhân sự tài chính",
+  VOLUNTEER: "Tình nguyện viên",
   CITIZEN: "Người dân",
   DONOR: "Nhà hảo tâm",
 };
@@ -25,4 +27,5 @@ export const ROLE_IDS: Record<Role, number> = {
   ADMIN: 4,
   DONOR: 5,
   FINANCIAL_OFFICER: 6,
+  VOLUNTEER: 7,
 };

@@ -51,8 +51,8 @@ import { TransparencyPage } from "@/features/transparency/pages/TransparencyPage
 import { VolunteerProfilePage } from "@/features/volunteers/pages/VolunteerProfilePage";
 import { ROLES } from "@/shared/constants/roles";
 
-const citizenRoles = [ROLES.citizen];
-const donorRoles = [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin];
+const citizenRoles = [ROLES.citizen, ROLES.volunteer];
+const donorRoles = [ROLES.donor, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin];
 const opsRoles = [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer];
 const coordinatorRoles = [ROLES.admin, ROLES.coordinator];
 const adminRoles = [ROLES.admin];
@@ -98,7 +98,7 @@ export function App() {
 
             <Route path="citizen/profile" element={<ProfilePage />} />
             <Route path="citizen/sos" element={<ProtectedRoute roles={citizenRoles}><CitizenSosPage /></ProtectedRoute>} />
-            <Route path="citizen/sos/:id" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.coordinator, ROLES.rescueTeam]}><SosDetailPage /></ProtectedRoute>} />
+            <Route path="citizen/sos/:id" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.rescueTeam]}><SosDetailPage /></ProtectedRoute>} />
             <Route path="citizen/volunteer-profile" element={<ProtectedRoute roles={citizenRoles}><VolunteerProfilePage /></ProtectedRoute>} />
             <Route path="citizen/shelters" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.coordinator, ROLES.admin]}><SheltersPage /></ProtectedRoute>} />
             <Route path="citizen/complaints" element={<ProtectedRoute roles={citizenRoles}><CitizenComplaintsPage /></ProtectedRoute>} />

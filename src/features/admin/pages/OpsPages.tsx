@@ -17,6 +17,7 @@ import { monitoringApi } from "@/features/monitoring/api";
 import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
+import type { User } from "@/shared/api/domain";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
@@ -368,6 +369,65 @@ function shipmentStepButtonSx(state: "past" | "current" | "next") {
   };
 }
 
+const approvalRequiredRoles = new Set<string>([ROLES.coordinator, ROLES.rescueTeam]);
+const approvalRequiredRoleHints = [
+  "COORDINATOR",
+  "RESCUE_TEAM",
+  "RESCUETEAM",
+  "RESCUE TEAM",
+  "DIEU PHOI",
+  "DIEU PHOI VIEN",
+  "DOI CUU HO",
+  "DOI CUUHO",
+];
+
+function userNeedsOperationalApproval(user: User, activeRoleFilter: string) {
+  if (isOperationalRole(activeRoleFilter)) return true;
+
+  const userRoles = getUserRoleValues(user);
+  if (userRoles.some(isOperationalRole)) return true;
+
+  const status = normalizeRoleValue(user.status);
+  return userRoles.length === 0 && (status === "PENDING" || status === "WAITING_APPROVAL" || status === "AWAITING_APPROVAL");
+}
+
+function getUserRoleValues(user: User) {
+  return [
+    user.role,
+    user.roleCode,
+    user.roleName,
+    ...(Array.isArray(user.roles) ? user.roles : []),
+  ].filter(Boolean).map((value) => String(value).trim());
+}
+
+function isOperationalRole(value?: string | null) {
+  if (!value) return false;
+  const normalized = normalizeRoleValue(value).replace(/^ROLE_/, "");
+  return approvalRequiredRoles.has(normalized) || approvalRequiredRoleHints.some((hint) => normalized.includes(hint));
+}
+
+function normalizeRoleValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+function getUserRoleLabel(user: User) {
+  const values = getUserRoleValues(user);
+  if (!values.length) return "Chưa xác định";
+
+  return values
+    .map((value) => {
+      const normalized = normalizeRoleValue(value).replace(/^ROLE_/, "");
+      if (normalized in ROLE_LABELS) return ROLE_LABELS[normalized as keyof typeof ROLE_LABELS];
+      if (isOperationalRole(value)) return normalized.includes("RESCUE") || normalized.includes("DOI CUU") ? "Đội cứu hộ" : "Điều phối viên";
+      return value;
+    })
+    .join(", ");
+}
+
 function DualMetric({ value, label }: { value: number; label: string }) {
   return (
     <Box>
@@ -380,62 +440,51 @@ function DualMetric({ value, label }: { value: number; label: string }) {
 }
 
 function TimelineCard({ pending, missions, stock }: { pending: number; missions: number; stock: number }) {
-  const rows = [
-    { label: "Phân loại", start: 2, span: 26, color: "#f87171" },
-    { label: "Phân đội", start: 18, span: 34, color: "var(--color-cream-100)" },
-    { label: "Sơ tán", start: 36, span: 30, color: "var(--color-green-600)" },
-    { label: "Kiểm kê", start: 8, span: 56, color: "var(--color-green-700)" },
+  const totalWork = Math.max(pending + missions + stock, 1);
+  const readiness = Math.max(18, Math.min(100, Math.round(((missions + 1) / Math.max(totalWork + 1, 1)) * 100)));
+  const gaugeData = [{ name: "Sẵn sàng", value: readiness, fill: "var(--color-green-700)" }];
+  const statusCards = [
+    { label: "SOS chờ xử lý", value: pending, color: "#f87171", helper: "cần phân loại" },
+    { label: "Nhiệm vụ", value: missions, color: "var(--color-green-700)", helper: "đang triển khai" },
+    { label: "Rủi ro kho", value: stock, color: "var(--color-green-600)", helper: "cần theo dõi" },
   ];
   return (
-    <Box sx={{ height: "100%", minHeight: 196, maxWidth: "100%", borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
+    <Box sx={{ height: "100%", minHeight: 228, maxWidth: "100%", borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography sx={miniLabelSx}>Tiến độ cứu trợ</Typography>
+        <Box>
+          <Typography sx={{ color: "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>Nhịp vận hành cứu trợ</Typography>
+          <Typography sx={miniLabelSx}>Mức sẵn sàng và tín hiệu cần xử lý</Typography>
+        </Box>
         <PercentTag tone="cyan">{Math.min(100, missions * 5 + pending + stock)}%</PercentTag>
       </Stack>
-      <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "76px minmax(0, 1fr)", columnGap: 1.5, rowGap: 1, position: "relative", maxWidth: "100%" }}>
-        <Box aria-hidden="true" sx={{ gridColumn: 2, gridRow: "1 / span 4", position: "relative", overflow: "hidden", borderRadius: 0 }}>
-          {[0, 1, 2, 3, 4, 5, 6].map((item) => (
-            <Box key={item} sx={{ position: "absolute", top: 0, bottom: 0, left: `${item * 16.66}%`, width: 1, bgcolor: "var(--color-green-100)" }} />
-          ))}
-          <Box sx={{ position: "absolute", top: 0, bottom: 0, left: "64%", width: 2, bgcolor: "var(--color-green-700)", opacity: .9 }} />
-        </Box>
-        {rows.map((row, index) => (
-          <Box key={row.label} sx={{ display: "contents" }}>
-            <Typography sx={{ ...miniLabelSx, alignSelf: "center", color: "var(--color-green-800)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {row.label}
-            </Typography>
-            <Box sx={{ height: 24, position: "relative", overflow: "hidden", borderRadius: 0 }}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  left: `${row.start}%`,
-                  width: `${Math.min(row.span, 98 - row.start)}%`,
-                  top: 0,
-                  bottom: 0,
-                  borderRadius: 0,
-                  bgcolor: row.color,
-                  color: row.color === "var(--color-green-700)" ? "#ffffff" : "var(--color-green-800)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  px: 1,
-                  fontSize: 11,
-                  fontWeight: 950,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {row.label}
-              </Box>
+
+      <Box sx={{ mt: 1.25, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(150px, .9fr) minmax(0, 1.1fr)" }, gap: 1.25, alignItems: "center" }}>
+        <Box sx={{ height: 142, position: "relative", minWidth: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart innerRadius="74%" outerRadius="100%" data={gaugeData} startAngle={180} endAngle={0} barSize={16}>
+              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+              <RadialBar dataKey="value" background={{ fill: "var(--color-green-100)" }} cornerRadius={0} isAnimationActive={false} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pt: 4 }}>
+            <Box sx={{ textAlign: "center" }}>
+              <Typography sx={{ color: "var(--color-green-800)", fontSize: 38, lineHeight: .9, fontWeight: 950 }}>{readiness}%</Typography>
+              <Typography sx={miniLabelSx}>sẵn sàng</Typography>
             </Box>
           </Box>
-        ))}
-      </Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: "76px minmax(0, 1fr)", columnGap: 1.5, mt: 1 }}>
-        <Box />
-        <Stack direction="row" justifyContent="space-between" sx={{ minWidth: 0 }}>
-        {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((day) => (
-          <Typography key={day} sx={miniLabelSx}>{day}</Typography>
-        ))}
+        </Box>
+
+        <Stack spacing={.85}>
+          {statusCards.map((item) => (
+            <Stack key={item.label} direction="row" spacing={1} alignItems="center" sx={{ border: "1px solid var(--color-border)", bgcolor: "#ffffff", px: 1.1, py: .75, minWidth: 0 }}>
+              <Box sx={{ width: 8, height: 34, bgcolor: item.color, flex: "0 0 auto" }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ color: "var(--color-green-800)", fontSize: 12, lineHeight: 1.2, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</Typography>
+                <Typography sx={miniLabelSx}>{item.helper}</Typography>
+              </Box>
+              <Typography sx={{ color: "var(--color-green-800)", fontSize: 22, lineHeight: 1, fontWeight: 950 }}>{item.value}</Typography>
+            </Stack>
+          ))}
         </Stack>
       </Box>
     </Box>
@@ -857,8 +906,35 @@ export function UsersPage() {
         <MenuItem value="">Tất cả</MenuItem>{Object.values(ROLES).map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
       </TextField>
       <QueryState isLoading={users.isLoading} error={users.error} empty={!users.data?.data.length} refetch={users.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Họ tên</TableCell><TableCell>Email</TableCell><TableCell>Số điện thoại</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
-          {users.data?.data.map((user) => <TableRow key={user.id}><TableCell>{user.fullName}</TableCell><TableCell>{user.email}</TableCell><TableCell>{user.phone}</TableCell><TableCell><StatusChip value={user.status} /></TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" onClick={() => approve.mutate({ id: user.id, isApproved: true })}>Duyệt</Button><Button size="small" color="error" onClick={() => approve.mutate({ id: user.id, isApproved: false })}>Từ chối</Button></Stack></TableCell></TableRow>)}
+        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Họ tên</TableCell><TableCell>Email</TableCell><TableCell>Số điện thoại</TableCell><TableCell>Vai trò</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {users.data?.data.map((user) => {
+            const needsApproval = userNeedsOperationalApproval(user, role);
+            return (
+              <TableRow key={user.id}>
+                <TableCell>{user.fullName}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone}</TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ color: "var(--color-green-800)", fontWeight: 800 }}>
+                    {getUserRoleLabel(user)}
+                  </Typography>
+                </TableCell>
+                <TableCell><StatusChip value={user.status} /></TableCell>
+                <TableCell>
+                  {needsApproval ? (
+                    <Stack direction="row" spacing={1}>
+                      <Button size="small" disabled={approve.isPending} onClick={() => approve.mutate({ id: user.id, isApproved: true })}>Duyệt</Button>
+                      <Button size="small" color="error" disabled={approve.isPending} onClick={() => approve.mutate({ id: user.id, isApproved: false })}>Từ chối</Button>
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" sx={{ color: "var(--color-text-muted)", fontWeight: 800 }}>
+                      Không cần duyệt
+                    </Typography>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody></Table></Paper>
       </QueryState>
       <Alert severity="info" sx={{ mt: 2 }}>Mã vai trò: {Object.entries(ROLE_IDS).map(([key, value]) => `${key}=${value}`).join(", ")}</Alert>

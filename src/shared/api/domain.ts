@@ -5,6 +5,10 @@ export interface User {
   fullName: string;
   email: string;
   phone: string;
+  role?: string | null;
+  roleName?: string | null;
+  roleCode?: string | null;
+  roles?: string[] | null;
   avatarUrl?: string | null;
   status: string;
   createdAt?: string;

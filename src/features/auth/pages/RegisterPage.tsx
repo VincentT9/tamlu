@@ -29,7 +29,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   phone: z.string().regex(/^\d{9,11}$/),
   password: z.string().min(6).regex(/[A-Z]/).regex(/[0-9]/).regex(/[\p{P}\p{S}]/u),
-  role: z.enum([ROLES.citizen, ROLES.donor, ROLES.coordinator, ROLES.rescueTeam]),
+  role: z.enum([ROLES.citizen, ROLES.donor, ROLES.volunteer, ROLES.coordinator, ROLES.rescueTeam]),
 });
 
 const otpSchema = z.object({
@@ -61,7 +61,7 @@ export function RegisterPage() {
     onSuccess: (data) => {
       if (data.token) {
         setSession({ token: data.token, user: data.user, roles: data.roles });
-        navigate("/citizen/sos", { replace: true });
+        navigate("/dashboard", { replace: true });
       } else {
         showToast("Email đã được xác minh. Tài khoản vận hành đang chờ quản trị viên phê duyệt.", "warning");
         navigate("/login", { replace: true });
@@ -150,7 +150,7 @@ export function RegisterPage() {
                   <FormControl>
                     <InputLabel>Vai trò</InputLabel>
                     <Select {...field} label="Vai trò">
-                      {[ROLES.citizen, ROLES.donor, ROLES.coordinator, ROLES.rescueTeam].map((role) => (
+                      {[ROLES.citizen, ROLES.donor, ROLES.volunteer, ROLES.coordinator, ROLES.rescueTeam].map((role) => (
                         <MenuItem key={role} value={role}>
                           {ROLE_LABELS[role]}
                         </MenuItem>

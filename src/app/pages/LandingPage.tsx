@@ -149,7 +149,7 @@ export function LandingPage() {
     { title: "Tái thiết nhà cửa", text: "Nguồn phục hồi hỗ trợ gia đình sửa chữa nhà ở và ổn định đời sống sau lũ.", icon: <VolunteerActivismIcon /> },
   ];
 
-  const partners = ["Đội phản ứng địa phương", "Lực lượng cứu hộ", "Mạng lưới trú tạm", "Hỗ trợ y tế", "Tình nguyện viên"];
+  const partners = ["Đội phản ứng địa\u00a0phương", "Lực lượng cứu hộ", "Mạng lưới trú tạm", "Hỗ trợ y tế", "Tình nguyện viên"];
 
   return (
     <Box
@@ -164,9 +164,9 @@ export function LandingPage() {
         sx={{
           mx: "auto",
           maxWidth: 1500,
-          overflow: "hidden",
-          borderRadius: { xs: 3, md: 5 },
-          border: `1px solid ${reliefTheme.lineStrong}`,
+          overflow: "visible",
+          borderRadius: 0,
+          border: "0",
           background:
             `radial-gradient(circle at 62% 12%, ${reliefTheme.shadow}, transparent 28%), linear-gradient(180deg, ${reliefTheme.frame} 0%, ${reliefTheme.bg} 100%)`,
           boxShadow: "none",
@@ -181,7 +181,7 @@ export function LandingPage() {
             pb: { xs: 7, md: 9, lg: 10 },
             position: "relative",
             overflow: "hidden",
-            borderRadius: { xs: 3, md: 5 },
+            borderRadius: 0,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -199,7 +199,7 @@ export function LandingPage() {
               objectFit: "cover",
               objectPosition: { xs: "47% 50%", md: "53% 50%", xl: "55% 50%" },
               opacity: 1,
-              filter: "saturate(.86) contrast(.98) brightness(1.06)",
+              filter: "saturate(.92) contrast(1.04) brightness(1.03)",
               transform: { xs: "scale(1.48)", md: "scale(1.08)" },
               transformOrigin: { xs: "47% 50%", md: "53% 50%" },
             }}
@@ -210,7 +210,7 @@ export function LandingPage() {
               position: "absolute",
               inset: 0,
               background:
-                "radial-gradient(circle at 56% 48%, rgba(246,248,232,.08) 0%, rgba(246,248,232,.30) 42%, rgba(246,248,232,.82) 78%, rgba(246,248,232,.96) 100%), linear-gradient(90deg, rgba(246,248,232,.98) 0%, rgba(246,248,232,.88) 42%, rgba(246,248,232,.54) 68%, rgba(246,248,232,.84) 100%), linear-gradient(180deg, rgba(246,248,232,.80) 0%, rgba(246,248,232,.22) 46%, rgba(246,248,232,.96) 100%)",
+                "radial-gradient(circle at 58% 48%, rgba(246,248,232,.02) 0%, rgba(246,248,232,.16) 38%, rgba(246,248,232,.58) 76%, rgba(246,248,232,.90) 100%), linear-gradient(90deg, rgba(246,248,232,.94) 0%, rgba(246,248,232,.78) 38%, rgba(246,248,232,.32) 68%, rgba(246,248,232,.66) 100%), linear-gradient(180deg, rgba(246,248,232,.68) 0%, rgba(246,248,232,.12) 48%, rgba(246,248,232,.86) 100%)",
             }}
           />
           <Box
@@ -221,7 +221,7 @@ export function LandingPage() {
               height: { xs: 360, md: 640 },
               borderRadius: "50%",
               background:
-                "radial-gradient(circle, rgba(247,249,216,.70) 0%, rgba(77,141,22,.08) 34%, transparent 68%)",
+                "radial-gradient(circle, rgba(247,249,216,.42) 0%, rgba(77,141,22,.08) 34%, transparent 68%)",
               filter: "blur(18px)",
             }}
           />
@@ -598,11 +598,15 @@ export function LandingPage() {
                         display: "grid",
                         minHeight: 62,
                         placeItems: "center",
+                        px: { xs: 2, md: 2.5 },
+                        py: 1.25,
                         borderRadius: 2,
                         border: `1px solid ${reliefTheme.line}`,
                         color: reliefTheme.faint,
                         fontWeight: 950,
                         letterSpacing: ".01em",
+                        lineHeight: 1.3,
+                        textAlign: "center",
                       }}
                     >
                       {partner}

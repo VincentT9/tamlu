@@ -1,6 +1,6 @@
-import { Button, Grid, Stack, Typography } from "@mui/material";
+import { Alert, Button, Grid, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { sosApi } from "@/features/sos/api";
 import { formatDate } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
@@ -10,6 +10,8 @@ import { Card } from "@/components/Card";
 
 export function CitizenSosPage() {
   const cases = useQuery({ queryKey: ["sos", "my"], queryFn: () => sosApi.my({ page: 1, limit: 20 }), refetchInterval: 30000 });
+  const location = useLocation();
+  const createdSosId = (location.state as { createdSosId?: string } | null)?.createdSosId;
 
   return (
     <>
@@ -18,6 +20,24 @@ export function CitizenSosPage() {
         description="Theo dõi trạng thái cứu hộ từ khi chờ xác minh đến khi xác nhận hoàn tất."
         actions={<Button component={Link} to="/sos/new" variant="contained" color="error">Tạo SOS</Button>}
       />
+      {createdSosId ? (
+        <Alert
+          severity="success"
+          sx={{ mb: 2 }}
+          action={
+            <Stack direction="row" spacing={1}>
+              <Button component={Link} to={`/citizen/sos/${createdSosId}`} color="inherit" size="small">
+                Xem chi tiết
+              </Button>
+              <Button component={Link} to="/sos/new" color="inherit" size="small">
+                Quay lại biểu mẫu
+              </Button>
+            </Stack>
+          }
+        >
+          Yêu cầu SOS đã được gửi. Bạn có thể xem chi tiết hoặc quay lại biểu mẫu để gửi yêu cầu khác.
+        </Alert>
+      ) : null}
       <QueryState isLoading={cases.isLoading} error={cases.error} empty={!cases.data?.data.length} refetch={cases.refetch}>
         <Grid container spacing={2}>
           {cases.data?.data.map((item) => (

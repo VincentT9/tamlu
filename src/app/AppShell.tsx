@@ -1,5 +1,4 @@
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -53,9 +52,7 @@ const navItems: NavItem[] = [
   { label: "Tạo SOS", to: "/sos/new", icon: SosIcon },
   { label: "SOS của tôi", to: "/citizen/sos", icon: FavoriteIcon, roles: [ROLES.citizen] },
   { label: "Ủng hộ", to: "/donor/donations", icon: PaidIcon, roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin] },
-  { label: "Vận hành", to: "/ops", icon: AdminPanelSettingsIcon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
   { label: "Hàng đợi SOS", to: "/ops/sos", icon: SosIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Nhiệm vụ", to: "/ops/missions", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator] },
   { label: "Kho hàng", to: "/ops/warehouses", icon: Inventory2Icon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
   { label: "Vận chuyển", to: "/ops/shipments", icon: LocalShippingIcon, roles: [ROLES.admin, ROLES.coordinator] },
   { label: "Tài chính", to: "/ops/disbursements", icon: PaidIcon, roles: [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator] },

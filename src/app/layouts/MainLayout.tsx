@@ -6,11 +6,9 @@ import { Button } from "@/components/Button";
 
 const publicLinks = [
   { label: "Trang chủ", to: "/", active: true },
-  { label: "Về chúng tôi", to: "/#mission", active: false },
   { label: "Chiến dịch", to: "/campaigns", active: true },
   { label: "Bản đồ cứu trợ", to: "/relief-map", active: true },
-  { label: "Biểu mẫu SOS", to: "/sos/new", active: true },
-  { label: "Đồng hành", to: "/campaigns", active: false },
+  { label: "Yêu cầu cứu hộ", to: "/sos/new", active: true },
 ];
 
 export function MainLayout() {
@@ -25,9 +23,7 @@ export function MainLayout() {
           aria-label="Điều hướng chính"
         >
           <Link to="/" className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-green-600)] focus:ring-offset-2 focus:ring-offset-white">
-            <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-[var(--color-border)]">
-              <img src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" className="h-10 w-10 object-contain" />
-            </span>
+            <img src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" className="h-14 w-14 object-contain" />
             <span className="hidden sm:block">
               <span className="block text-base font-black leading-5 text-[var(--color-green-800)]">Tâm Lũ</span>
               <span className="block text-xs font-semibold text-[var(--color-text-muted)]">Kết nối yêu thương, cứu trợ lũ lụt</span>
@@ -124,14 +120,12 @@ export function MainLayout() {
         <Outlet />
       </main>
 
-      <footer className="bg-[var(--color-cream-50)] px-2 pb-2 md:px-4 md:pb-4">
-        <div className="mx-auto max-w-[1500px] rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-5 py-10 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-[1.3fr_.8fr_.8fr]">
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-10 md:px-6">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="grid gap-8 md:grid-cols-[1.35fr_.75fr_.75fr] md:items-start">
             <div>
               <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-[var(--color-border)]">
-                  <img src="/images/tam-lu-logo.png" alt="Logo Tâm Lũ" className="h-12 w-12 object-contain" />
-                </span>
+                <img src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" className="h-20 w-20 object-contain" />
                 <div>
                   <p className="text-lg font-black">Tâm Lũ</p>
                   <p className="text-sm font-semibold text-[var(--color-text-muted)]">Kết nối yêu thương, cứu trợ lũ lụt</p>
