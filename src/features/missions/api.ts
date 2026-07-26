@@ -12,6 +12,7 @@ export const missionApi = {
     rescueTeamId: string;
     vehicleIds: string[];
     destinationShelterId?: string | null;
+    volunteerProfileIds?: string[];
   }) => postData<Mission>("/api/missions", body),
   byId: (id: string) => getData<Mission>(`/api/missions/${id}`),
   coordinatorList: (params?: QueryParams) => getData<PaginatedResult<Mission>>("/api/coordinator/missions", params),

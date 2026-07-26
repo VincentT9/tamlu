@@ -45,19 +45,36 @@ interface NavItem {
   roles?: string[];
 }
 
+const financialRoleAliases = [ROLES.financialOfficer, "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"];
+const opsRoleAliases = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
+
 const navItems: NavItem[] = [
   { label: "Trang chủ", to: "/", icon: DashboardIcon },
   { label: "Chiến dịch", to: "/campaigns", icon: CampaignIcon },
   { label: "Bản đồ cứu trợ", to: "/relief-map", icon: MapIcon },
   { label: "Tạo SOS", to: "/sos/new", icon: SosIcon },
   { label: "SOS của tôi", to: "/citizen/sos", icon: FavoriteIcon, roles: [ROLES.citizen] },
-  { label: "Ủng hộ", to: "/donor/donations", icon: PaidIcon, roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin] },
-  { label: "Hàng đợi SOS", to: "/ops/sos", icon: SosIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Kho hàng", to: "/ops/warehouses", icon: Inventory2Icon, roles: [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer] },
+  { label: "Lịch sử quyên góp", to: "/donor/donations", icon: PaidIcon, roles: [ROLES.donor, ROLES.citizen, ROLES.coordinator, ROLES.admin] },
+  { label: "Chiến dịch", to: "/donor/campaigns", icon: CampaignIcon, roles: [ROLES.donor] },
+  { label: "Yêu cầu cứu trợ", to: "/ops/sos", icon: SosIcon, roles: [ROLES.coordinator] },
+  { label: "Phân công cứu hộ", to: "/ops/missions", icon: MapIcon, roles: [ROLES.coordinator] },
+  { label: "Duyệt khảo sát", to: "/ops/area-assessments", icon: DashboardIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Chiến dịch", to: "/ops/campaigns", icon: CampaignIcon, roles: opsRoleAliases },
+  { label: "Mua sắm", to: "/ops/procurements", icon: PaidIcon, roles: opsRoleAliases },
+  { label: "Kế hoạch phân bổ", to: "/ops/allocation-plans", icon: DashboardIcon, roles: opsRoleAliases },
+  { label: "Kho hàng", to: "/ops/warehouses", icon: Inventory2Icon, roles: opsRoleAliases },
   { label: "Vận chuyển", to: "/ops/shipments", icon: LocalShippingIcon, roles: [ROLES.admin, ROLES.coordinator] },
-  { label: "Tài chính", to: "/ops/disbursements", icon: PaidIcon, roles: [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator] },
+  { label: "Tài chính", to: "/ops/disbursements", icon: PaidIcon, roles: opsRoleAliases },
+  { label: "Điểm trú tạm", to: "/citizen/shelters", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Tình nguyện hỗ trợ", to: "/ops/volunteers", icon: VolunteerActivismIcon, roles: [ROLES.coordinator] },
+  { label: "Tổ chức", to: "/ops/organizations", icon: PeopleIcon, roles: [ROLES.admin] },
   { label: "Người dùng", to: "/ops/users", icon: PeopleIcon, roles: [ROLES.admin] },
+  { label: "Khiếu nại", to: "/ops/complaints", icon: SosIcon, roles: [ROLES.admin] },
+  { label: "Kiểm toán", to: "/ops/audit-logs", icon: DashboardIcon, roles: [ROLES.admin] },
   { label: "Nhiệm vụ đội cứu hộ", to: "/team/missions", icon: VolunteerActivismIcon, roles: [ROLES.rescueTeam] },
+  { label: "Chuyến hàng đội", to: "/team/shipments", icon: LocalShippingIcon, roles: [ROLES.rescueTeam] },
+  { label: "Đánh giá khu vực", to: "/team/area-assessments", icon: DashboardIcon, roles: [ROLES.rescueTeam] },
+  { label: "Minh chứng", to: "/team/proofs", icon: DashboardIcon, roles: [ROLES.rescueTeam] },
 ];
 
 const drawerWidth = 270;

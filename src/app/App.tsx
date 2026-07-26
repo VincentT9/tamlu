@@ -8,6 +8,7 @@ import { LandingPage } from "@/app/pages/LandingPage";
 import { NotFoundPage } from "@/app/pages/NotFoundPage";
 import {
   AllocationPlansPage,
+  AreaAssessmentsPage,
   AuditLogsPage,
   CampaignAdminPage,
   ComplaintsPage,
@@ -53,10 +54,11 @@ import { ROLES } from "@/shared/constants/roles";
 
 const citizenRoles = [ROLES.citizen, ROLES.volunteer];
 const donorRoles = [ROLES.donor, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin];
-const opsRoles = [ROLES.admin, ROLES.coordinator, ROLES.financialOfficer];
+const financialRoleAliases = [ROLES.financialOfficer, "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"];
+const opsRoles = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
 const coordinatorRoles = [ROLES.admin, ROLES.coordinator];
 const adminRoles = [ROLES.admin];
-const financeRoles = [ROLES.admin, ROLES.financialOfficer, ROLES.coordinator];
+const financeRoles = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
 const teamRoles = [ROLES.rescueTeam];
 const allRoles = Object.values(ROLES);
 
@@ -104,6 +106,7 @@ export function App() {
             <Route path="citizen/complaints" element={<ProtectedRoute roles={citizenRoles}><CitizenComplaintsPage /></ProtectedRoute>} />
 
             <Route path="donor/donations" element={<ProtectedRoute roles={donorRoles}><DonationHistoryPage /></ProtectedRoute>} />
+            <Route path="donor/campaigns" element={<ProtectedRoute roles={donorRoles}><CampaignListPage /></ProtectedRoute>} />
 
             <Route path="ops" element={<ProtectedRoute roles={opsRoles}><OpsDashboardPage /></ProtectedRoute>} />
             <Route path="ops/sos" element={<ProtectedRoute roles={coordinatorRoles}><OpsSosPage /></ProtectedRoute>} />
@@ -111,6 +114,7 @@ export function App() {
             <Route path="ops/warehouses" element={<ProtectedRoute roles={opsRoles}><WarehousesPage /></ProtectedRoute>} />
             <Route path="ops/inventory" element={<ProtectedRoute roles={opsRoles}><InventoryPage /></ProtectedRoute>} />
             <Route path="ops/shipments" element={<ProtectedRoute roles={coordinatorRoles}><ShipmentsPage /></ProtectedRoute>} />
+            <Route path="ops/area-assessments" element={<ProtectedRoute roles={coordinatorRoles}><AreaAssessmentsPage /></ProtectedRoute>} />
             <Route path="ops/campaigns" element={<ProtectedRoute roles={opsRoles}><CampaignAdminPage /></ProtectedRoute>} />
             <Route path="ops/procurements" element={<ProtectedRoute roles={financeRoles}><ProcurementPage /></ProtectedRoute>} />
             <Route path="ops/allocation-plans" element={<ProtectedRoute roles={financeRoles}><AllocationPlansPage /></ProtectedRoute>} />

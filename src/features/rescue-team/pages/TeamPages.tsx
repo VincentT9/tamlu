@@ -158,6 +158,7 @@ export function TeamAreaAssessmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [form, setForm] = useState({ campaignId: "", areaName: "", province: "", district: "", ward: "", householdsAffected: 1, floodSeverity: "HIGH", priorityLevel: "HIGH", notes: "" });
+  const [needs, setNeeds] = useState([{ itemType: "Gạo", quantity: 100, unit: "kg", notes: "" }]);
   const fieldLabels: Record<keyof typeof form, string> = {
     campaignId: "Mã chiến dịch",
     areaName: "Tên khu vực",
@@ -171,12 +172,26 @@ export function TeamAreaAssessmentsPage() {
   };
   const rows = useQuery({ queryKey: ["area-assessments-team"], queryFn: () => aidApi.areaAssessments({ page: 1, limit: 50 }) });
   const create = useMutation({
-    mutationFn: () => aidApi.createAreaAssessment(form),
+    mutationFn: async () => {
+      const assessment = await aidApi.createAreaAssessment(form);
+      await Promise.all(needs
+        .filter((need) => need.itemType && Number(need.quantity) > 0 && need.unit)
+        .map((need) => aidApi.addAreaNeed(assessment.id, {
+          itemType: need.itemType,
+          quantity: Number(need.quantity),
+          unit: need.unit,
+          notes: need.notes,
+        })));
+      return assessment;
+    },
     onSuccess: () => {
-      showToast("Đánh giá khu vực đã được tạo.", "success");
+      showToast("Đánh giá khu vực và nhu cầu cứu trợ đã được gửi.", "success");
+      setForm({ campaignId: "", areaName: "", province: "", district: "", ward: "", householdsAffected: 1, floodSeverity: "HIGH", priorityLevel: "HIGH", notes: "" });
+      setNeeds([{ itemType: "Gạo", quantity: 100, unit: "kg", notes: "" }]);
       queryClient.invalidateQueries({ queryKey: ["area-assessments-team"] });
     },
   });
+  const hasValidNeeds = needs.every((need) => need.itemType && Number(need.quantity) > 0 && need.unit);
   return (
     <>
       <PageHeader title="Đánh giá khu vực" description="Ghi nhận nhu cầu hiện trường để lập kế hoạch phân bổ cứu trợ." />
@@ -188,7 +203,40 @@ export function TeamAreaAssessmentsPage() {
               {Object.keys(form).map((key) => (
                 <TextField key={key} label={fieldLabels[key as keyof typeof form]} value={String(form[key as keyof typeof form])} onChange={(event) => setForm({ ...form, [key]: key === "householdsAffected" ? Number(event.target.value) : event.target.value })} />
               ))}
-              <Button variant="contained" onClick={() => create.mutate()} disabled={!form.campaignId || create.isPending}>Gửi</Button>
+              <Typography variant="subtitle2" fontWeight={900}>Nhu cầu khẩn cấp</Typography>
+              {needs.map((need, index) => (
+                <Stack key={index} spacing={1}>
+                  <TextField label="Loại vật tư/nhu cầu" value={need.itemType} onChange={(event) => {
+                    const next = [...needs];
+                    next[index] = { ...need, itemType: event.target.value };
+                    setNeeds(next);
+                  }} />
+                  <Grid container spacing={1}>
+                    <Grid size={6}>
+                      <TextField fullWidth label="Số lượng" type="number" value={need.quantity} onChange={(event) => {
+                        const next = [...needs];
+                        next[index] = { ...need, quantity: Number(event.target.value) };
+                        setNeeds(next);
+                      }} />
+                    </Grid>
+                    <Grid size={6}>
+                      <TextField fullWidth label="Đơn vị" value={need.unit} onChange={(event) => {
+                        const next = [...needs];
+                        next[index] = { ...need, unit: event.target.value };
+                        setNeeds(next);
+                      }} />
+                    </Grid>
+                  </Grid>
+                  <TextField label="Ghi chú nhu cầu" value={need.notes} onChange={(event) => {
+                    const next = [...needs];
+                    next[index] = { ...need, notes: event.target.value };
+                    setNeeds(next);
+                  }} />
+                  <Button size="small" color="error" disabled={needs.length === 1} onClick={() => setNeeds(needs.filter((_, needIndex) => needIndex !== index))}>Xóa nhu cầu</Button>
+                </Stack>
+              ))}
+              <Button variant="outlined" startIcon={<DoneAllIcon />} onClick={() => setNeeds([...needs, { itemType: "", quantity: 1, unit: "kg", notes: "" }])}>Thêm nhu cầu</Button>
+              <Button variant="contained" onClick={() => create.mutate()} disabled={!form.campaignId || !hasValidNeeds || create.isPending}>Gửi khảo sát</Button>
             </Stack>
           </SectionPaper>
         </Grid>
@@ -205,10 +253,177 @@ export function TeamAreaAssessmentsPage() {
 }
 
 export function TeamProofsPage() {
+  const queryClient = useQueryClient();
+  const showToast = useToast((state) => state.showToast);
+  const [form, setForm] = useState({
+    disbursementId: "",
+    fileUrls: "",
+    fileType: "IMAGE",
+    caption: "Minh chứng trao hỗ trợ tại hiện trường",
+    latitude: 16.4637,
+    longitude: 107.5909,
+    accuracy: 15,
+    signerName: "",
+    signerRole: "Người nhận hỗ trợ",
+    signatureUrl: "",
+  });
+  const disbursements = useQuery({
+    queryKey: ["team-disbursements-for-proofs"],
+    queryFn: () => aidApi.disbursements({ page: 1, limit: 50 }),
+  });
+  const createProof = useMutation({
+    mutationFn: async () => {
+      const proofPackage = await aidApi.createProof(form.disbursementId) as { id?: string };
+      const proofPackageId = proofPackage.id ?? form.disbursementId;
+      const mediaUrls = form.fileUrls
+        .split(/[\n,]/)
+        .map((url) => url.trim())
+        .filter(Boolean);
+
+      if (mediaUrls.length) {
+        await aidApi.addProofMedia(proofPackageId, mediaUrls, form.fileType, form.caption);
+      }
+      await aidApi.addProofGeotag(proofPackageId, {
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude),
+        accuracy: Number(form.accuracy),
+      });
+      if (form.signerName && form.signatureUrl) {
+        await aidApi.addProofSignature(proofPackageId, {
+          signerName: form.signerName,
+          signerRole: form.signerRole,
+          signatureUrl: form.signatureUrl,
+        });
+      }
+      return proofPackage;
+    },
+    onSuccess: () => {
+      showToast("Minh chứng hiện trường đã được nộp.", "success");
+      setForm({
+        disbursementId: "",
+        fileUrls: "",
+        fileType: "IMAGE",
+        caption: "Minh chứng trao hỗ trợ tại hiện trường",
+        latitude: 16.4637,
+        longitude: 107.5909,
+        accuracy: 15,
+        signerName: "",
+        signerRole: "Người nhận hỗ trợ",
+        signatureUrl: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["team-disbursements-for-proofs"] });
+    },
+  });
+  const locate = () => {
+    navigator.geolocation?.getCurrentPosition((position) => setForm({
+      ...form,
+      latitude: Number(position.coords.latitude.toFixed(6)),
+      longitude: Number(position.coords.longitude.toFixed(6)),
+      accuracy: Math.round(position.coords.accuracy),
+    }));
+  };
+
   return (
     <>
-      <PageHeader title="Bộ minh chứng" description="Tạo bộ minh chứng từ quy trình giải ngân, kèm liên kết media, vị trí và chữ ký người nhận." />
-      <Alert severity="info">Backend cung cấp endpoint minh chứng trong phân hệ giải ngân. Trang này tạm thời đóng vai trò checklist hiện trường cho đến khi chọn một khoản giải ngân cụ thể.</Alert>
+      <PageHeader title="Bộ minh chứng" description="Nộp ảnh, tọa độ GPS và chữ ký xác nhận sau khi trao tiền hoặc vật tư cho người dân." />
+      <Grid container spacing={2.5}>
+        <Grid size={{ xs: 12, lg: 5 }}>
+          <SectionPaper>
+            <Stack spacing={2}>
+              <Typography variant="h6" fontWeight={900}>Nộp minh chứng thực địa</Typography>
+              <Alert severity="info">
+                Chọn khoản giải ngân đã thực hiện, sau đó gửi ảnh/đường dẫn media, vị trí GPS và chữ ký người nhận để phục vụ giám sát công khai.
+              </Alert>
+              <TextField
+                select
+                label="Khoản giải ngân"
+                value={form.disbursementId}
+                onChange={(event) => setForm({ ...form, disbursementId: event.target.value })}
+              >
+                <MenuItem value="" disabled>{disbursements.isLoading ? "Đang tải khoản giải ngân..." : "Chọn khoản giải ngân"}</MenuItem>
+                {(disbursements.data?.data ?? []).map((row) => (
+                  <MenuItem key={row.id} value={row.id}>
+                    {row.itemName} - {row.amount.toLocaleString("vi-VN")} đ
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Link ảnh/video minh chứng"
+                multiline
+                minRows={3}
+                value={form.fileUrls}
+                onChange={(event) => setForm({ ...form, fileUrls: event.target.value })}
+                helperText="Có thể nhập nhiều link, mỗi link một dòng hoặc phân tách bằng dấu phẩy."
+              />
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField select fullWidth label="Loại media" value={form.fileType} onChange={(event) => setForm({ ...form, fileType: event.target.value })}>
+                    <MenuItem value="IMAGE">Hình ảnh</MenuItem>
+                    <MenuItem value="VIDEO">Video</MenuItem>
+                    <MenuItem value="DOCUMENT">Tài liệu</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Độ chính xác GPS (m)" type="number" value={form.accuracy} onChange={(event) => setForm({ ...form, accuracy: Number(event.target.value) })} />
+                </Grid>
+              </Grid>
+              <TextField label="Chú thích minh chứng" value={form.caption} onChange={(event) => setForm({ ...form, caption: event.target.value })} />
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Vĩ độ" type="number" value={form.latitude} onChange={(event) => setForm({ ...form, latitude: Number(event.target.value) })} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Kinh độ" type="number" value={form.longitude} onChange={(event) => setForm({ ...form, longitude: Number(event.target.value) })} />
+                </Grid>
+              </Grid>
+              <Button startIcon={<GpsFixedIcon />} onClick={locate}>Dùng GPS hiện tại</Button>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Tên người ký nhận" value={form.signerName} onChange={(event) => setForm({ ...form, signerName: event.target.value })} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField fullWidth label="Vai trò người ký" value={form.signerRole} onChange={(event) => setForm({ ...form, signerRole: event.target.value })} />
+                </Grid>
+              </Grid>
+              <TextField label="Link chữ ký/biên nhận" value={form.signatureUrl} onChange={(event) => setForm({ ...form, signatureUrl: event.target.value })} placeholder="https://..." />
+              <Button
+                variant="contained"
+                startIcon={<DoneAllIcon />}
+                disabled={!form.disbursementId || (!form.fileUrls && !form.signatureUrl) || createProof.isPending}
+                onClick={() => createProof.mutate()}
+              >
+                Nộp minh chứng
+              </Button>
+            </Stack>
+          </SectionPaper>
+        </Grid>
+        <Grid size={{ xs: 12, lg: 7 }}>
+          <QueryState isLoading={disbursements.isLoading} error={disbursements.error} empty={!disbursements.data?.data.length} refetch={disbursements.refetch}>
+            <Paper variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Khoản hỗ trợ</TableCell>
+                    <TableCell>Số tiền</TableCell>
+                    <TableCell>Trạng thái</TableCell>
+                    <TableCell>Ngày thực hiện</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {disbursements.data?.data.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.itemName}</TableCell>
+                      <TableCell>{row.amount.toLocaleString("vi-VN")} đ</TableCell>
+                      <TableCell><StatusChip value={row.status} /></TableCell>
+                      <TableCell>{row.executedAt ? formatDate(row.executedAt) : "Chưa thực hiện"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          </QueryState>
+        </Grid>
+      </Grid>
     </>
   );
 }

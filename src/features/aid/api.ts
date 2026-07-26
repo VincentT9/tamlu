@@ -7,6 +7,7 @@ export const aidApi = {
   createSupplier: (body: { name: string; phone?: string; address?: string; isTrusted: boolean }) =>
     postData("/api/suppliers", body),
   procurements: (params?: QueryParams) => getData<PaginatedResult<Procurement>>("/api/procurements", params),
+  procurement: (id: string) => getData<Procurement>(`/api/procurements/${id}`),
   createProcurement: (body: unknown) => postData<Procurement>("/api/procurements", body),
   approveProcurement: (id: string) => putData<Procurement>(`/api/procurements/${id}/approve`),
   payProcurement: (id: string, method: string) =>

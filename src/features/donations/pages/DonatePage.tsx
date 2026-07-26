@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
+import { useAuthStore } from "@/features/auth/store";
 import { donationApi } from "@/features/donations/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatMoney } from "@/shared/utils/format";
@@ -28,10 +29,17 @@ type DonateForm = z.output<typeof schema>;
 export function DonatePage() {
   const { campaignId = "" } = useParams();
   const showToast = useToast((state) => state.showToast);
+  const user = useAuthStore((state) => state.user);
   const detail = useQuery({ queryKey: ["public-campaign", campaignId], queryFn: () => donationApi.publicCampaign(campaignId), enabled: Boolean(campaignId) });
   const form = useForm<DonateInput, unknown, DonateForm>({
     resolver: zodResolver(schema),
-    defaultValues: { amount: 100000, donorName: "", donorEmail: "", donorPhone: "", message: "" },
+    defaultValues: {
+      amount: 100000,
+      donorName: user?.fullName ?? "",
+      donorEmail: user?.email ?? "",
+      donorPhone: user?.phone ?? "",
+      message: "",
+    },
   });
   const mutation = useMutation({
     mutationFn: (values: DonateForm) =>

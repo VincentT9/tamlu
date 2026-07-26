@@ -3,7 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SearchIcon from "@mui/icons-material/Search";
-import { Alert, Avatar, Box, Button, Chip, Grid, IconButton, MenuItem, Paper, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, MenuItem, Paper, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -17,7 +17,8 @@ import { monitoringApi } from "@/features/monitoring/api";
 import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
-import type { User } from "@/shared/api/domain";
+import type { Procurement, User } from "@/shared/api/domain";
+import { getErrorMessage } from "@/shared/api/client";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
@@ -28,6 +29,26 @@ import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { useToast } from "@/shared/ui/toast";
 import { useAuthStore } from "@/features/auth/store";
+
+const ROLE_ALIASES: Record<string, string[]> = {
+  ADMIN: ["ADMIN", "QUAN_TRI", "QUAN_TRI_VIEN"],
+  COORDINATOR: ["COORDINATOR", "DIEU_PHOI", "DIEU_PHOI_VIEN"],
+  FINANCIAL_OFFICER: ["FINANCIAL_OFFICER", "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"],
+};
+
+function normalizeRole(value: string) {
+  return value
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]+/g, "_");
+}
+
+function hasOperationalRole(roles: string[], role: keyof typeof ROLE_ALIASES) {
+  const normalizedRoles = roles.map(normalizeRole);
+  return ROLE_ALIASES[role].some((alias) => normalizedRoles.includes(alias));
+}
 
 export function OpsDashboardPage() {
   const dashboard = useQuery({ queryKey: ["dashboard-summary"], queryFn: adminApi.dashboard, refetchInterval: 60000 });
@@ -504,13 +525,6 @@ export function OpsSosPage() {
       queryClient.invalidateQueries({ queryKey: ["ops-sos"] });
     },
   });
-  const updateStatus = useMutation({
-    mutationFn: ({ id, next }: { id: string; next: string }) => sosApi.updateStatus(id, { status: next }),
-    onSuccess: () => {
-      showToast("SOS status updated.", "success");
-      queryClient.invalidateQueries({ queryKey: ["ops-sos"] });
-    },
-  });
 
   return (
     <>
@@ -545,14 +559,16 @@ export function OpsSosPage() {
               <TableCell><StatusChip value={item.priorityLevel} /></TableCell>
               <TableCell><StatusChip value={item.status} /></TableCell>
               <TableCell>
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button size="small" component={Link} to={`/citizen/sos/${item.id}`}>
+                    Xem chi tiết
+                  </Button>
                   {item.status === SOS_STATUS.pending ? (
                     <>
                       <Button size="small" startIcon={<CheckIcon />} onClick={() => verify.mutate({ id: item.id, result: "APPROVED" })}>Xác minh</Button>
                       <Button size="small" color="error" startIcon={<CloseIcon />} onClick={() => verify.mutate({ id: item.id, result: "REJECTED" })}>Từ chối</Button>
                     </>
                   ) : null}
-                  {item.status === SOS_STATUS.verified ? <Button size="small" onClick={() => updateStatus.mutate({ id: item.id, next: SOS_STATUS.assigned })}>Đánh dấu đã phân công</Button> : null}
                 </Stack>
               </TableCell>
             </TableRow>
@@ -566,20 +582,23 @@ export function OpsSosPage() {
 export function OpsMissionsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
-  const [form, setForm] = useState<{ emergencyCaseId: string; rescueTeamId: string; priority: string; title: string }>({
+  const [form, setForm] = useState<{ emergencyCaseId: string; rescueTeamId: string; priority: string; title: string; volunteerProfileIds: string[] }>({
     emergencyCaseId: "",
     rescueTeamId: "",
     priority: PRIORITY.high,
     title: "",
+    volunteerProfileIds: [],
   });
   const missions = useQuery({ queryKey: ["ops-missions"], queryFn: () => missionApi.coordinatorList({ page: 1, limit: 50 }), refetchInterval: 30000 });
   const verifiedCases = useQuery({ queryKey: ["ops-sos", SOS_STATUS.verified, "mission-select"], queryFn: () => sosApi.coordinatorList({ status: SOS_STATUS.verified, page: 1, limit: 50 }), refetchInterval: 30000 });
   const teams = useQuery({ queryKey: ["rescue-teams"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }) });
+  const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "mission-select"], queryFn: () => volunteerApi.coordinatorList({ page: 1, limit: 50 }) });
+  const verifiedVolunteers = (volunteers.data?.data ?? []).filter((volunteer) => volunteer.idVerified || volunteer.status?.toUpperCase() === "VERIFIED");
   const create = useMutation({
     mutationFn: () => missionApi.create({ ...form, vehicleIds: [] }),
     onSuccess: () => {
       showToast("Nhiệm vụ đã được tạo.", "success");
-      setForm({ emergencyCaseId: "", rescueTeamId: "", priority: PRIORITY.high, title: "" });
+      setForm({ emergencyCaseId: "", rescueTeamId: "", priority: PRIORITY.high, title: "", volunteerProfileIds: [] });
       queryClient.invalidateQueries({ queryKey: ["ops-missions"] });
     },
   });
@@ -624,6 +643,25 @@ export function OpsMissionsPage() {
               <TextField select label="Đội cứu hộ" value={form.rescueTeamId} onChange={(e) => setForm({ ...form, rescueTeamId: e.target.value })}>
                 <MenuItem value="" disabled>{teams.isLoading ? "Đang tải đội cứu hộ..." : "Chọn đội cứu hộ"}</MenuItem>
                 {(teams.data?.data ?? []).map((team) => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)}
+              </TextField>
+              <TextField
+                select
+                label="Tình nguyện viên hỗ trợ"
+                value={form.volunteerProfileIds}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm({ ...form, volunteerProfileIds: typeof value === "string" ? value.split(",") : value });
+                }}
+                SelectProps={{ multiple: true }}
+                helperText="Chỉ hiển thị hồ sơ tình nguyện đã xác minh."
+              >
+                {verifiedVolunteers.length ? verifiedVolunteers.map((volunteer) => (
+                  <MenuItem key={volunteer.id} value={volunteer.id}>
+                    {volunteer.skills} {volunteer.availableAreas ? `- ${volunteer.availableAreas}` : ""}
+                  </MenuItem>
+                )) : (
+                  <MenuItem disabled>Chưa có tình nguyện viên đã xác minh</MenuItem>
+                )}
               </TextField>
               <TextField select label="Mức ưu tiên" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 {Object.values(PRIORITY).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
@@ -748,7 +786,42 @@ export function ShipmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [status, setStatus] = useState("");
+  const [showShipmentForm, setShowShipmentForm] = useState(false);
+  const [shipmentForm, setShipmentForm] = useState({
+    warehouseId: "",
+    targetWarehouseId: "",
+    aidAllocationPlanId: "",
+    vehicleId: "",
+    items: [{ inventoryItemId: "", quantity: 1 }],
+  });
   const shipments = useQuery({ queryKey: ["shipments", status], queryFn: () => inventoryApi.shipments({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
+  const warehouses = useQuery({ queryKey: ["warehouses", "shipment-form"], queryFn: inventoryApi.warehouses });
+  const sourceWarehouseId = shipmentForm.warehouseId || warehouses.data?.[0]?.id || "";
+  const warehouseItems = useQuery({
+    queryKey: ["warehouse-items", sourceWarehouseId, "shipment-form"],
+    queryFn: () => inventoryApi.warehouseItems(sourceWarehouseId, { page: 1, limit: 50 }),
+    enabled: Boolean(sourceWarehouseId),
+  });
+  const allocationPlans = useQuery({ queryKey: ["allocation-plans", "shipment-form"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
+  const vehicles = useQuery({ queryKey: ["vehicles", "shipment-form"], queryFn: () => missionApi.vehicles({ page: 1, limit: 50 }) });
+  const readyVehicles = (vehicles.data?.data ?? []).filter((vehicle) => isReadyVehicleStatus(vehicle.status));
+  const hasValidShipmentItems = shipmentForm.items.every((item) => item.inventoryItemId && Number(item.quantity) > 0);
+  const createShipment = useMutation({
+    mutationFn: () => inventoryApi.createShipment({
+      warehouseId: sourceWarehouseId,
+      targetWarehouseId: shipmentForm.targetWarehouseId || null,
+      aidAllocationPlanId: shipmentForm.aidAllocationPlanId || null,
+      vehicleId: shipmentForm.vehicleId || null,
+      items: shipmentForm.items.map((item) => ({ inventoryItemId: item.inventoryItemId, quantity: Number(item.quantity) })),
+    }),
+    onSuccess: () => {
+      showToast("Chuyến hàng đã được lập từ kho nguồn đến kho tiền phương.", "success");
+      setShipmentForm({ warehouseId: "", targetWarehouseId: "", aidAllocationPlanId: "", vehicleId: "", items: [{ inventoryItemId: "", quantity: 1 }] });
+      setShowShipmentForm(false);
+      queryClient.invalidateQueries({ queryKey: ["shipments"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouse-items"] });
+    },
+  });
   const update = useMutation({
     mutationFn: ({ id, next }: { id: string; next: string }) => inventoryApi.updateShipmentStatus(id, { status: next }),
     onSuccess: () => {
@@ -759,9 +832,100 @@ export function ShipmentsPage() {
   return (
     <>
       <PageHeader title="Quản lý vận chuyển" description="Theo dõi giao nhận và cập nhật trạng thái vận chuyển trong quy trình hậu cần." />
-      <TextField select label="Trạng thái" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 220, mb: 2 }}>
-        <MenuItem value="">Tất cả</MenuItem>{Object.values(SHIPMENT_STATUS).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
-      </TextField>
+      <Stack spacing={2.5} sx={{ mb: 2 }}>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ xs: "stretch", md: "center" }}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setShowShipmentForm((value) => !value)} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+            {showShipmentForm ? "Ẩn form lập chuyến" : "Lập chuyến hàng"}
+          </Button>
+          <TextField select label="Trạng thái" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 220 }}>
+            <MenuItem value="">Tất cả</MenuItem>{Object.values(SHIPMENT_STATUS).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
+          </TextField>
+        </Stack>
+        {showShipmentForm ? (
+          <SectionPaper>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="h6" fontWeight={900}>Lập chuyến về Kho Tiền Phương</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Điều phối viên chọn hàng từ Kho Tổng, chuyển về kho tiền phương gần vùng lũ hoặc theo kế hoạch phân bổ đã duyệt.
+                </Typography>
+              </Box>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <TextField fullWidth select label="Kho nguồn" value={sourceWarehouseId} onChange={(event) => setShipmentForm({ ...shipmentForm, warehouseId: event.target.value, items: [{ inventoryItemId: "", quantity: 1 }] })}>
+                    <MenuItem value="" disabled>{warehouses.isLoading ? "Đang tải kho..." : "Chọn kho nguồn"}</MenuItem>
+                    {(warehouses.data ?? []).map((warehouse) => <MenuItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</MenuItem>)}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <TextField fullWidth select label="Kho tiền phương" value={shipmentForm.targetWarehouseId} onChange={(event) => setShipmentForm({ ...shipmentForm, targetWarehouseId: event.target.value })}>
+                    <MenuItem value="">Không chọn</MenuItem>
+                    {(warehouses.data ?? []).filter((warehouse) => warehouse.id !== sourceWarehouseId).map((warehouse) => <MenuItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</MenuItem>)}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <TextField fullWidth select label="Kế hoạch phân bổ" value={shipmentForm.aidAllocationPlanId} onChange={(event) => setShipmentForm({ ...shipmentForm, aidAllocationPlanId: event.target.value })}>
+                    <MenuItem value="">Không gắn kế hoạch</MenuItem>
+                    {(allocationPlans.data?.data ?? []).map((plan) => <MenuItem key={plan.id} value={plan.id}>{plan.areaName ?? plan.campaignName ?? plan.id}</MenuItem>)}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <TextField fullWidth select label="Phương tiện" value={shipmentForm.vehicleId} onChange={(event) => setShipmentForm({ ...shipmentForm, vehicleId: event.target.value })}>
+                    <MenuItem value="">Chưa chỉ định</MenuItem>
+                    {readyVehicles.length ? readyVehicles.map((vehicle) => (
+                      <MenuItem key={vehicle.id} value={vehicle.id}>
+                        {vehicle.vehicleName}
+                      </MenuItem>
+                    )) : (
+                      <MenuItem disabled>{vehicles.isLoading ? "Đang tải phương tiện..." : "Không có phương tiện sẵn sàng"}</MenuItem>
+                    )}
+                  </TextField>
+                </Grid>
+              </Grid>
+              <Stack spacing={1.5}>
+                {shipmentForm.items.map((item, index) => (
+                  <Grid container spacing={1.5} alignItems="center" key={index}>
+                    <Grid size={{ xs: 12, md: 7 }}>
+                      <TextField fullWidth select label="Mặt hàng từ kho nguồn" value={item.inventoryItemId} onChange={(event) => {
+                        const items = [...shipmentForm.items];
+                        items[index] = { ...item, inventoryItemId: event.target.value };
+                        setShipmentForm({ ...shipmentForm, items });
+                      }}>
+                        <MenuItem value="" disabled>{warehouseItems.isLoading ? "Đang tải tồn kho..." : "Chọn mặt hàng"}</MenuItem>
+                        {(warehouseItems.data?.data ?? []).map((inventoryItem) => (
+                          <MenuItem key={inventoryItem.id} value={inventoryItem.id}>
+                            {inventoryItem.itemName} - còn {inventoryItem.quantity - inventoryItem.reservedQuantity} {inventoryItem.unit}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                      <TextField fullWidth label="Số lượng chuyển" type="number" value={item.quantity} onChange={(event) => {
+                        const items = [...shipmentForm.items];
+                        items[index] = { ...item, quantity: Number(event.target.value) };
+                        setShipmentForm({ ...shipmentForm, items });
+                      }} />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 2 }}>
+                      <Button fullWidth size="small" color="error" disabled={shipmentForm.items.length === 1} onClick={() => setShipmentForm({ ...shipmentForm, items: shipmentForm.items.filter((_, itemIndex) => itemIndex !== index) })}>
+                        Xóa
+                      </Button>
+                    </Grid>
+                  </Grid>
+                ))}
+              </Stack>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setShipmentForm({ ...shipmentForm, items: [...shipmentForm.items, { inventoryItemId: "", quantity: 1 }] })}>
+                  Thêm mặt hàng
+                </Button>
+                <Button variant="contained" disabled={!sourceWarehouseId || !hasValidShipmentItems || createShipment.isPending} onClick={() => createShipment.mutate()}>
+                  Tạo chuyến hàng
+                </Button>
+              </Stack>
+            </Stack>
+          </SectionPaper>
+        ) : null}
+      </Stack>
       <QueryState isLoading={shipments.isLoading} error={shipments.error} empty={!shipments.data?.data.length} refetch={shipments.refetch}>
         <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Xuất phát</TableCell><TableCell>Tài xế</TableCell><TableCell>Trạng thái</TableCell><TableCell sx={{ minWidth: 520 }}>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {shipments.data?.data.map((shipment) => (
@@ -790,10 +954,108 @@ export function ShipmentsPage() {
   );
 }
 
+export function AreaAssessmentsPage() {
+  const queryClient = useQueryClient();
+  const showToast = useToast((state) => state.showToast);
+  const [status, setStatus] = useState("");
+  const assessments = useQuery({ queryKey: ["area-assessments", status], queryFn: () => aidApi.areaAssessments({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
+  const verify = useMutation({
+    mutationFn: ({ id, nextStatus }: { id: string; nextStatus: "VERIFIED" | "REJECTED" }) =>
+      aidApi.verifyAreaAssessment(id, { status: nextStatus, notes: nextStatus === "VERIFIED" ? "Điều phối viên đã xác minh nhu cầu thực địa." : "Báo cáo cần rà soát lại." }),
+    onSuccess: () => {
+      showToast("Trạng thái khảo sát thực địa đã được cập nhật.", "success");
+      queryClient.invalidateQueries({ queryKey: ["area-assessments"] });
+    },
+  });
+
+  return (
+    <>
+      <PageHeader title="Duyệt khảo sát nhu cầu" description="Xác minh báo cáo thiệt hại và nhu cầu khẩn cấp do đội cứu hộ gửi từ hiện trường." />
+      <TextField select label="Trạng thái" value={status} onChange={(event) => setStatus(event.target.value)} sx={{ minWidth: 240, mb: 2 }}>
+        <MenuItem value="">Tất cả</MenuItem>
+        {["PENDING", "VERIFIED", "REJECTED"].map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
+      </TextField>
+      <QueryState isLoading={assessments.isLoading} error={assessments.error} empty={!assessments.data?.data.length} refetch={assessments.refetch}>
+        <Paper variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Khu vực</TableCell>
+                <TableCell>Hộ ảnh hưởng</TableCell>
+                <TableCell>Nhu cầu</TableCell>
+                <TableCell>Ưu tiên</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {assessments.data?.data.map((assessment) => (
+                <TableRow key={assessment.id}>
+                  <TableCell>
+                    <Typography fontWeight={900}>{assessment.areaName}</Typography>
+                    <Typography variant="body2" color="text.secondary">{assessment.ward}, {assessment.district}, {assessment.province}</Typography>
+                  </TableCell>
+                  <TableCell>{assessment.householdsAffected}</TableCell>
+                  <TableCell>
+                    <Stack spacing={0.5}>
+                      {assessment.needs.length ? assessment.needs.map((need) => (
+                        <Typography key={need.id} variant="body2">{need.itemType}: {need.quantity} {need.unit}</Typography>
+                      )) : <Typography variant="body2" color="text.secondary">Chưa nhập nhu cầu chi tiết</Typography>}
+                    </Stack>
+                  </TableCell>
+                  <TableCell><StatusChip value={assessment.priorityLevel} /></TableCell>
+                  <TableCell><StatusChip value={assessment.status} /></TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      <Button size="small" disabled={assessment.status === "VERIFIED" || verify.isPending} onClick={() => verify.mutate({ id: assessment.id, nextStatus: "VERIFIED" })}>Xác minh</Button>
+                      <Button size="small" color="error" disabled={assessment.status === "REJECTED" || verify.isPending} onClick={() => verify.mutate({ id: assessment.id, nextStatus: "REJECTED" })}>Từ chối</Button>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      </QueryState>
+    </>
+  );
+}
+
 export function CampaignAdminPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const roles = useAuthStore((state) => state.roles);
+  const isAdmin = roles.includes(ROLES.admin);
+  const [campaignForm, setCampaignForm] = useState({
+    name: "",
+    description: "",
+    targetAmount: 100000000,
+    affectedArea: "",
+    startDate: toDateInputValue(new Date()),
+    endDate: toDateInputValue(addDays(new Date(), 30)),
+    coverImageUrl: "",
+  });
   const campaigns = useQuery({ queryKey: ["campaigns-admin"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }) });
+  const createCampaign = useMutation({
+    mutationFn: () => donationApi.createCampaign({
+      ...campaignForm,
+      status: isAdmin ? CAMPAIGN_STATUS.active : CAMPAIGN_STATUS.draft,
+      targetAmount: Number(campaignForm.targetAmount),
+    }),
+    onSuccess: () => {
+      showToast(isAdmin ? "Chiến dịch đã được tạo và kích hoạt." : "Chiến dịch đã được tạo, đang chờ admin duyệt.", "success");
+      setCampaignForm({
+        name: "",
+        description: "",
+        targetAmount: 100000000,
+        affectedArea: "",
+        startDate: toDateInputValue(new Date()),
+        endDate: toDateInputValue(addDays(new Date(), 30)),
+        coverImageUrl: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["campaigns-admin"] });
+    },
+  });
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => donationApi.updateCampaignStatus(id, status),
     onSuccess: () => {
@@ -804,62 +1066,684 @@ export function CampaignAdminPage() {
 
   return (
     <>
-      <PageHeader title="Quản trị chiến dịch" description="Theo dõi trạng thái chiến dịch và tiến độ quyên góp công khai." />
+      <PageHeader title="Quản trị chiến dịch" description="Điều phối viên tạo chiến dịch gây quỹ ở dạng bản nháp. Admin xét duyệt và kích hoạt trước khi công khai." />
+      <SectionPaper>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6" fontWeight={900}>Tạo chiến dịch gây quỹ</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {isAdmin ? "Admin tạo chiến dịch sẽ kích hoạt ngay." : "Chiến dịch do điều phối viên tạo sẽ chuyển sang trạng thái bản nháp để admin duyệt."}
+            </Typography>
+          </Box>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField fullWidth label="Tên chiến dịch" value={campaignForm.name} onChange={(event) => setCampaignForm({ ...campaignForm, name: event.target.value })} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField fullWidth label="Mục tiêu quyên góp" type="number" value={campaignForm.targetAmount} onChange={(event) => setCampaignForm({ ...campaignForm, targetAmount: Number(event.target.value) })} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField fullWidth label="Khu vực ảnh hưởng" value={campaignForm.affectedArea} onChange={(event) => setCampaignForm({ ...campaignForm, affectedArea: event.target.value })} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField fullWidth label="Ngày bắt đầu" type="date" value={campaignForm.startDate} onChange={(event) => setCampaignForm({ ...campaignForm, startDate: event.target.value })} InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField fullWidth label="Ngày kết thúc" type="date" value={campaignForm.endDate} onChange={(event) => setCampaignForm({ ...campaignForm, endDate: event.target.value })} InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField fullWidth label="Ảnh bìa chiến dịch" value={campaignForm.coverImageUrl} onChange={(event) => setCampaignForm({ ...campaignForm, coverImageUrl: event.target.value })} placeholder="https://..." />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField fullWidth multiline minRows={3} label="Mô tả chiến dịch" value={campaignForm.description} onChange={(event) => setCampaignForm({ ...campaignForm, description: event.target.value })} />
+            </Grid>
+          </Grid>
+          <Box>
+            <Button variant="contained" startIcon={<AddIcon />} disabled={!campaignForm.name || !campaignForm.affectedArea || createCampaign.isPending} onClick={() => createCampaign.mutate()}>
+              {isAdmin ? "Tạo và kích hoạt" : "Tạo bản nháp chờ duyệt"}
+            </Button>
+          </Box>
+        </Stack>
+      </SectionPaper>
       <QueryState isLoading={campaigns.isLoading} error={campaigns.error} empty={!campaigns.data?.data.length} refetch={campaigns.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên chiến dịch</TableCell><TableCell>Đã quyên góp</TableCell><TableCell>Mục tiêu</TableCell><TableCell>Trạng thái</TableCell><TableCell>Khu vực</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
-          {campaigns.data?.data.map((campaign) => <TableRow key={campaign.id}><TableCell>{campaign.name}</TableCell><TableCell>{formatMoney(campaign.currentAmount)}</TableCell><TableCell>{formatMoney(campaign.targetAmount)}</TableCell><TableCell><StatusChip value={campaign.status} /></TableCell><TableCell>{campaign.affectedArea}</TableCell><TableCell><Stack direction="row" spacing={1}><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.active || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.active })}>Kích hoạt</Button><Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.paused || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.paused })}>Tạm dừng</Button><Button size="small" color="error" disabled={campaign.status === CAMPAIGN_STATUS.closed || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.closed })}>Đóng</Button></Stack></TableCell></TableRow>)}
-        </TableBody></Table></Paper>
+        <Paper variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Tên chiến dịch</TableCell>
+                <TableCell>Đã quyên góp</TableCell>
+                <TableCell>Mục tiêu</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Khu vực</TableCell>
+                <TableCell>Chi tiết</TableCell>
+                {isAdmin ? <TableCell>Thao tác</TableCell> : null}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {campaigns.data?.data.map((campaign) => (
+                <TableRow key={campaign.id}>
+                  <TableCell>{campaign.name}</TableCell>
+                  <TableCell>{formatMoney(campaign.currentAmount)}</TableCell>
+                  <TableCell>{formatMoney(campaign.targetAmount)}</TableCell>
+                  <TableCell><StatusChip value={campaign.status} /></TableCell>
+                  <TableCell>{campaign.affectedArea}</TableCell>
+                  <TableCell>
+                    <Button component={Link} to={`/campaigns/${campaign.id}`} size="small">
+                      Xem chi tiết
+                    </Button>
+                  </TableCell>
+                  {isAdmin ? (
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.active || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.active })}>Kích hoạt</Button>
+                        <Button size="small" disabled={campaign.status === CAMPAIGN_STATUS.paused || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.paused })}>Tạm dừng</Button>
+                        <Button size="small" color="error" disabled={campaign.status === CAMPAIGN_STATUS.closed || updateStatus.isPending} onClick={() => updateStatus.mutate({ id: campaign.id, status: CAMPAIGN_STATUS.closed })}>Đóng</Button>
+                      </Stack>
+                    </TableCell>
+                  ) : null}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
       </QueryState>
     </>
   );
 }
 
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function toDateInputValue(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function isReadyVehicleStatus(status?: string | null) {
+  if (!status) return false;
+  return ["AVAILABLE", "READY", "ACTIVE", "IDLE", "SAN_SANG"].includes(normalizeWorkflowStatus(status));
+}
+
 export function ProcurementPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const roles = useAuthStore((state) => state.roles);
+  const canCreateProcurement = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "COORDINATOR");
+  const canReviewProcurement = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "FINANCIAL_OFFICER");
+  const [showProcurementForm, setShowProcurementForm] = useState(false);
+  const [selectedProcurement, setSelectedProcurement] = useState<Procurement | null>(null);
+  const [procurementForm, setProcurementForm] = useState({
+    campaignId: "",
+    supplierId: "",
+    warehouseId: "",
+    items: [{ itemName: "Gạo", quantity: 100, unit: "kg", pricePerUnit: 15000 }],
+  });
   const procurements = useQuery({ queryKey: ["procurements"], queryFn: () => aidApi.procurements({ page: 1, limit: 50 }) });
+  const campaigns = useQuery({ queryKey: ["campaigns-admin", "procurement-select"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }), enabled: canCreateProcurement });
+  const suppliers = useQuery({ queryKey: ["suppliers"], queryFn: aidApi.suppliers, enabled: canCreateProcurement });
+  const warehouses = useQuery({ queryKey: ["warehouses"], queryFn: inventoryApi.warehouses, enabled: canCreateProcurement });
+  const selectedProcurementDetail = useQuery({
+    queryKey: ["procurement-detail", selectedProcurement?.id],
+    queryFn: () => aidApi.procurement(selectedProcurement?.id ?? ""),
+    enabled: Boolean(selectedProcurement?.id),
+  });
+  const procurementForDialog = selectedProcurementDetail.data ?? selectedProcurement;
+  const procurementItemsForDialog = getProcurementItems(procurementForDialog);
+  const procurementTotal = procurementForm.items.reduce(
+    (total, item) => total + Number(item.quantity) * Number(item.pricePerUnit),
+    0,
+  );
+  const createProcurement = useMutation({
+    mutationFn: () => aidApi.createProcurement({
+      campaignId: procurementForm.campaignId,
+      supplierId: procurementForm.supplierId,
+      warehouseId: procurementForm.warehouseId,
+      items: procurementForm.items.map((item) => ({
+        itemName: item.itemName,
+        quantity: Number(item.quantity),
+        unit: item.unit,
+        pricePerUnit: Number(item.pricePerUnit),
+      })),
+    }),
+    onSuccess: () => {
+      showToast("Đề xuất mua vật tư đã được gửi cho kế toán duyệt.", "success");
+      setProcurementForm({
+        campaignId: "",
+        supplierId: "",
+        warehouseId: "",
+        items: [{ itemName: "Gạo", quantity: 100, unit: "kg", pricePerUnit: 15000 }],
+      });
+      setShowProcurementForm(false);
+      queryClient.invalidateQueries({ queryKey: ["procurements"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
+  const hasValidProcurementItems = procurementForm.items.every((item) => item.itemName && Number(item.quantity) > 0 && item.unit && Number(item.pricePerUnit) > 0);
   const action = useMutation({
     mutationFn: ({ id, type }: { id: string; type: "approve" | "pay" | "deliver" }) =>
       type === "approve" ? aidApi.approveProcurement(id) : type === "pay" ? aidApi.payProcurement(id, "BANK_TRANSFER") : aidApi.deliverProcurement(id),
     onSuccess: () => {
-      showToast("Hồ sơ mua sắm đã được cập nhật.", "success");
+      showToast("Hồ sơ mua sắm đã được cập nhật. Ngân sách được khóa giữ sau khi duyệt.", "success");
       queryClient.invalidateQueries({ queryKey: ["procurements"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
-  return <WorkflowTable title="Mua sắm cứu trợ" rows={procurements.data?.data ?? []} loading={procurements.isLoading} error={procurements.error} refetch={procurements.refetch} actions={(row) => (
-    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "pay" })}>Thanh toán</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Bàn giao</Button></Stack>
-  )} />;
+  return (
+    <Stack spacing={2.5}>
+      {canCreateProcurement ? (
+        <Stack spacing={2}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setShowProcurementForm((value) => !value)}
+              sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}
+            >
+              {showProcurementForm ? "Ẩn form đề xuất" : "Đề xuất vật tư"}
+            </Button>
+          {showProcurementForm ? (
+            <SectionPaper>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="h6" fontWeight={900}>Đề xuất mua vật tư</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Điều phối viên lập đơn mua nhiều vật tư từ nhà cung cấp về Kho Tổng. Kế toán duyệt để hệ thống khóa giữ ngân sách, tránh chi tiêu vượt quỹ.
+                  </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Chiến dịch sử dụng ngân sách"
+                      value={procurementForm.campaignId}
+                      onChange={(event) => setProcurementForm({ ...procurementForm, campaignId: event.target.value })}
+                    >
+                      <MenuItem value="" disabled>{campaigns.isLoading ? "Đang tải chiến dịch..." : "Chọn chiến dịch"}</MenuItem>
+                      {(campaigns.data?.data ?? []).map((campaign) => <MenuItem key={campaign.id} value={campaign.id}>{campaign.name}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Nhà cung cấp"
+                      value={procurementForm.supplierId}
+                      onChange={(event) => setProcurementForm({ ...procurementForm, supplierId: event.target.value })}
+                    >
+                      <MenuItem value="" disabled>{suppliers.isLoading ? "Đang tải nhà cung cấp..." : "Chọn nhà cung cấp"}</MenuItem>
+                      {(suppliers.data ?? []).map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.name}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Kho nhận"
+                      value={procurementForm.warehouseId}
+                      onChange={(event) => setProcurementForm({ ...procurementForm, warehouseId: event.target.value })}
+                    >
+                      <MenuItem value="" disabled>{warehouses.isLoading ? "Đang tải kho..." : "Chọn Kho Tổng"}</MenuItem>
+                      {(warehouses.data ?? []).map((warehouse) => <MenuItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                </Grid>
+                <Stack spacing={1.5}>
+                  {procurementForm.items.map((item, index) => (
+                    <Grid container spacing={1.5} alignItems="center" key={index}>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                          fullWidth
+                          label="Tên vật tư"
+                          value={item.itemName}
+                          onChange={(event) => {
+                            const items = [...procurementForm.items];
+                            items[index] = { ...item, itemName: event.target.value };
+                            setProcurementForm({ ...procurementForm, items });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+                        <TextField
+                          fullWidth
+                          label="Số lượng"
+                          type="number"
+                          value={item.quantity}
+                          onChange={(event) => {
+                            const items = [...procurementForm.items];
+                            items[index] = { ...item, quantity: Number(event.target.value) };
+                            setProcurementForm({ ...procurementForm, items });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+                        <TextField
+                          fullWidth
+                          label="Đơn vị"
+                          value={item.unit}
+                          onChange={(event) => {
+                            const items = [...procurementForm.items];
+                            items[index] = { ...item, unit: event.target.value };
+                            setProcurementForm({ ...procurementForm, items });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+                        <TextField
+                          fullWidth
+                          label="Đơn giá"
+                          type="number"
+                          value={item.pricePerUnit}
+                          onChange={(event) => {
+                            const items = [...procurementForm.items];
+                            items[index] = { ...item, pricePerUnit: Number(event.target.value) };
+                            setProcurementForm({ ...procurementForm, items });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 2 }}>
+                        <Typography fontWeight={900} sx={{ color: "var(--color-green-800)" }}>
+                          {formatMoney(Number(item.quantity) * Number(item.pricePerUnit))}
+                        </Typography>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 1 }}>
+                        <Button
+                          fullWidth
+                          size="small"
+                          color="error"
+                          disabled={procurementForm.items.length === 1}
+                          onClick={() => setProcurementForm({ ...procurementForm, items: procurementForm.items.filter((_, itemIndex) => itemIndex !== index) })}
+                        >
+                          Xóa
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  ))}
+                </Stack>
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ xs: "stretch", md: "center" }} justifyContent="space-between">
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => setProcurementForm({
+                      ...procurementForm,
+                      items: [...procurementForm.items, { itemName: "", quantity: 1, unit: "kg", pricePerUnit: 0 }],
+                    })}
+                  >
+                    Thêm vật tư
+                  </Button>
+                  <MetricCard label="Tổng tạm tính" value={formatMoney(Number.isFinite(procurementTotal) ? procurementTotal : 0)} />
+                </Stack>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  disabled={!procurementForm.campaignId || !procurementForm.supplierId || !procurementForm.warehouseId || !hasValidProcurementItems || createProcurement.isPending}
+                  onClick={() => createProcurement.mutate()}
+                  sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}
+                >
+                  Gửi đề xuất mua vật tư
+                </Button>
+              </Stack>
+            </SectionPaper>
+          ) : null}
+        </Stack>
+      ) : null}
+      <WorkflowTable title="Danh sách đề xuất mua vật tư" rows={procurements.data?.data ?? []} loading={procurements.isLoading} error={procurements.error} refetch={procurements.refetch} actions={(row) => (
+        canReviewProcurement ? (
+          <Stack direction="row" spacing={1}>
+            <Button size="small" onClick={() => setSelectedProcurement(row as Procurement)}>Xem</Button>
+            <Button size="small" disabled={isPastProcurementStep(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt và khóa ngân sách</Button>
+            <Button size="small" disabled={isPastProcurementStep(row.status, "pay") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "pay" })}>Thanh toán</Button>
+            <Button size="small" disabled={isPastProcurementStep(row.status, "deliver") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Nhập kho</Button>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">Chờ kế toán duyệt</Typography>
+        )
+      )} />
+      <Dialog open={Boolean(selectedProcurement)} onClose={() => setSelectedProcurement(null)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Danh sách vật tư đề xuất</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <MetricCard label="Chiến dịch" value={procurementForDialog?.campaignName ?? "Chưa có thông tin"} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <MetricCard label="Nhà cung cấp" value={procurementForDialog?.supplierName ?? "Chưa có thông tin"} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <MetricCard label="Kho nhận" value={procurementForDialog?.warehouseName ?? "Chưa có thông tin"} />
+              </Grid>
+            </Grid>
+            {selectedProcurementDetail.isLoading ? (
+              <Typography variant="body2" color="text.secondary">Đang tải danh sách vật tư...</Typography>
+            ) : null}
+            <Paper variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Vật tư</TableCell>
+                    <TableCell>Số lượng</TableCell>
+                    <TableCell>Đơn vị</TableCell>
+                    <TableCell>Đơn giá</TableCell>
+                    <TableCell>Thành tiền</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {procurementItemsForDialog.length ? procurementItemsForDialog.map((item, index) => {
+                    const pricePerUnit = item.pricePerUnit ?? item.unitPrice ?? 0;
+                    const lineTotal = item.totalAmount ?? item.amount ?? item.quantity * pricePerUnit;
+                    return (
+                    <TableRow key={item.id ?? index}>
+                      <TableCell>{item.itemName ?? item.name ?? "Vật tư"}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.unit ?? "-"}</TableCell>
+                      <TableCell>{formatMoney(pricePerUnit)}</TableCell>
+                      <TableCell>{formatMoney(lineTotal)}</TableCell>
+                    </TableRow>
+                    );
+                  }) : (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Typography color="text.secondary">Chưa có dữ liệu vật tư trong đề xuất này.</Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Paper>
+            <MetricCard label="Tổng đề xuất" value={formatMoney(procurementForDialog?.totalAmount ?? 0)} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedProcurement(null)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
+    </Stack>
+  );
 }
 
 export function AllocationPlansPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const roles = useAuthStore((state) => state.roles);
+  const canCreateAllocation = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "COORDINATOR");
+  const canApproveAllocation = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "FINANCIAL_OFFICER");
+  const [showAllocationForm, setShowAllocationForm] = useState(false);
+  const [allocationForm, setAllocationForm] = useState({
+    campaignId: "",
+    areaAssessmentId: "",
+    items: [{ itemType: "Gạo", quantity: 100, approvedAmount: 0 }],
+  });
   const plans = useQuery({ queryKey: ["allocation-plans"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
+  const campaigns = useQuery({ queryKey: ["campaigns-admin", "allocation-select"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }), enabled: canCreateAllocation });
+  const assessments = useQuery({ queryKey: ["area-assessments", "allocation-select"], queryFn: () => aidApi.areaAssessments({ status: "VERIFIED", page: 1, limit: 50 }), enabled: canCreateAllocation });
+  const allocationTotal = allocationForm.items.reduce((total, item) => total + Number(item.approvedAmount), 0);
+  const hasValidAllocationItems = allocationForm.items.every((item) => item.itemType && Number(item.quantity) > 0 && Number(item.approvedAmount) >= 0);
+  const createPlan = useMutation({
+    mutationFn: () => aidApi.createAllocationPlan({
+      campaignId: allocationForm.campaignId,
+      areaAssessmentId: allocationForm.areaAssessmentId || null,
+      items: allocationForm.items.map((item) => ({
+        itemType: item.itemType,
+        quantity: Number(item.quantity),
+        approvedAmount: Number(item.approvedAmount),
+      })),
+    }),
+    onSuccess: () => {
+      showToast("Kế hoạch phân bổ đã được tạo. Điều phối viên có thể trình duyệt khi sẵn sàng.", "success");
+      setAllocationForm({ campaignId: "", areaAssessmentId: "", items: [{ itemType: "Gạo", quantity: 100, approvedAmount: 0 }] });
+      setShowAllocationForm(false);
+      queryClient.invalidateQueries({ queryKey: ["allocation-plans"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
   const action = useMutation({
     mutationFn: ({ id, type }: { id: string; type: "submit" | "approve" | "close" }) =>
       type === "submit" ? aidApi.submitAllocationPlan(id) : type === "approve" ? aidApi.approveAllocationPlan(id, { status: "APPROVED" }) : aidApi.closeAllocationPlan(id),
     onSuccess: () => {
-      showToast("Kế hoạch phân bổ đã được cập nhật.", "success");
+      showToast("Kế hoạch phân bổ đã được cập nhật. Khi phê duyệt, hệ thống khóa giữ tiền và hàng theo kế hoạch.", "success");
       queryClient.invalidateQueries({ queryKey: ["allocation-plans"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
-  return <WorkflowTable title="Kế hoạch phân bổ" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
-    <Stack direction="row" spacing={1}><Button size="small" onClick={() => action.mutate({ id: row.id, type: "submit" })}>Gửi duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt</Button><Button size="small" onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng</Button></Stack>
-  )} />;
+  return (
+    <Stack spacing={2.5}>
+      {canCreateAllocation ? (
+        <Stack spacing={2}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setShowAllocationForm((value) => !value)} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+            {showAllocationForm ? "Ẩn form kế hoạch" : "Lập kế hoạch phân bổ"}
+          </Button>
+          {showAllocationForm ? (
+            <SectionPaper>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="h6" fontWeight={900}>Lập phương án cấp phát</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Chọn chiến dịch, báo cáo nhu cầu đã xác minh và khai báo lượng hàng/tiền cần giữ chỗ trước khi trình kế toán duyệt.
+                  </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField fullWidth select label="Chiến dịch" value={allocationForm.campaignId} onChange={(event) => setAllocationForm({ ...allocationForm, campaignId: event.target.value })}>
+                      <MenuItem value="" disabled>{campaigns.isLoading ? "Đang tải chiến dịch..." : "Chọn chiến dịch"}</MenuItem>
+                      {(campaigns.data?.data ?? []).map((campaign) => <MenuItem key={campaign.id} value={campaign.id}>{campaign.name}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField fullWidth select label="Báo cáo nhu cầu đã xác minh" value={allocationForm.areaAssessmentId} onChange={(event) => setAllocationForm({ ...allocationForm, areaAssessmentId: event.target.value })}>
+                      <MenuItem value="">Không gắn báo cáo</MenuItem>
+                      {(assessments.data?.data ?? []).map((assessment) => <MenuItem key={assessment.id} value={assessment.id}>{assessment.areaName} - {assessment.householdsAffected} hộ</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                </Grid>
+                <Stack spacing={1.5}>
+                  {allocationForm.items.map((item, index) => (
+                    <Grid container spacing={1.5} alignItems="center" key={index}>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField fullWidth label="Loại vật tư/tiền mặt" value={item.itemType} onChange={(event) => {
+                          const items = [...allocationForm.items];
+                          items[index] = { ...item, itemType: event.target.value };
+                          setAllocationForm({ ...allocationForm, items });
+                        }} />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField fullWidth label="Số lượng cấp phát" type="number" value={item.quantity} onChange={(event) => {
+                          const items = [...allocationForm.items];
+                          items[index] = { ...item, quantity: Number(event.target.value) };
+                          setAllocationForm({ ...allocationForm, items });
+                        }} />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField fullWidth label="Tiền mặt dự kiến" type="number" value={item.approvedAmount} onChange={(event) => {
+                          const items = [...allocationForm.items];
+                          items[index] = { ...item, approvedAmount: Number(event.target.value) };
+                          setAllocationForm({ ...allocationForm, items });
+                        }} />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 2 }}>
+                        <Button fullWidth size="small" color="error" disabled={allocationForm.items.length === 1} onClick={() => setAllocationForm({ ...allocationForm, items: allocationForm.items.filter((_, itemIndex) => itemIndex !== index) })}>Xóa</Button>
+                      </Grid>
+                    </Grid>
+                  ))}
+                </Stack>
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ xs: "stretch", md: "center" }} justifyContent="space-between">
+                  <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setAllocationForm({ ...allocationForm, items: [...allocationForm.items, { itemType: "", quantity: 1, approvedAmount: 0 }] })}>
+                    Thêm dòng cấp phát
+                  </Button>
+                  <MetricCard label="Tổng tiền giữ chỗ" value={formatMoney(allocationTotal)} />
+                </Stack>
+                <Button variant="contained" disabled={!hasValidAllocationItems || createPlan.isPending} onClick={() => createPlan.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+                  Tạo kế hoạch phân bổ
+                </Button>
+              </Stack>
+            </SectionPaper>
+          ) : null}
+        </Stack>
+      ) : null}
+      <WorkflowTable title="Kế hoạch phân bổ" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
+        <Stack direction="row" spacing={1}>
+          {canCreateAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "submit") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "submit" })}>Trình duyệt</Button> : null}
+          {canApproveAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Phê duyệt và khóa giữ</Button> : null}
+          {canCreateAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "close") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng kế hoạch</Button> : null}
+        </Stack>
+      )} />
+    </Stack>
+  );
+}
+
+function normalizeWorkflowStatus(status: string) {
+  return normalizeRole(status);
+}
+
+function isPastProcurementStep(status: string, action: "approve" | "pay" | "deliver") {
+  const normalized = normalizeWorkflowStatus(status);
+  if (["REJECTED", "CANCELLED", "CANCELED", "DELIVERED", "RECEIVED", "IMPORTED", "COMPLETED"].includes(normalized)) return true;
+  const order: Record<string, number> = {
+    DRAFT: 0,
+    PENDING: 0,
+    SUBMITTED: 0,
+    APPROVED: 1,
+    HELD: 1,
+    BUDGET_HELD: 1,
+    BUDGET_LOCKED: 1,
+    PAID: 2,
+    PAYMENT_COMPLETED: 2,
+    EXECUTED: 2,
+  };
+  const actionOrder = { approve: 0, pay: 1, deliver: 2 }[action];
+  return (order[normalized] ?? -1) > actionOrder;
+}
+
+function isPastAllocationStep(status: string, action: "submit" | "approve" | "close") {
+  const normalized = normalizeWorkflowStatus(status);
+  if (["REJECTED", "CANCELLED", "CANCELED", "CLOSED", "COMPLETED"].includes(normalized)) return true;
+  const order: Record<string, number> = {
+    DRAFT: 0,
+    PENDING: 0,
+    SUBMITTED: 1,
+    PENDING_APPROVAL: 1,
+    UNDER_REVIEW: 1,
+    APPROVED: 2,
+    HELD: 2,
+    BUDGET_HELD: 2,
+    IN_PROGRESS: 2,
+    DISTRIBUTING: 2,
+  };
+  const actionOrder = { submit: 0, approve: 1, close: 2 }[action];
+  return (order[normalized] ?? -1) > actionOrder;
 }
 
 export function DisbursementsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const roles = useAuthStore((state) => state.roles);
+  const canCreateDisbursement = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "COORDINATOR");
+  const canExecuteDisbursement = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "FINANCIAL_OFFICER");
+  const [showDisbursementForm, setShowDisbursementForm] = useState(false);
+  const [selectedDisbursement, setSelectedDisbursement] = useState<WorkflowRow | null>(null);
+  const [disbursementForm, setDisbursementForm] = useState({ allocationPlanId: "", expenseCategory: "DIRECT_AID", itemName: "Hỗ trợ tiền mặt", type: "BANK_TRANSFER", method: "BANK_TRANSFER", amount: 0 });
+  const [executeForm, setExecuteForm] = useState({ invoiceUrl: "", actualAmount: 0 });
   const rows = useQuery({ queryKey: ["disbursements"], queryFn: () => aidApi.disbursements({ page: 1, limit: 50 }) });
-  const execute = useMutation({
-    mutationFn: (id: string) => aidApi.executeDisbursement(id, { invoiceUrl: "https://example.com/invoice-placeholder.png", actualAmount: 0 }),
+  const plans = useQuery({ queryKey: ["allocation-plans", "disbursement-select"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }), enabled: canCreateDisbursement });
+  const create = useMutation({
+    mutationFn: () => aidApi.createDisbursement({
+      allocationPlanId: disbursementForm.allocationPlanId || null,
+      expenseCategory: disbursementForm.expenseCategory,
+      itemName: disbursementForm.itemName,
+      type: disbursementForm.type,
+      method: disbursementForm.method,
+      amount: Number(disbursementForm.amount),
+    }),
     onSuccess: () => {
-      showToast("Yêu cầu giải ngân đã được gửi.", "success");
+      showToast("Đề xuất giải ngân đã được tạo và chờ kế toán xử lý.", "success");
+      setDisbursementForm({ allocationPlanId: "", expenseCategory: "DIRECT_AID", itemName: "Hỗ trợ tiền mặt", type: "BANK_TRANSFER", method: "BANK_TRANSFER", amount: 0 });
+      setShowDisbursementForm(false);
       queryClient.invalidateQueries({ queryKey: ["disbursements"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
-  return <WorkflowTable title="Giải ngân" rows={rows.data?.data ?? []} loading={rows.isLoading} error={rows.error} refetch={rows.refetch} actions={(row) => <Button size="small" onClick={() => execute.mutate(row.id)}>Thực hiện</Button>} />;
+  const execute = useMutation({
+    mutationFn: (id: string) => aidApi.executeDisbursement(id, { invoiceUrl: executeForm.invoiceUrl, actualAmount: Number(executeForm.actualAmount) }),
+    onSuccess: () => {
+      showToast("Giải ngân đã được thực hiện và ghi nhận lên sổ cái công khai.", "success");
+      setSelectedDisbursement(null);
+      setExecuteForm({ invoiceUrl: "", actualAmount: 0 });
+      queryClient.invalidateQueries({ queryKey: ["disbursements"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
+  return (
+    <Stack spacing={2.5}>
+      {canCreateDisbursement ? (
+        <Stack spacing={2}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setShowDisbursementForm((value) => !value)} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+            {showDisbursementForm ? "Ẩn form giải ngân" : "Đề xuất giải ngân"}
+          </Button>
+          {showDisbursementForm ? (
+            <SectionPaper>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="h6" fontWeight={900}>Đề xuất chi hỗ trợ</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Điều phối viên tạo khoản chi, kế toán thực hiện chuyển khoản và tải biên lai để ghi chi phí trực tiếp lên sổ cái công khai.
+                  </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth select label="Kế hoạch phân bổ" value={disbursementForm.allocationPlanId} onChange={(event) => setDisbursementForm({ ...disbursementForm, allocationPlanId: event.target.value })}>
+                      <MenuItem value="">Không gắn kế hoạch</MenuItem>
+                      {(plans.data?.data ?? []).map((plan) => <MenuItem key={plan.id} value={plan.id}>{plan.areaName ?? plan.campaignName ?? plan.id}</MenuItem>)}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth label="Nội dung chi" value={disbursementForm.itemName} onChange={(event) => setDisbursementForm({ ...disbursementForm, itemName: event.target.value })} />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth label="Số tiền đề xuất" type="number" value={disbursementForm.amount} onChange={(event) => setDisbursementForm({ ...disbursementForm, amount: Number(event.target.value) })} />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth label="Loại chi phí" value={disbursementForm.expenseCategory} onChange={(event) => setDisbursementForm({ ...disbursementForm, expenseCategory: event.target.value })} />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth label="Loại giao dịch" value={disbursementForm.type} onChange={(event) => setDisbursementForm({ ...disbursementForm, type: event.target.value })} />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField fullWidth label="Phương thức" value={disbursementForm.method} onChange={(event) => setDisbursementForm({ ...disbursementForm, method: event.target.value })} />
+                  </Grid>
+                </Grid>
+                <Button variant="contained" disabled={!disbursementForm.itemName || Number(disbursementForm.amount) <= 0 || create.isPending} onClick={() => create.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+                  Gửi đề xuất chi
+                </Button>
+              </Stack>
+            </SectionPaper>
+          ) : null}
+        </Stack>
+      ) : null}
+      <WorkflowTable title="Giải ngân" rows={rows.data?.data ?? []} loading={rows.isLoading} error={rows.error} refetch={rows.refetch} actions={(row) => (
+        canExecuteDisbursement ? <Button size="small" onClick={() => {
+          setSelectedDisbursement(row);
+          setExecuteForm({ invoiceUrl: "", actualAmount: row.amount ?? row.totalAmount ?? 0 });
+        }}>Thực hiện</Button> : <Typography variant="body2" color="text.secondary">Chờ kế toán chuyển khoản</Typography>
+      )} />
+      <Dialog open={Boolean(selectedDisbursement)} onClose={() => setSelectedDisbursement(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Thực hiện giải ngân</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <MetricCard label="Khoản chi" value={selectedDisbursement?.itemName ?? selectedDisbursement?.campaignName ?? selectedDisbursement?.id ?? "-"} />
+            <TextField label="Số tiền thực chuyển" type="number" value={executeForm.actualAmount} onChange={(event) => setExecuteForm({ ...executeForm, actualAmount: Number(event.target.value) })} />
+            <TextField label="URL biên lai chuyển khoản" value={executeForm.invoiceUrl} onChange={(event) => setExecuteForm({ ...executeForm, invoiceUrl: event.target.value })} placeholder="https://..." />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedDisbursement(null)}>Hủy</Button>
+          <Button variant="contained" disabled={!selectedDisbursement || !executeForm.invoiceUrl || Number(executeForm.actualAmount) <= 0 || execute.isPending} onClick={() => selectedDisbursement ? execute.mutate(selectedDisbursement.id) : undefined}>
+            Xác nhận chuyển khoản
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Stack>
+  );
 }
 
 interface WorkflowRow {
@@ -872,6 +1756,34 @@ interface WorkflowRow {
   amount?: number;
   status: string;
   createdAt: string;
+}
+
+interface ProcurementItemView {
+  id?: string;
+  itemName?: string;
+  name?: string;
+  quantity: number;
+  unit?: string;
+  pricePerUnit?: number;
+  unitPrice?: number;
+  totalAmount?: number;
+  amount?: number;
+}
+
+function getProcurementItems(procurement?: Procurement | null): ProcurementItemView[] {
+  if (!procurement) return [];
+  const source = procurement as Procurement & {
+    procurementItems?: ProcurementItemView[];
+    orderItems?: ProcurementItemView[];
+    procurementOrderItems?: ProcurementItemView[];
+  };
+  return source.items?.length
+    ? source.items
+    : source.procurementItems?.length
+      ? source.procurementItems
+      : source.orderItems?.length
+        ? source.orderItems
+        : source.procurementOrderItems ?? [];
 }
 
 function WorkflowTable({ title, rows, loading, error, refetch, actions }: { title: string; rows: WorkflowRow[]; loading: boolean; error: unknown; refetch: () => void; actions: (row: WorkflowRow) => React.ReactNode }) {

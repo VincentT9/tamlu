@@ -4,6 +4,7 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import { Link, Navigate } from "react-router-dom";
+import { OpsDashboardPage } from "@/features/admin/pages/OpsPages";
 import { useAuthStore } from "@/features/auth/store";
 import { ROLES } from "@/shared/constants/roles";
 import { PageHeader } from "@/shared/ui/PageHeader";
@@ -36,12 +37,26 @@ const citizenActions = [
   },
 ];
 
+function normalizeDashboardRole(value: string) {
+  return value
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]+/g, "_");
+}
+
+function hasFinanceRole(roles: string[]) {
+  const normalized = roles.map(normalizeDashboardRole);
+  return ["FINANCIAL_OFFICER", "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"].some((role) => normalized.includes(role));
+}
+
 export function DashboardIndexPage() {
   const roles = useAuthStore((state) => state.roles);
 
   if (roles.includes(ROLES.rescueTeam)) return <Navigate to="/team/missions" replace />;
-  if (roles.includes(ROLES.admin) || roles.includes(ROLES.coordinator) || roles.includes(ROLES.financialOfficer)) {
-    return <Navigate to="/ops" replace />;
+  if (roles.includes(ROLES.admin) || roles.includes(ROLES.coordinator) || hasFinanceRole(roles)) {
+    return <OpsDashboardPage />;
   }
   if (roles.includes(ROLES.donor) && !roles.includes(ROLES.citizen) && !roles.includes(ROLES.volunteer)) {
     return <Navigate to="/donor/donations" replace />;

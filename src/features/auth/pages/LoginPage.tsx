@@ -146,9 +146,21 @@ function isCitizenSosListRoute(path: string) {
 }
 
 function defaultRoute(roles: string[]) {
-  if (roles.includes("RESCUE_TEAM")) return "/team/missions";
-  if (roles.includes("ADMIN") || roles.includes("COORDINATOR") || roles.includes("FINANCIAL_OFFICER")) return "/ops";
-  if (roles.includes("DONOR")) return "/donor/donations";
-  if (roles.includes("CITIZEN") || roles.includes("VOLUNTEER")) return "/dashboard";
+  const normalizedRoles = roles.map((role) =>
+    role
+      .trim()
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Z0-9]+/g, "_"),
+  );
+  if (normalizedRoles.includes("RESCUE_TEAM")) return "/team/missions";
+  if (
+    normalizedRoles.includes("ADMIN") ||
+    normalizedRoles.includes("COORDINATOR") ||
+    ["FINANCIAL_OFFICER", "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"].some((role) => normalizedRoles.includes(role))
+  ) return "/ops";
+  if (normalizedRoles.includes("DONOR")) return "/donor/donations";
+  if (normalizedRoles.includes("CITIZEN") || normalizedRoles.includes("VOLUNTEER")) return "/dashboard";
   return "/dashboard";
 }
