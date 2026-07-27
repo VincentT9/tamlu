@@ -14,12 +14,11 @@ import { Box, Button, Chip, Grid, LinearProgress, Paper, Stack, Typography } fro
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
+import { FLOOD_CAMPAIGN_FALLBACK_IMAGE, getCampaignImageUrl } from "@/shared/utils/campaignImage";
 import { formatMoney, percent } from "@/shared/utils/format";
 import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
 
-const fallbackCampaignImage =
-  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=85";
 const heroRescueImageUrl = "/images/flood-family-rescue.png";
 
 const reliefTheme = {
@@ -710,9 +709,9 @@ export function LandingPage() {
                               width: "100%",
                               height: 180,
                               backgroundImage:
-                                `linear-gradient(180deg, rgba(246,248,232,.08), rgba(246,248,232,.78)), url(${campaign.coverImageUrl || fallbackCampaignImage})`,
-                              backgroundSize: "cover",
-                              backgroundPosition: "center",
+                                `linear-gradient(180deg, rgba(246,248,232,.08), rgba(246,248,232,.78)), url(${getCampaignImageUrl(campaign.coverImageUrl)}), url(${FLOOD_CAMPAIGN_FALLBACK_IMAGE})`,
+                              backgroundSize: "cover, cover, cover",
+                              backgroundPosition: "center, center, center",
                             }}
                           />
                           <Stack spacing={1.75} sx={{ p: reliefShape.cardPadding }}>

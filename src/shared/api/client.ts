@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import type { ApiErrorPayload, ApiResponse, QueryParams } from "@/shared/api/types";
 import { useAuthStore } from "@/features/auth/store";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://exe201-floodrescue-be.onrender.com";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://api.congtn.io.vn";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -74,10 +74,46 @@ export function unwrap<T>(response: ApiResponse<T>): T {
 }
 
 export function getErrorMessage(error: unknown): string {
-  if (typeof error === "object" && error && "message" in error) {
-    return String((error as { message?: unknown }).message ?? "Đã xảy ra lỗi");
+  if (typeof error === "object" && error) {
+    const payload = error as { message?: unknown; details?: unknown };
+    const message = typeof payload.message === "string" && payload.message.trim()
+      ? payload.message.trim()
+      : "Đã xảy ra lỗi";
+    const details = getDetailMessage(payload.details);
+    return details && details !== message ? `${message}: ${details}` : message;
   }
   return "Đã xảy ra lỗi";
+}
+
+function getDetailMessage(details: unknown): string {
+  if (!details) return "";
+  if (typeof details === "string") return details;
+  if (Array.isArray(details)) {
+    return details
+      .map(getDetailMessage)
+      .filter(Boolean)
+      .join("; ");
+  }
+  if (typeof details !== "object") return "";
+
+  const record = details as Record<string, unknown>;
+  for (const key of ["message", "title", "error"]) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+
+  const errors = record.errors;
+  if (errors && typeof errors === "object") {
+    return Object.entries(errors as Record<string, unknown>)
+      .flatMap(([field, value]) => {
+        if (Array.isArray(value)) return value.map((item) => `${field}: ${String(item)}`);
+        if (typeof value === "string") return [`${field}: ${value}`];
+        return [];
+      })
+      .join("; ");
+  }
+
+  return "";
 }
 
 export function isBackendConnectionError(error: unknown): boolean {

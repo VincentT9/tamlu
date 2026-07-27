@@ -32,9 +32,16 @@ export const missionApi = {
     putData<Mission>(`/api/coordinator/missions/${id}/reassign`, body),
   cancel: (id: string, reason: string) => putData<Mission>(`/api/coordinator/missions/${id}/cancel`, { reason }),
   shelters: (params?: QueryParams) => getData<PaginatedResult<Shelter>>("/api/shelters", params),
+  createShelter: (body: Partial<Shelter>) => postData<Shelter>("/api/shelters", body),
   shelterMap: () => getData<Shelter[]>("/api/shelters/map"),
   shelterSuggest: (params: { latitude: number; longitude: number; numPeople: number }) =>
     getData<Shelter[]>("/api/shelters/suggest", params),
+  shelterCheckIns: (id: string, params?: QueryParams) =>
+    getData<PaginatedResult<{ id: string; personName?: string | null; householdId?: string | null; numPeople?: number | null; status?: string | null; checkedInAt?: string | null; checkedOutAt?: string | null }>>(`/api/shelters/${id}/check-ins`, params),
+  checkInShelter: (id: string, body: { personName: string; numPeople: number; householdId?: string | null }) =>
+    postData(`/api/shelters/${id}/check-in`, body),
+  checkOutShelter: (id: string, body: { personName?: string; householdId?: string | null; checkInId?: string | null }) =>
+    postData(`/api/shelters/${id}/check-out`, body),
   rescueTeams: (params?: QueryParams) => getData<PaginatedResult<RescueTeam>>("/api/rescue-teams", params),
   vehicles: (params?: QueryParams) => getData<PaginatedResult<Vehicle>>("/api/vehicles", params),
   myTeam: () => getData<unknown>("/api/team/my-team"),

@@ -1,8 +1,10 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { Box, Button, Card, CardActions, CardContent, CardMedia, Grid, LinearProgress, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, Grid, LinearProgress, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
+import { getCampaignImageUrl, setCampaignImageFallback } from "@/shared/utils/campaignImage";
 import { formatDate, formatMoney, percent, truncate } from "@/shared/utils/format";
 import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
@@ -24,6 +26,7 @@ const pageTheme = {
 };
 
 export function CampaignListPage() {
+  const navigate = useNavigate();
   const campaigns = useQuery({
     queryKey: ["public-campaigns"],
     queryFn: () => donationApi.publicCampaigns({ page: 1, limit: 12 }),
@@ -55,6 +58,29 @@ export function CampaignListPage() {
       }}
     >
       <Box sx={{ mx: "auto", maxWidth: 1500 }}>
+        <Button
+          type="button"
+          variant="outlined"
+          size="small"
+          startIcon={<ArrowBackIcon fontSize="small" />}
+          onClick={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate("/");
+          }}
+          sx={{
+            mb: 2,
+            minHeight: 38,
+            px: 1.6,
+            borderRadius: 999,
+            bgcolor: "rgba(255,255,255,.58)",
+            borderColor: pageTheme.line,
+            color: pageTheme.text,
+            fontWeight: 900,
+            "&:hover": { bgcolor: "#ffffff", borderColor: pageTheme.waterSoft },
+          }}
+        >
+          Quay lại
+        </Button>
         <Stack spacing={1.6} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 900 }}>
           <Typography sx={{ display: "none", color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
             Cổng ủng hộ công khai
@@ -87,17 +113,31 @@ export function CampaignListPage() {
                     backdropFilter: "blur(18px)",
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"}
-                    alt={campaign.name}
+                  <Box
                     sx={{
+                      position: "relative",
+                      width: "100%",
+                      height: { xs: 220, md: 238 },
+                      overflow: "hidden",
                       bgcolor: pageTheme.panel,
-                      objectFit: "cover",
-                      filter: "saturate(.78) contrast(1.03)",
                     }}
-                  />
+                  >
+                    <Box
+                      component="img"
+                      src={getCampaignImageUrl(campaign.coverImageUrl)}
+                      alt={campaign.name || "Chiến dịch cứu trợ lũ lụt"}
+                      loading="lazy"
+                      onError={setCampaignImageFallback}
+                      sx={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        filter: "saturate(.86) contrast(1.02)",
+                      }}
+                    />
+                  </Box>
                   <CardContent sx={{ flex: 1, p: { xs: 2.5, md: 3 } }}>
                     <Stack spacing={1.2}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">

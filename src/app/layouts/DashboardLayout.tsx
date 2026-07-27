@@ -41,7 +41,7 @@ const dashboardNav: DashboardNavItem[] = [
   { label: "Mua sắm", to: "/ops/procurements", roles: opsRoleAliases, icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
   { label: "Kế hoạch phân bổ", to: "/ops/allocation-plans", roles: opsRoleAliases, icon: <FactCheckOutlinedIcon fontSize="small" /> },
   { label: "Kho hàng", to: "/ops/inventory", roles: opsRoleAliases, icon: <Inventory2OutlinedIcon fontSize="small" />, badge: 3 },
-  { label: "Vận chuyển", to: "/ops/shipments", roles: [ROLES.admin, ROLES.coordinator, ROLES.rescueTeam], icon: <LocalShippingOutlinedIcon fontSize="small" /> },
+  { label: "Vận chuyển", to: "/ops/shipments", roles: opsRoleAliases, icon: <LocalShippingOutlinedIcon fontSize="small" /> },
   { label: "Tài chính", to: "/ops/disbursements", roles: opsRoleAliases, icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
   { label: "Điểm trú tạm", to: "/citizen/shelters", roles: [ROLES.admin, ROLES.coordinator], icon: <MapOutlinedIcon fontSize="small" /> },
   { label: "Tình nguyện hỗ trợ", to: "/ops/volunteers", roles: [ROLES.coordinator], icon: <GroupsOutlinedIcon fontSize="small" /> },
@@ -134,3 +134,5 @@ export function DashboardLayout() {
     </div>
   );
 }
+
+

@@ -33,6 +33,7 @@ import { CampaignDetailPage } from "@/features/donations/pages/CampaignDetailPag
 import { CampaignListPage } from "@/features/donations/pages/CampaignListPage";
 import { DonatePage } from "@/features/donations/pages/DonatePage";
 import { DonationHistoryPage } from "@/features/donations/pages/DonationHistoryPage";
+import { PaymentResultPage } from "@/features/donations/pages/PaymentResultPage";
 import { SheltersPage } from "@/features/missions/pages/SheltersPage";
 import { CitizenComplaintsPage } from "@/features/monitoring/pages/CitizenComplaintsPage";
 import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
@@ -81,6 +82,7 @@ export function App() {
             <Route path="sos" element={<CreateSosPage />} />
             <Route path="sos/new" element={<CreateSosPage />} />
             <Route path="donor/donate/:campaignId" element={<DonatePage />} />
+            <Route path="payment/result" element={<PaymentResultPage />} />
           </Route>
 
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -113,7 +115,7 @@ export function App() {
             <Route path="ops/missions" element={<ProtectedRoute roles={coordinatorRoles}><OpsMissionsPage /></ProtectedRoute>} />
             <Route path="ops/warehouses" element={<ProtectedRoute roles={opsRoles}><WarehousesPage /></ProtectedRoute>} />
             <Route path="ops/inventory" element={<ProtectedRoute roles={opsRoles}><InventoryPage /></ProtectedRoute>} />
-            <Route path="ops/shipments" element={<ProtectedRoute roles={coordinatorRoles}><ShipmentsPage /></ProtectedRoute>} />
+            <Route path="ops/shipments" element={<ProtectedRoute roles={opsRoles}><ShipmentsPage /></ProtectedRoute>} />
             <Route path="ops/area-assessments" element={<ProtectedRoute roles={coordinatorRoles}><AreaAssessmentsPage /></ProtectedRoute>} />
             <Route path="ops/campaigns" element={<ProtectedRoute roles={opsRoles}><CampaignAdminPage /></ProtectedRoute>} />
             <Route path="ops/procurements" element={<ProtectedRoute roles={financeRoles}><ProcurementPage /></ProtectedRoute>} />

@@ -12,6 +12,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { getErrorMessage } from "@/shared/api/client";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { PublicPageFrame } from "@/shared/ui/PublicPageFrame";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { useToast } from "@/shared/ui/toast";
 
@@ -117,7 +118,7 @@ export function CreateSosPage() {
   };
 
   return (
-    <>
+    <PublicPageFrame>
       <PageHeader
         eyebrow="SOS khẩn cấp"
         title="Yêu cầu hỗ trợ cứu hộ"
@@ -273,7 +274,7 @@ export function CreateSosPage() {
           </Box>
         </Stack>
       </SectionPaper>
-    </>
+    </PublicPageFrame>
   );
 }
 

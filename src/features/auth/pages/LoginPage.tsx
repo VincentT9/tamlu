@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Box, Button, Link as MuiLink, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { authApi } from "@/features/auth/api";
 import { useAuthStore } from "@/features/auth/store";
@@ -20,7 +20,6 @@ type LoginForm = z.infer<typeof schema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const setSession = useAuthStore((state) => state.setSession);
   const showToast = useToast((state) => state.showToast);
   const form = useForm<LoginForm>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } });
@@ -33,8 +32,7 @@ export function LoginPage() {
       }
       setSession({ token: data.token, user: data.user, roles: data.roles });
       showToast("Chào mừng quý vị quay lại Tâm Lũ.", "success");
-      const from = (location.state as { from?: string } | null)?.from;
-      navigate(resolveLoginRoute(data.roles, from), { replace: true });
+      navigate("/dashboard", { replace: true });
     },
   });
 
@@ -134,33 +132,4 @@ export function LoginPage() {
       </Paper>
     </Box>
   );
-}
-
-function resolveLoginRoute(roles: string[], from?: string) {
-  if (from && !isCitizenSosListRoute(from)) return from;
-  return defaultRoute(roles);
-}
-
-function isCitizenSosListRoute(path: string) {
-  return path === "/citizen/sos" || path.startsWith("/citizen/sos?");
-}
-
-function defaultRoute(roles: string[]) {
-  const normalizedRoles = roles.map((role) =>
-    role
-      .trim()
-      .toUpperCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^A-Z0-9]+/g, "_"),
-  );
-  if (normalizedRoles.includes("RESCUE_TEAM")) return "/team/missions";
-  if (
-    normalizedRoles.includes("ADMIN") ||
-    normalizedRoles.includes("COORDINATOR") ||
-    ["FINANCIAL_OFFICER", "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"].some((role) => normalizedRoles.includes(role))
-  ) return "/ops";
-  if (normalizedRoles.includes("DONOR")) return "/donor/donations";
-  if (normalizedRoles.includes("CITIZEN") || normalizedRoles.includes("VOLUNTEER")) return "/dashboard";
-  return "/dashboard";
 }

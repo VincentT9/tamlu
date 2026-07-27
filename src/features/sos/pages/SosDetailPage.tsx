@@ -10,6 +10,7 @@ import { missionApi } from "@/features/missions/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
 import { useAuthStore } from "@/features/auth/store";
+import { getErrorMessage } from "@/shared/api/client";
 import { ROLES } from "@/shared/constants/roles";
 import { SOS_STATUS } from "@/shared/constants/statuses";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
@@ -30,7 +31,15 @@ export function SosDetailPage() {
   const canCoordinate = hasAnyRole([ROLES.admin, ROLES.coordinator]);
   const detail = useQuery({ queryKey: ["sos", id], queryFn: () => sosApi.byId(id), enabled: Boolean(id), refetchInterval: 30000 });
   const teams = useQuery({ queryKey: ["rescue-teams", "sos-detail"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }), enabled: canCoordinate });
+  const missions = useQuery({ queryKey: ["ops-missions", "sos-detail"], queryFn: () => missionApi.coordinatorList({ page: 1, limit: 50 }), enabled: canCoordinate });
   const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "sos-detail"], queryFn: () => volunteerApi.coordinatorList({ page: 1, limit: 50 }), enabled: canCoordinate });
+  const activeMissionTeamIds = new Set((missions.data?.data ?? [])
+    .filter((mission) => !["COMPLETED", "CANCELLED", "CANCELED", "FAILED"].includes(normalizeStatusValue(mission.status)))
+    .map((mission) => mission.rescueTeamId)
+    .filter(Boolean));
+  const availableTeams = (teams.data?.data ?? []).filter((team) => {
+    return isAvailableRescueTeamStatus(team.status) && !activeMissionTeamIds.has(team.id);
+  });
   const verifiedVolunteers = (volunteers.data?.data ?? []).filter((volunteer) => volunteer.idVerified || volunteer.status?.toUpperCase() === "VERIFIED");
   const confirm = useMutation({
     mutationFn: () => sosApi.confirm(id, note),
@@ -38,6 +47,7 @@ export function SosDetailPage() {
       showToast("Đã xác nhận hoàn tất cứu hộ. Cảm ơn bạn.", "success");
       detail.refetch();
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   const verify = useMutation({
     mutationFn: (result: "APPROVED" | "REJECTED") => sosApi.verify(id, { result }),
@@ -46,11 +56,12 @@ export function SosDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["sos", id] });
       queryClient.invalidateQueries({ queryKey: ["ops-sos"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   const assign = useMutation({
     mutationFn: async () => {
       if (!detail.data) throw new Error("Không tìm thấy yêu cầu SOS.");
-      const mission = await missionApi.create({
+      return missionApi.create({
         emergencyCaseId: detail.data.id,
         title: detail.data.title,
         priority: detail.data.priorityLevel,
@@ -58,22 +69,18 @@ export function SosDetailPage() {
         vehicleIds: [],
         volunteerProfileIds: assignment.volunteerProfileIds,
       });
-      await sosApi.updateStatus(detail.data.id, {
-        status: SOS_STATUS.assigned,
-        note: "Đã phân công đội cứu hộ và lực lượng hỗ trợ.",
-      });
-      return mission;
     },
     onSuccess: () => {
-      showToast("Đã phân công cứu hộ và chuyển SOS sang trạng thái đã phân công.", "success");
+      showToast("Đã phân công cứu hộ. Trạng thái SOS đã được backend cập nhật theo nhiệm vụ mới.", "success");
       setAssignment({ rescueTeamId: "", volunteerProfileIds: [] });
       queryClient.invalidateQueries({ queryKey: ["sos", id] });
       queryClient.invalidateQueries({ queryKey: ["ops-sos"] });
       queryClient.invalidateQueries({ queryKey: ["ops-missions"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   const item = detail.data;
-  const canAssign = canCoordinate && item?.status === SOS_STATUS.verified;
+  const canAssign = canCoordinate && isVerifiedSosStatus(item?.status);
 
   return (
     <>
@@ -141,7 +148,7 @@ export function SosDetailPage() {
                       <ImageList cols={1} gap={10} sx={{ m: 0 }}>
                         {item.media.map((media) => (
                           <ImageListItem key={media.id}>
-                            <img src={media.fileUrl} alt={media.fileType} loading="lazy" style={{ borderRadius: 12, width: "100%", maxHeight: 180, objectFit: "cover" }} />
+                            <img src={media.fileUrl} alt={media.fileType} loading="lazy" style={{ borderRadius: 12, width: "100%", height: 180, objectFit: "cover", objectPosition: "center", display: "block" }} />
                           </ImageListItem>
                         ))}
                       </ImageList>
@@ -167,11 +174,17 @@ export function SosDetailPage() {
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         <StatusChip value={item.status} />
                         <StatusChip value={item.priorityLevel} />
-                        <Typography color="text.secondary">{item.numPeople} người cần hỗ trợ</Typography>
+                        <Typography color="text.secondary">
+                          {item.numPeople} người cần hỗ trợ
+                          {item.hasElderly ? " · có người cao tuổi" : ""}
+                          {item.hasChildren ? " · có trẻ em" : ""}
+                          {item.hasInjured ? " · có người bị thương" : ""}
+                          {item.hasDisabled ? " · có người khuyết tật" : ""}
+                        </Typography>
                       </Stack>
                     </Stack>
                   </Grid>
-                  {item.status === SOS_STATUS.pending ? (
+                  {isPendingSosStatus(item.status) ? (
                     <Grid size={{ xs: 12, lg: 2.5 }}>
                       <Stack direction={{ xs: "column", sm: "row", lg: "column" }} spacing={1}>
                         <Button size="small" startIcon={<CheckIcon />} onClick={() => verify.mutate("APPROVED")} disabled={verify.isPending}>
@@ -183,7 +196,7 @@ export function SosDetailPage() {
                       </Stack>
                     </Grid>
                   ) : null}
-                  <Grid size={{ xs: 12, md: 6, lg: item.status === SOS_STATUS.pending ? 2.5 : 3 }}>
+                   <Grid size={{ xs: 12, md: 6, lg: isPendingSosStatus(item.status) ? 2.5 : 3 }}>
                     <TextField
                       fullWidth
                       select
@@ -191,15 +204,17 @@ export function SosDetailPage() {
                       value={assignment.rescueTeamId}
                       onChange={(event) => setAssignment({ ...assignment, rescueTeamId: event.target.value })}
                       disabled={!canAssign}
-                      helperText={canAssign ? "Chọn đội tiếp nhận." : "Chỉ phân công sau khi SOS đã xác minh."}
+                      helperText={canAssign ? "Chỉ hiển thị đội đang khả dụng và chưa có nhiệm vụ đang mở." : "Chỉ phân công sau khi SOS đã xác minh."}
                     >
-                      <MenuItem value="" disabled>{teams.isLoading ? "Đang tải đội cứu hộ..." : "Chọn đội cứu hộ"}</MenuItem>
-                      {(teams.data?.data ?? []).map((team) => (
+                      <MenuItem value="" disabled>
+                        {teams.isLoading || missions.isLoading ? "Đang tải đội cứu hộ..." : availableTeams.length ? "Chọn đội cứu hộ khả dụng" : "Không có đội cứu hộ khả dụng"}
+                      </MenuItem>
+                      {availableTeams.map((team) => (
                         <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>
                       ))}
                     </TextField>
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6, lg: item.status === SOS_STATUS.pending ? 2.5 : 3 }}>
+                   <Grid size={{ xs: 12, md: 6, lg: isPendingSosStatus(item.status) ? 2.5 : 3 }}>
                     <TextField
                       fullWidth
                       select
@@ -215,7 +230,7 @@ export function SosDetailPage() {
                     >
                       {verifiedVolunteers.length ? verifiedVolunteers.map((volunteer) => (
                         <MenuItem key={volunteer.id} value={volunteer.id}>
-                          {volunteer.skills} {volunteer.availableAreas ? `- ${volunteer.availableAreas}` : ""}
+                          {getVolunteerDisplayName(volunteer)}
                         </MenuItem>
                       )) : (
                         <MenuItem disabled>Chưa có tình nguyện viên đã xác minh</MenuItem>
@@ -252,4 +267,32 @@ export function SosDetailPage() {
       </QueryState>
     </>
   );
+}
+
+function normalizeStatusValue(value: string) {
+  return value
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]+/g, "_");
+}
+
+function isAvailableRescueTeamStatus(status?: string | null) {
+  if (!status) return false;
+  return ["AVAILABLE", "READY", "ACTIVE", "IDLE", "SAN_SANG"].includes(normalizeStatusValue(status));
+}
+
+function isPendingSosStatus(status?: string | null) {
+  return normalizeStatusValue(status ?? "") === "PENDING";
+}
+
+function isVerifiedSosStatus(status?: string | null) {
+  return ["VERIFIED", "APPROVED", "CONFIRMED"].includes(normalizeStatusValue(status ?? ""));
+}
+
+function getVolunteerDisplayName(volunteer: { id: string; skills?: string | null; availableAreas?: string | null; userName?: string | null; fullName?: string | null; name?: string | null; phone?: string | null }) {
+  const name = volunteer.fullName ?? volunteer.userName ?? volunteer.name ?? volunteer.phone ?? `Tình nguyện viên ${volunteer.id.slice(0, 8)}`;
+  const area = volunteer.availableAreas ? ` - ${volunteer.availableAreas}` : "";
+  return `${name}${area}`;
 }

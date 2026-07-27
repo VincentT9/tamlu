@@ -11,6 +11,8 @@ export interface CreateDonationBody {
   donorPhone?: string;
   isAnonymous: boolean;
   message?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
 }
 
 export const donationApi = {

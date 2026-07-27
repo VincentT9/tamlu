@@ -5,9 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
 import type { PublicCampaignDetail } from "@/shared/api/domain";
+import { getCampaignImageUrl, setCampaignImageFallback } from "@/shared/utils/campaignImage";
 import { formatDate, formatMoney, percent } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { PublicPageFrame } from "@/shared/ui/PublicPageFrame";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
@@ -17,9 +19,11 @@ export function CampaignDetailPage() {
   const detail = useQuery({ queryKey: ["public-campaign", id], queryFn: () => donationApi.publicCampaign(id), enabled: Boolean(id) });
 
   return (
-    <QueryState isLoading={detail.isLoading} error={detail.error} refetch={detail.refetch}>
-      {detail.data ? <CampaignDetailContent data={detail.data} /> : null}
-    </QueryState>
+    <PublicPageFrame>
+      <QueryState isLoading={detail.isLoading} error={detail.error} refetch={detail.refetch}>
+        {detail.data ? <CampaignDetailContent data={detail.data} /> : null}
+      </QueryState>
+    </PublicPageFrame>
   );
 }
 
@@ -48,10 +52,20 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
           <SectionPaper>
             <Stack spacing={2}>
               <Box sx={{ position: "relative", overflow: "visible", borderRadius: 0 }}>
-                <img
-                  src={campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"}
+                <Box
+                  component="img"
+                  src={getCampaignImageUrl(campaign.coverImageUrl)}
                   alt={campaign.name}
-                  style={{ width: "100%", maxHeight: 420, objectFit: "cover", display: "block" }}
+                  loading="lazy"
+                  onError={setCampaignImageFallback}
+                  sx={{
+                    width: "100%",
+                    height: { xs: 260, md: 420 },
+                    objectFit: "cover",
+                    objectPosition: "center",
+                    display: "block",
+                    filter: "saturate(.86) contrast(1.02)",
+                  }}
                 />
                 <Box sx={{ position: "absolute", inset: "auto 0 0 0", p: 2.5, background: "linear-gradient(180deg, transparent, rgba(246,248,232,.90))", color: "var(--color-text)" }}>
                   <Typography fontWeight={900} sx={{ color: "var(--color-green-800)" }}>{campaign.affectedArea}</Typography>

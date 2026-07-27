@@ -168,6 +168,11 @@ export interface Vehicle {
   vehicleName: string;
   vehicleType: string;
   status: string;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  assignedDriverName?: string | null;
+  assignedDriverPhone?: string | null;
+  licensePlate?: string | null;
 }
 
 export interface Shelter {
@@ -323,6 +328,8 @@ export interface Procurement {
   status: string;
   createdAt: string;
   items: Array<{ id: string; itemName: string; quantity: number; unit: string; pricePerUnit: number }>;
+  invoiceUrl?: string | null;
+  paymentReceiptUrl?: string | null;
 }
 
 export interface AreaAssessment {

@@ -10,8 +10,8 @@ export const aidApi = {
   procurement: (id: string) => getData<Procurement>(`/api/procurements/${id}`),
   createProcurement: (body: unknown) => postData<Procurement>("/api/procurements", body),
   approveProcurement: (id: string) => putData<Procurement>(`/api/procurements/${id}/approve`),
-  payProcurement: (id: string, method: string) =>
-    putData<Procurement>(`/api/procurements/${id}/pay`, undefined, { method }),
+  payProcurement: (id: string, method: string, invoiceUrl?: string) =>
+    putData<Procurement>(`/api/procurements/${id}/pay`, { method, invoiceUrl, paymentReceiptUrl: invoiceUrl }, { method }),
   deliverProcurement: (id: string) => putData<Procurement>(`/api/procurements/${id}/deliver`),
   areaAssessments: (params?: QueryParams) => getData<PaginatedResult<AreaAssessment>>("/api/area-assessments", params),
   createAreaAssessment: (body: Partial<AreaAssessment>) => postData<AreaAssessment>("/api/area-assessments", body),

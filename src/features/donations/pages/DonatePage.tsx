@@ -8,9 +8,11 @@ import { z } from "zod";
 import { useAuthStore } from "@/features/auth/store";
 import { donationApi } from "@/features/donations/api";
 import { getErrorMessage } from "@/shared/api/client";
+import { getCampaignImageUrl, setCampaignImageFallback } from "@/shared/utils/campaignImage";
 import { formatMoney } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { PublicPageFrame } from "@/shared/ui/PublicPageFrame";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { useToast } from "@/shared/ui/toast";
@@ -60,7 +62,7 @@ export function DonatePage() {
   });
 
   return (
-    <>
+    <PublicPageFrame>
       <PageHeader title="Ủng hộ chiến dịch" description="Khoản đóng góp của bạn sẽ được ghi nhận vào sổ công khai của Tâm Lũ sau khi thanh toán thành công." />
       <QueryState isLoading={detail.isLoading} error={detail.error} refetch={detail.refetch}>
         <Grid container spacing={3}>
@@ -69,9 +71,11 @@ export function DonatePage() {
               <Paper variant="outlined" sx={{ overflow: "visible", borderRadius: 0 }}>
                 <Box
                   component="img"
-                  src={detail.data?.campaign.coverImageUrl || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"}
+                  src={getCampaignImageUrl(detail.data?.campaign.coverImageUrl)}
                   alt={detail.data?.campaign.name ?? "Chiến dịch cứu trợ lũ lụt"}
-                  sx={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
+                  loading="lazy"
+                  onError={setCampaignImageFallback}
+                  sx={{ width: "100%", height: 220, objectFit: "cover", objectPosition: "center", display: "block", filter: "saturate(.86) contrast(1.02)" }}
                 />
                 <Stack spacing={1} sx={{ p: 2.5 }}>
                   <Typography variant="h6" fontWeight={900}>{detail.data?.campaign.name ?? "Chiến dịch"}</Typography>
@@ -106,6 +110,6 @@ export function DonatePage() {
           </Grid>
         </Grid>
       </QueryState>
-    </>
+    </PublicPageFrame>
   );
 }

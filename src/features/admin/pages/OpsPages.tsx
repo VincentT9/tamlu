@@ -17,7 +17,7 @@ import { monitoringApi } from "@/features/monitoring/api";
 import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
-import type { Procurement, User } from "@/shared/api/domain";
+import type { AreaAssessment, Complaint, EmergencyCase, Procurement, User } from "@/shared/api/domain";
 import { getErrorMessage } from "@/shared/api/client";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
@@ -463,67 +463,55 @@ function DualMetric({ value, label }: { value: number; label: string }) {
 function TimelineCard({ pending, missions, stock }: { pending: number; missions: number; stock: number }) {
   const totalWork = Math.max(pending + missions + stock, 1);
   const readiness = Math.max(18, Math.min(100, Math.round(((missions + 1) / Math.max(totalWork + 1, 1)) * 100)));
-  const gaugeData = [{ name: "Sẵn sàng", value: readiness, fill: "var(--color-green-700)" }];
   const statusCards = [
-    { label: "SOS chờ xử lý", value: pending, color: "#f87171", helper: "cần phân loại" },
+    { label: "SOS chờ xử lý", value: pending, color: "#c94f4f", helper: "cần phân loại" },
     { label: "Nhiệm vụ", value: missions, color: "var(--color-green-700)", helper: "đang triển khai" },
     { label: "Rủi ro kho", value: stock, color: "var(--color-green-600)", helper: "cần theo dõi" },
   ];
+
   return (
     <Box sx={{ height: "100%", minHeight: 228, maxWidth: "100%", borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Box>
-          <Typography sx={{ color: "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>Nhịp vận hành cứu trợ</Typography>
-          <Typography sx={miniLabelSx}>Mức sẵn sàng và tín hiệu cần xử lý</Typography>
+          <Typography sx={{ color: "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>Tiến độ cứu trợ</Typography>
+          <Typography sx={miniLabelSx}>Các điểm nghẽn cần điều phối trong tuần</Typography>
         </Box>
-        <PercentTag tone="cyan">{Math.min(100, missions * 5 + pending + stock)}%</PercentTag>
+        <PercentTag tone="cyan">{readiness}%</PercentTag>
       </Stack>
 
-      <Box sx={{ mt: 1.25, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(150px, .9fr) minmax(0, 1.1fr)" }, gap: 1.25, alignItems: "center" }}>
-        <Box sx={{ height: 142, position: "relative", minWidth: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart innerRadius="74%" outerRadius="100%" data={gaugeData} startAngle={180} endAngle={0} barSize={16}>
-              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-              <RadialBar dataKey="value" background={{ fill: "var(--color-green-100)" }} cornerRadius={0} isAnimationActive={false} />
-            </RadialBarChart>
-          </ResponsiveContainer>
-          <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pt: 4 }}>
-            <Box sx={{ textAlign: "center" }}>
-              <Typography sx={{ color: "var(--color-green-800)", fontSize: 38, lineHeight: .9, fontWeight: 950 }}>{readiness}%</Typography>
-              <Typography sx={miniLabelSx}>sẵn sàng</Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        <Stack spacing={.85}>
-          {statusCards.map((item) => (
-            <Stack key={item.label} direction="row" spacing={1} alignItems="center" sx={{ border: "1px solid var(--color-border)", bgcolor: "#ffffff", px: 1.1, py: .75, minWidth: 0 }}>
-              <Box sx={{ width: 8, height: 34, bgcolor: item.color, flex: "0 0 auto" }} />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ color: "var(--color-green-800)", fontSize: 12, lineHeight: 1.2, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</Typography>
-                <Typography sx={miniLabelSx}>{item.helper}</Typography>
-              </Box>
+      <Box sx={{ mt: 1.5, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1 }}>
+        {statusCards.map((item) => (
+          <Stack key={item.label} spacing={1} sx={{ border: "1px solid var(--color-border)", bgcolor: "#ffffff", px: 1.25, py: 1.1, minWidth: 0 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+              <Typography sx={{ color: "var(--color-green-800)", fontSize: 12, lineHeight: 1.2, fontWeight: 900 }}>{item.label}</Typography>
               <Typography sx={{ color: "var(--color-green-800)", fontSize: 22, lineHeight: 1, fontWeight: 950 }}>{item.value}</Typography>
             </Stack>
-          ))}
-        </Stack>
+            <Box sx={{ height: 8, bgcolor: "var(--color-green-100)", overflow: "hidden" }}>
+              <Box sx={{ height: "100%", width: `${Math.min(100, Math.max(8, (item.value / totalWork) * 100))}%`, bgcolor: item.color }} />
+            </Box>
+            <Typography sx={miniLabelSx}>{item.helper}</Typography>
+          </Stack>
+        ))}
       </Box>
     </Box>
   );
 }
-
 export function OpsSosPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [status, setStatus] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const cases = useQuery({ queryKey: ["ops-sos", status], queryFn: () => sosApi.coordinatorList({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
   const sortedCases = [...(cases.data?.data ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const filteredCases = sortedCases.filter((item) => matchesSosSearch(item, search));
   const verify = useMutation({
     mutationFn: ({ id, result }: { id: string; result: "APPROVED" | "REJECTED" }) => sosApi.verify(id, { result }),
     onSuccess: () => {
-      showToast("SOS verification updated.", "success");
+      showToast("Trạng thái xác minh SOS đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["ops-sos"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
 
   return (
@@ -534,11 +522,36 @@ export function OpsSosPage() {
           <MenuItem value="">Tất cả</MenuItem>
           {Object.values(SOS_STATUS).map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
         </TextField>
+        <TextField
+          label="Tìm theo tiêu đề, mã yêu cầu, SĐT..."
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") setSearch(searchInput.trim());
+          }}
+          sx={{ minWidth: { md: 360 }, flex: { md: 1 } }}
+        />
+        <Button variant="contained" startIcon={<SearchIcon />} onClick={() => setSearch(searchInput.trim())}>
+          Tìm kiếm
+        </Button>
+        {search ? (
+          <Button variant="outlined" onClick={() => {
+            setSearch("");
+            setSearchInput("");
+          }}>
+            Xóa lọc
+          </Button>
+        ) : null}
       </Stack>
       <QueryState isLoading={cases.isLoading} error={cases.error} empty={!cases.data?.data.length} refetch={cases.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Yêu cầu</TableCell><TableCell>Số người</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
-          {sortedCases.map((item) => (
+        <Paper variant="outlined" sx={{ overflowX: "auto" }}><Table size="small" sx={{ minWidth: 980 }}><TableHead><TableRow><TableCell>Mã yêu cầu</TableCell><TableCell>Yêu cầu</TableCell><TableCell>Số người</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {filteredCases.length ? filteredCases.map((item) => (
             <TableRow key={item.id}>
+              <TableCell>
+                <Typography fontWeight={900} sx={{ color: "var(--color-green-800)", whiteSpace: "nowrap" }}>
+                  {getSosRequestCode(item)}
+                </Typography>
+              </TableCell>
               <TableCell>
                 <Typography
                   component={Link}
@@ -563,7 +576,7 @@ export function OpsSosPage() {
                   <Button size="small" component={Link} to={`/citizen/sos/${item.id}`}>
                     Xem chi tiết
                   </Button>
-                  {item.status === SOS_STATUS.pending ? (
+                  {isPendingSosStatus(item.status) ? (
                     <>
                       <Button size="small" startIcon={<CheckIcon />} onClick={() => verify.mutate({ id: item.id, result: "APPROVED" })}>Xác minh</Button>
                       <Button size="small" color="error" startIcon={<CloseIcon />} onClick={() => verify.mutate({ id: item.id, result: "REJECTED" })}>Từ chối</Button>
@@ -572,7 +585,15 @@ export function OpsSosPage() {
                 </Stack>
               </TableCell>
             </TableRow>
-          ))}
+          )) : (
+            <TableRow>
+              <TableCell colSpan={6}>
+                <Typography color="text.secondary">
+                  Không tìm thấy yêu cầu SOS phù hợp với từ khóa “{search}”.
+                </Typography>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody></Table></Paper>
       </QueryState>
     </>
@@ -582,6 +603,7 @@ export function OpsSosPage() {
 export function OpsMissionsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const [showAllMissions, setShowAllMissions] = useState(false);
   const [form, setForm] = useState<{ emergencyCaseId: string; rescueTeamId: string; priority: string; title: string; volunteerProfileIds: string[] }>({
     emergencyCaseId: "",
     rescueTeamId: "",
@@ -593,7 +615,10 @@ export function OpsMissionsPage() {
   const verifiedCases = useQuery({ queryKey: ["ops-sos", SOS_STATUS.verified, "mission-select"], queryFn: () => sosApi.coordinatorList({ status: SOS_STATUS.verified, page: 1, limit: 50 }), refetchInterval: 30000 });
   const teams = useQuery({ queryKey: ["rescue-teams"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }) });
   const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "mission-select"], queryFn: () => volunteerApi.coordinatorList({ page: 1, limit: 50 }) });
+  const availableTeams = (teams.data?.data ?? []).filter((team) => isReadyRescueTeamStatus(team.status));
   const verifiedVolunteers = (volunteers.data?.data ?? []).filter((volunteer) => volunteer.idVerified || volunteer.status?.toUpperCase() === "VERIFIED");
+  const latestMissions = [...(missions.data?.data ?? [])].sort((a, b) => new Date(b.assignedAt ?? b.completedAt ?? 0).getTime() - new Date(a.assignedAt ?? a.completedAt ?? 0).getTime());
+  const visibleMissions = showAllMissions ? latestMissions : latestMissions.slice(0, 4);
   const create = useMutation({
     mutationFn: () => missionApi.create({ ...form, vehicleIds: [] }),
     onSuccess: () => {
@@ -601,6 +626,7 @@ export function OpsMissionsPage() {
       setForm({ emergencyCaseId: "", rescueTeamId: "", priority: PRIORITY.high, title: "", volunteerProfileIds: [] });
       queryClient.invalidateQueries({ queryKey: ["ops-missions"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
 
   return (
@@ -642,7 +668,9 @@ export function OpsMissionsPage() {
               <TextField label="Tiêu đề" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               <TextField select label="Đội cứu hộ" value={form.rescueTeamId} onChange={(e) => setForm({ ...form, rescueTeamId: e.target.value })}>
                 <MenuItem value="" disabled>{teams.isLoading ? "Đang tải đội cứu hộ..." : "Chọn đội cứu hộ"}</MenuItem>
-                {(teams.data?.data ?? []).map((team) => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)}
+                {availableTeams.length ? availableTeams.map((team) => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>) : (
+                  <MenuItem disabled>{teams.isLoading ? "Đang tải đội cứu hộ..." : "Không có đội cứu hộ khả dụng"}</MenuItem>
+                )}
               </TextField>
               <TextField
                 select
@@ -674,17 +702,29 @@ export function OpsMissionsPage() {
         </Grid>
         <Grid size={{ xs: 12, lg: 8 }}>
           <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
-            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Đội</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Cập nhật</TableCell></TableRow></TableHead><TableBody>
-              {missions.data?.data.map((mission) => (
-                <TableRow key={mission.id}>
-                  <TableCell>{mission.code}</TableCell>
-                  <TableCell>{mission.rescueTeamName}</TableCell>
-                  <TableCell><StatusChip value={mission.priority} /></TableCell>
-                  <TableCell><StatusChip value={mission.status} /></TableCell>
-                  <TableCell>{formatDate(mission.completedAt ?? mission.assignedAt)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody></Table></Paper>
+            <Paper variant="outlined">
+              <Table size="small">
+                <TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Đội</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Cập nhật</TableCell></TableRow></TableHead>
+                <TableBody>
+                  {visibleMissions.map((mission) => (
+                    <TableRow key={mission.id}>
+                      <TableCell>{mission.code}</TableCell>
+                      <TableCell>{mission.rescueTeamName}</TableCell>
+                      <TableCell><StatusChip value={mission.priority} /></TableCell>
+                      <TableCell><StatusChip value={mission.status} /></TableCell>
+                      <TableCell>{formatDate(mission.completedAt ?? mission.assignedAt)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+            {latestMissions.length > 4 ? (
+              <Box sx={{ mt: 1.5, textAlign: "right" }}>
+                <Button size="small" onClick={() => setShowAllMissions((value) => !value)}>
+                  {showAllMissions ? "Thu gọn" : "Hiển thị thêm"}
+                </Button>
+              </Box>
+            ) : null}
           </QueryState>
         </Grid>
       </Grid>
@@ -692,25 +732,41 @@ export function OpsMissionsPage() {
   );
 }
 
-export function WarehousesPage() {
-  const warehouses = useQuery({ queryKey: ["warehouses"], queryFn: inventoryApi.warehouses });
-  const lowStock = useQuery({ queryKey: ["low-stock"], queryFn: inventoryApi.lowStock });
-  return (
-    <>
-      <PageHeader title="Kho hàng và tồn kho" description="Theo dõi độ phủ kho hàng và rủi ro thiếu hàng." />
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Kho hàng" value={warehouses.data?.length ?? 0} /></Grid>
-        <Grid size={{ xs: 12, md: 4 }}><MetricCard label="Sắp hết hàng" value={lowStock.data?.length ?? 0} tone="red" /></Grid>
-        <Grid size={{ xs: 12 }}><QueryState isLoading={warehouses.isLoading} error={warehouses.error} empty={!warehouses.data?.length} refetch={warehouses.refetch}>
-          <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên kho</TableCell><TableCell>Địa chỉ</TableCell><TableCell>Quản lý</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
-            {warehouses.data?.map((warehouse) => (
-              <TableRow key={warehouse.id}><TableCell>{warehouse.name}</TableCell><TableCell>{warehouse.address}</TableCell><TableCell>{warehouse.managerName}</TableCell><TableCell><StatusChip value={warehouse.status} /></TableCell></TableRow>
-            ))}
-          </TableBody></Table></Paper>
-        </QueryState></Grid>
-      </Grid>
-    </>
-  );
+type EmergencyCaseWithCode = EmergencyCase & {
+  code?: string | null;
+  caseCode?: string | null;
+  requestCode?: string | null;
+  emergencyCode?: string | null;
+};
+
+function getSosRequestCode(item: EmergencyCaseWithCode) {
+  return item.code ?? item.caseCode ?? item.requestCode ?? item.emergencyCode ?? item.id.slice(0, 8).toUpperCase();
+}
+
+function matchesSosSearch(item: EmergencyCase, keyword: string) {
+  const normalizedKeyword = normalizeSearchText(keyword);
+  if (!normalizedKeyword) return true;
+  const searchable = [
+    getSosRequestCode(item),
+    item.id,
+    item.title,
+    item.description,
+    item.contactName,
+    item.contactPhone,
+    item.address,
+    item.emergencyType,
+    item.priorityLevel,
+    item.status,
+  ];
+  return normalizeSearchText(searchable.filter(Boolean).join(" ")).includes(normalizedKeyword);
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 export function InventoryPage() {
@@ -782,6 +838,10 @@ export function InventoryPage() {
   );
 }
 
+export function WarehousesPage() {
+  return <InventoryPage />;
+}
+
 export function ShipmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
@@ -805,6 +865,7 @@ export function ShipmentsPage() {
   const allocationPlans = useQuery({ queryKey: ["allocation-plans", "shipment-form"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
   const vehicles = useQuery({ queryKey: ["vehicles", "shipment-form"], queryFn: () => missionApi.vehicles({ page: 1, limit: 50 }) });
   const readyVehicles = (vehicles.data?.data ?? []).filter((vehicle) => isReadyVehicleStatus(vehicle.status));
+  const selectedVehicle = readyVehicles.find((vehicle) => vehicle.id === shipmentForm.vehicleId);
   const hasValidShipmentItems = shipmentForm.items.every((item) => item.inventoryItemId && Number(item.quantity) > 0);
   const createShipment = useMutation({
     mutationFn: () => inventoryApi.createShipment({
@@ -821,6 +882,7 @@ export function ShipmentsPage() {
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-items"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   const update = useMutation({
     mutationFn: ({ id, next }: { id: string; next: string }) => inventoryApi.updateShipmentStatus(id, { status: next }),
@@ -828,6 +890,7 @@ export function ShipmentsPage() {
       showToast("Trạng thái vận chuyển đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   return (
     <>
@@ -882,6 +945,13 @@ export function ShipmentsPage() {
                   </TextField>
                 </Grid>
               </Grid>
+              {selectedVehicle ? (
+                <Alert severity="info">
+                  Tài xế/phương tiện: <strong>{selectedVehicle.driverName ?? selectedVehicle.assignedDriverName ?? "Chưa có tên tài xế"}</strong>
+                  {(selectedVehicle.driverPhone ?? selectedVehicle.assignedDriverPhone) ? ` - ${selectedVehicle.driverPhone ?? selectedVehicle.assignedDriverPhone}` : ""}
+                  {selectedVehicle.licensePlate ? ` - Biển số ${selectedVehicle.licensePlate}` : ""}
+                </Alert>
+              ) : null}
               <Stack spacing={1.5}>
                 {shipmentForm.items.map((item, index) => (
                   <Grid container spacing={1.5} alignItems="center" key={index}>
@@ -958,6 +1028,7 @@ export function AreaAssessmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [status, setStatus] = useState("");
+  const [selectedAssessment, setSelectedAssessment] = useState<AreaAssessment | null>(null);
   const assessments = useQuery({ queryKey: ["area-assessments", status], queryFn: () => aidApi.areaAssessments({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
   const verify = useMutation({
     mutationFn: ({ id, nextStatus }: { id: string; nextStatus: "VERIFIED" | "REJECTED" }) =>
@@ -1007,6 +1078,7 @@ export function AreaAssessmentsPage() {
                   <TableCell><StatusChip value={assessment.status} /></TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
+                      <Button size="small" onClick={() => setSelectedAssessment(assessment)}>Xem chi tiết</Button>
                       <Button size="small" disabled={assessment.status === "VERIFIED" || verify.isPending} onClick={() => verify.mutate({ id: assessment.id, nextStatus: "VERIFIED" })}>Xác minh</Button>
                       <Button size="small" color="error" disabled={assessment.status === "REJECTED" || verify.isPending} onClick={() => verify.mutate({ id: assessment.id, nextStatus: "REJECTED" })}>Từ chối</Button>
                     </Stack>
@@ -1017,6 +1089,69 @@ export function AreaAssessmentsPage() {
           </Table>
         </Paper>
       </QueryState>
+      <Dialog open={Boolean(selectedAssessment)} onClose={() => setSelectedAssessment(null)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Chi tiết khảo sát nhu cầu</DialogTitle>
+        <DialogContent>
+          {selectedAssessment ? (
+            <Stack spacing={2}>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <MetricCard label="Khu vực" value={selectedAssessment.areaName} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <MetricCard label="Số hộ bị ảnh hưởng" value={String(selectedAssessment.householdsAffected)} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <MetricCard label="Trạng thái" value={STATUS_LABELS[selectedAssessment.status] ?? selectedAssessment.status} />
+                </Grid>
+              </Grid>
+              <SectionPaper>
+                <Stack spacing={0.75}>
+                  <Typography fontWeight={900}>Địa bàn</Typography>
+                  <Typography color="text.secondary">
+                    {selectedAssessment.ward}, {selectedAssessment.district}, {selectedAssessment.province}
+                  </Typography>
+                  <Typography fontWeight={900}>Mức ngập / ưu tiên</Typography>
+                  <Stack direction="row" spacing={1}>
+                    <StatusChip value={selectedAssessment.floodSeverity} />
+                    <StatusChip value={selectedAssessment.priorityLevel} />
+                  </Stack>
+                  {selectedAssessment.notes ? <Typography color="text.secondary">{selectedAssessment.notes}</Typography> : null}
+                </Stack>
+              </SectionPaper>
+              <Paper variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nhu cầu</TableCell>
+                      <TableCell>Số lượng</TableCell>
+                      <TableCell>Đơn vị</TableCell>
+                      <TableCell>Ghi chú</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {selectedAssessment.needs.length ? selectedAssessment.needs.map((need) => (
+                      <TableRow key={need.id}>
+                        <TableCell>{need.itemType}</TableCell>
+                        <TableCell>{need.quantity}</TableCell>
+                        <TableCell>{need.unit}</TableCell>
+                        <TableCell>{need.notes ?? "-"}</TableCell>
+                      </TableRow>
+                    )) : (
+                      <TableRow>
+                        <TableCell colSpan={4}>Chưa có nhu cầu chi tiết.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Paper>
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedAssessment(null)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
@@ -1037,11 +1172,22 @@ export function CampaignAdminPage() {
   });
   const campaigns = useQuery({ queryKey: ["campaigns-admin"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }) });
   const createCampaign = useMutation({
-    mutationFn: () => donationApi.createCampaign({
-      ...campaignForm,
-      status: isAdmin ? CAMPAIGN_STATUS.active : CAMPAIGN_STATUS.draft,
-      targetAmount: Number(campaignForm.targetAmount),
-    }),
+    mutationFn: async () => {
+      const coverImageUrl = campaignForm.coverImageUrl.trim();
+      const created = await donationApi.createCampaign({
+        ...campaignForm,
+        coverImageUrl: isInlineImageDataUrl(coverImageUrl) ? "" : coverImageUrl,
+        targetAmount: Number(campaignForm.targetAmount),
+      });
+      if (isAdmin && created.status !== CAMPAIGN_STATUS.active) {
+        try {
+          return await donationApi.updateCampaignStatus(created.id, CAMPAIGN_STATUS.active);
+        } catch {
+          showToast("Chiến dịch đã được tạo nhưng chưa kích hoạt được. Vui lòng dùng nút Kích hoạt trong danh sách.", "warning");
+        }
+      }
+      return created;
+    },
     onSuccess: () => {
       showToast(isAdmin ? "Chiến dịch đã được tạo và kích hoạt." : "Chiến dịch đã được tạo, đang chờ admin duyệt.", "success");
       setCampaignForm({
@@ -1055,6 +1201,7 @@ export function CampaignAdminPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["campaigns-admin"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => donationApi.updateCampaignStatus(id, status),
@@ -1062,6 +1209,7 @@ export function CampaignAdminPage() {
       showToast("Trạng thái chiến dịch đã được cập nhật.", "success");
       queryClient.invalidateQueries({ queryKey: ["campaigns-admin"] });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
 
   return (
@@ -1092,14 +1240,40 @@ export function CampaignAdminPage() {
               <TextField fullWidth label="Ngày kết thúc" type="date" value={campaignForm.endDate} onChange={(event) => setCampaignForm({ ...campaignForm, endDate: event.target.value })} InputLabelProps={{ shrink: true }} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Ảnh bìa chiến dịch" value={campaignForm.coverImageUrl} onChange={(event) => setCampaignForm({ ...campaignForm, coverImageUrl: event.target.value })} placeholder="https://..." />
+              <Stack spacing={1}>
+                <Button component="label" variant="outlined" startIcon={<AddIcon />} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
+                  Chọn ảnh bìa chiến dịch
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      showToast("Backend hiện chỉ nhận URL ảnh bìa. Vui lòng nhập URL ảnh; chiến dịch vẫn có thể tạo không cần ảnh bìa.", "warning");
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </Button>
+                <TextField fullWidth label="Hoặc nhập URL ảnh bìa" value={campaignForm.coverImageUrl} onChange={(event) => setCampaignForm({ ...campaignForm, coverImageUrl: event.target.value })} placeholder="https://..." />
+              </Stack>
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField fullWidth multiline minRows={3} label="Mô tả chiến dịch" value={campaignForm.description} onChange={(event) => setCampaignForm({ ...campaignForm, description: event.target.value })} />
             </Grid>
           </Grid>
           <Box>
-            <Button variant="contained" startIcon={<AddIcon />} disabled={!campaignForm.name || !campaignForm.affectedArea || createCampaign.isPending} onClick={() => createCampaign.mutate()}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              disabled={!campaignForm.name || !campaignForm.affectedArea || createCampaign.isPending}
+              onClick={() => {
+                if (isInlineImageDataUrl(campaignForm.coverImageUrl)) {
+                  showToast("Ảnh dạng base64 không được gửi lên backend. Chiến dịch sẽ được tạo không kèm ảnh bìa.", "warning");
+                }
+                createCampaign.mutate();
+              }}
+            >
               {isAdmin ? "Tạo và kích hoạt" : "Tạo bản nháp chờ duyệt"}
             </Button>
           </Box>
@@ -1161,7 +1335,16 @@ function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+function isInlineImageDataUrl(value?: string | null) {
+  return /^data:image\/[a-z0-9.+-]+;base64,/i.test(value?.trim() ?? "");
+}
+
 function isReadyVehicleStatus(status?: string | null) {
+  if (!status) return false;
+  return ["AVAILABLE", "READY", "ACTIVE", "IDLE", "SAN_SANG"].includes(normalizeWorkflowStatus(status));
+}
+
+function isReadyRescueTeamStatus(status?: string | null) {
   if (!status) return false;
   return ["AVAILABLE", "READY", "ACTIVE", "IDLE", "SAN_SANG"].includes(normalizeWorkflowStatus(status));
 }
@@ -1174,6 +1357,8 @@ export function ProcurementPage() {
   const canReviewProcurement = hasOperationalRole(roles, "ADMIN") || hasOperationalRole(roles, "FINANCIAL_OFFICER");
   const [showProcurementForm, setShowProcurementForm] = useState(false);
   const [selectedProcurement, setSelectedProcurement] = useState<Procurement | null>(null);
+  const [payingProcurement, setPayingProcurement] = useState<Procurement | null>(null);
+  const [procurementPaymentReceiptUrl, setProcurementPaymentReceiptUrl] = useState("");
   const [procurementForm, setProcurementForm] = useState({
     campaignId: "",
     supplierId: "",
@@ -1222,10 +1407,12 @@ export function ProcurementPage() {
   });
   const hasValidProcurementItems = procurementForm.items.every((item) => item.itemName && Number(item.quantity) > 0 && item.unit && Number(item.pricePerUnit) > 0);
   const action = useMutation({
-    mutationFn: ({ id, type }: { id: string; type: "approve" | "pay" | "deliver" }) =>
-      type === "approve" ? aidApi.approveProcurement(id) : type === "pay" ? aidApi.payProcurement(id, "BANK_TRANSFER") : aidApi.deliverProcurement(id),
+    mutationFn: ({ id, type, receiptUrl }: { id: string; type: "approve" | "pay" | "deliver"; receiptUrl?: string }) =>
+      type === "approve" ? aidApi.approveProcurement(id) : type === "pay" ? aidApi.payProcurement(id, "BANK_TRANSFER", receiptUrl) : aidApi.deliverProcurement(id),
     onSuccess: () => {
       showToast("Hồ sơ mua sắm đã được cập nhật. Ngân sách được khóa giữ sau khi duyệt.", "success");
+      setPayingProcurement(null);
+      setProcurementPaymentReceiptUrl("");
       queryClient.invalidateQueries({ queryKey: ["procurements"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
@@ -1392,9 +1579,9 @@ export function ProcurementPage() {
         canReviewProcurement ? (
           <Stack direction="row" spacing={1}>
             <Button size="small" onClick={() => setSelectedProcurement(row as Procurement)}>Xem</Button>
-            <Button size="small" disabled={isPastProcurementStep(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt và khóa ngân sách</Button>
-            <Button size="small" disabled={isPastProcurementStep(row.status, "pay") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "pay" })}>Thanh toán</Button>
-            <Button size="small" disabled={isPastProcurementStep(row.status, "deliver") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Nhập kho</Button>
+            <Button size="small" disabled={!canRunProcurementAction(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Duyệt và khóa ngân sách</Button>
+            <Button size="small" disabled={!canRunProcurementAction(row.status, "pay") || action.isPending} onClick={() => setPayingProcurement(row as Procurement)}>Thanh toán</Button>
+            <Button size="small" disabled={!canRunProcurementAction(row.status, "deliver") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "deliver" })}>Nhập kho</Button>
           </Stack>
         ) : (
           <Typography variant="body2" color="text.secondary">Chờ kế toán duyệt</Typography>
@@ -1431,12 +1618,13 @@ export function ProcurementPage() {
                 </TableHead>
                 <TableBody>
                   {procurementItemsForDialog.length ? procurementItemsForDialog.map((item, index) => {
-                    const pricePerUnit = item.pricePerUnit ?? item.unitPrice ?? 0;
-                    const lineTotal = item.totalAmount ?? item.amount ?? item.quantity * pricePerUnit;
+                    const quantity = Number(item.quantity ?? 1);
+                    const pricePerUnit = item.pricePerUnit ?? item.unitPrice ?? (quantity > 0 ? (item.totalAmount ?? item.amount ?? 0) / quantity : 0);
+                    const lineTotal = item.totalAmount ?? item.amount ?? quantity * pricePerUnit;
                     return (
                     <TableRow key={item.id ?? index}>
-                      <TableCell>{item.itemName ?? item.name ?? "Vật tư"}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.itemName ?? item.name ?? item.itemType ?? "Vật tư"}</TableCell>
+                      <TableCell>{quantity}</TableCell>
                       <TableCell>{item.unit ?? "-"}</TableCell>
                       <TableCell>{formatMoney(pricePerUnit)}</TableCell>
                       <TableCell>{formatMoney(lineTotal)}</TableCell>
@@ -1459,6 +1647,32 @@ export function ProcurementPage() {
           <Button onClick={() => setSelectedProcurement(null)}>Đóng</Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={Boolean(payingProcurement)} onClose={() => setPayingProcurement(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Xác nhận thanh toán mua sắm</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Alert severity="info">Nhập URL hóa đơn/biên lai chuyển khoản để lưu minh chứng thanh toán trước khi nhập kho.</Alert>
+            <MetricCard label="Đề xuất" value={payingProcurement?.campaignName ?? payingProcurement?.id ?? "Đề xuất mua sắm"} />
+            <TextField
+              label="URL hóa đơn hoặc biên lai"
+              value={procurementPaymentReceiptUrl}
+              onChange={(event) => setProcurementPaymentReceiptUrl(event.target.value)}
+              placeholder="https://..."
+              autoFocus
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPayingProcurement(null)}>Hủy</Button>
+          <Button
+            variant="contained"
+            disabled={!payingProcurement || !procurementPaymentReceiptUrl.trim() || action.isPending}
+            onClick={() => payingProcurement ? action.mutate({ id: payingProcurement.id, type: "pay", receiptUrl: procurementPaymentReceiptUrl.trim() }) : undefined}
+          >
+            Xác nhận thanh toán
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
@@ -1477,7 +1691,8 @@ export function AllocationPlansPage() {
   });
   const plans = useQuery({ queryKey: ["allocation-plans"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
   const campaigns = useQuery({ queryKey: ["campaigns-admin", "allocation-select"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }), enabled: canCreateAllocation });
-  const assessments = useQuery({ queryKey: ["area-assessments", "allocation-select"], queryFn: () => aidApi.areaAssessments({ status: "VERIFIED", page: 1, limit: 50 }), enabled: canCreateAllocation });
+  const assessments = useQuery({ queryKey: ["area-assessments", "allocation-select"], queryFn: () => aidApi.areaAssessments({ page: 1, limit: 100 }), enabled: canCreateAllocation });
+  const verifiedAssessments = (assessments.data?.data ?? []).filter((assessment) => isVerifiedAssessmentStatus(assessment.status));
   const allocationTotal = allocationForm.items.reduce((total, item) => total + Number(item.approvedAmount), 0);
   const hasValidAllocationItems = allocationForm.items.every((item) => item.itemType && Number(item.quantity) > 0 && Number(item.approvedAmount) >= 0);
   const createPlan = useMutation({
@@ -1533,7 +1748,9 @@ export function AllocationPlansPage() {
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField fullWidth select label="Báo cáo nhu cầu đã xác minh" value={allocationForm.areaAssessmentId} onChange={(event) => setAllocationForm({ ...allocationForm, areaAssessmentId: event.target.value })}>
                       <MenuItem value="">Không gắn báo cáo</MenuItem>
-                      {(assessments.data?.data ?? []).map((assessment) => <MenuItem key={assessment.id} value={assessment.id}>{assessment.areaName} - {assessment.householdsAffected} hộ</MenuItem>)}
+                      {verifiedAssessments.length ? verifiedAssessments.map((assessment) => <MenuItem key={assessment.id} value={assessment.id}>{assessment.areaName} - {assessment.householdsAffected} hộ</MenuItem>) : (
+                        <MenuItem disabled>{assessments.isLoading ? "Đang tải báo cáo..." : "Chưa có báo cáo đã xác minh"}</MenuItem>
+                      )}
                     </TextField>
                   </Grid>
                 </Grid>
@@ -1583,9 +1800,9 @@ export function AllocationPlansPage() {
       ) : null}
       <WorkflowTable title="Kế hoạch phân bổ" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
         <Stack direction="row" spacing={1}>
-          {canCreateAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "submit") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "submit" })}>Trình duyệt</Button> : null}
-          {canApproveAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Phê duyệt và khóa giữ</Button> : null}
-          {canCreateAllocation ? <Button size="small" disabled={isPastAllocationStep(row.status, "close") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng kế hoạch</Button> : null}
+          {canCreateAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "submit") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "submit" })}>Trình duyệt</Button> : null}
+          {canApproveAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Phê duyệt và khóa giữ</Button> : null}
+          {canCreateAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "close") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng kế hoạch</Button> : null}
         </Stack>
       )} />
     </Stack>
@@ -1596,42 +1813,36 @@ function normalizeWorkflowStatus(status: string) {
   return normalizeRole(status);
 }
 
-function isPastProcurementStep(status: string, action: "approve" | "pay" | "deliver") {
-  const normalized = normalizeWorkflowStatus(status);
-  if (["REJECTED", "CANCELLED", "CANCELED", "DELIVERED", "RECEIVED", "IMPORTED", "COMPLETED"].includes(normalized)) return true;
-  const order: Record<string, number> = {
-    DRAFT: 0,
-    PENDING: 0,
-    SUBMITTED: 0,
-    APPROVED: 1,
-    HELD: 1,
-    BUDGET_HELD: 1,
-    BUDGET_LOCKED: 1,
-    PAID: 2,
-    PAYMENT_COMPLETED: 2,
-    EXECUTED: 2,
-  };
-  const actionOrder = { approve: 0, pay: 1, deliver: 2 }[action];
-  return (order[normalized] ?? -1) > actionOrder;
+function isPendingSosStatus(status?: string | null) {
+  return normalizeWorkflowStatus(status ?? "") === "PENDING";
 }
 
-function isPastAllocationStep(status: string, action: "submit" | "approve" | "close") {
+function isVerifiedSosStatus(status?: string | null) {
+  return ["VERIFIED", "APPROVED", "CONFIRMED"].includes(normalizeWorkflowStatus(status ?? ""));
+}
+
+function isVerifiedAssessmentStatus(status?: string | null) {
+  return ["VERIFIED", "APPROVED", "CONFIRMED"].includes(normalizeWorkflowStatus(status ?? ""));
+}
+
+function canRunProcurementAction(status: string, action: "approve" | "pay" | "deliver") {
   const normalized = normalizeWorkflowStatus(status);
-  if (["REJECTED", "CANCELLED", "CANCELED", "CLOSED", "COMPLETED"].includes(normalized)) return true;
-  const order: Record<string, number> = {
-    DRAFT: 0,
-    PENDING: 0,
-    SUBMITTED: 1,
-    PENDING_APPROVAL: 1,
-    UNDER_REVIEW: 1,
-    APPROVED: 2,
-    HELD: 2,
-    BUDGET_HELD: 2,
-    IN_PROGRESS: 2,
-    DISTRIBUTING: 2,
+  const allowed: Record<typeof action, string[]> = {
+    approve: ["DRAFT", "PENDING", "SUBMITTED", "PENDING_APPROVAL", "UNDER_REVIEW"],
+    pay: ["APPROVED", "HELD", "BUDGET_HELD", "BUDGET_LOCKED"],
+    deliver: ["PAID", "PAYMENT_COMPLETED", "EXECUTED"],
   };
-  const actionOrder = { submit: 0, approve: 1, close: 2 }[action];
-  return (order[normalized] ?? -1) > actionOrder;
+  return allowed[action].includes(normalized);
+}
+
+function canRunAllocationAction(status: string, action: "submit" | "approve" | "close") {
+  const normalized = normalizeWorkflowStatus(status);
+  const allowed: Record<typeof action, string[]> = {
+    submit: ["DRAFT", "PENDING"],
+    approve: ["SUBMITTED", "PENDING_APPROVAL", "UNDER_REVIEW"],
+    close: ["APPROVED", "HELD", "BUDGET_HELD", "IN_PROGRESS", "DISTRIBUTING"],
+  };
+  return allowed[action].includes(normalized);
 }
 
 export function DisbursementsPage() {
@@ -1762,7 +1973,8 @@ interface ProcurementItemView {
   id?: string;
   itemName?: string;
   name?: string;
-  quantity: number;
+  itemType?: string;
+  quantity?: number;
   unit?: string;
   pricePerUnit?: number;
   unitPrice?: number;
@@ -1776,14 +1988,66 @@ function getProcurementItems(procurement?: Procurement | null): ProcurementItemV
     procurementItems?: ProcurementItemView[];
     orderItems?: ProcurementItemView[];
     procurementOrderItems?: ProcurementItemView[];
+    procurementOrderDetails?: ProcurementItemView[];
+    purchaseItems?: ProcurementItemView[];
+    purchaseOrderItems?: ProcurementItemView[];
+    lineItems?: ProcurementItemView[];
+    orderLines?: ProcurementItemView[];
+    details?: ProcurementItemView[];
+    lines?: ProcurementItemView[];
+    itemName?: string;
+    itemType?: string;
+    name?: string;
+    quantity?: number;
+    unit?: string;
+    pricePerUnit?: number;
+    unitPrice?: number;
+    amount?: number;
   };
-  return source.items?.length
+  const items = source.items?.length
     ? source.items
     : source.procurementItems?.length
       ? source.procurementItems
       : source.orderItems?.length
         ? source.orderItems
-        : source.procurementOrderItems ?? [];
+        : source.procurementOrderItems?.length
+          ? source.procurementOrderItems
+          : source.procurementOrderDetails?.length
+            ? source.procurementOrderDetails
+            : source.purchaseItems?.length
+              ? source.purchaseItems
+              : source.purchaseOrderItems?.length
+                ? source.purchaseOrderItems
+                : source.lineItems?.length
+                  ? source.lineItems
+                  : source.orderLines?.length
+                    ? source.orderLines
+                    : source.details?.length
+                      ? source.details
+                      : source.lines ?? [];
+
+  if (items.length) return items;
+  if (source.itemName || source.itemType || source.name) {
+    return [{
+      id: source.id,
+      itemName: source.itemName,
+      itemType: source.itemType,
+      name: source.name,
+      quantity: source.quantity ?? 1,
+      unit: source.unit,
+      pricePerUnit: source.pricePerUnit,
+      unitPrice: source.unitPrice,
+      totalAmount: source.totalAmount,
+      amount: source.amount,
+    }];
+  }
+  return [];
+}
+
+function getVolunteerDisplayName(volunteer: { id: string; skills?: string | null; availableAreas?: string | null; userName?: string | null; fullName?: string | null; name?: string | null; phone?: string | null }) {
+  const name = volunteer.fullName ?? volunteer.userName ?? volunteer.name ?? volunteer.phone ?? `Tình nguyện viên ${volunteer.id.slice(0, 8)}`;
+  const area = volunteer.availableAreas ? ` - ${volunteer.availableAreas}` : "";
+  return `${name}${area}`;
 }
 
 function WorkflowTable({ title, rows, loading, error, refetch, actions }: { title: string; rows: WorkflowRow[]; loading: boolean; error: unknown; refetch: () => void; actions: (row: WorkflowRow) => React.ReactNode }) {
@@ -1885,8 +2149,58 @@ export function OrganizationsPage() {
 }
 
 export function ComplaintsPage() {
+  const queryClient = useQueryClient();
+  const showToast = useToast((state) => state.showToast);
   const rows = useQuery({ queryKey: ["admin-complaints"], queryFn: () => monitoringApi.adminComplaints({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Khiếu nại" description="Theo dõi phản ánh của cộng đồng và các vấn đề cần điều phối xử lý." query={rows} primaryKey="title" />;
+  const update = useMutation({
+    mutationFn: ({ id, status, resolution }: { id: string; status: string; resolution: string }) => monitoringApi.updateComplaint(id, { status, resolution }),
+    onSuccess: () => {
+      showToast("Trạng thái phản ánh đã được cập nhật.", "success");
+      queryClient.invalidateQueries({ queryKey: ["admin-complaints"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
+
+  return (
+    <>
+      <PageHeader title="Khiếu nại và phản ánh" description="Theo dõi phản ánh của cộng đồng, phân loại vấn đề và cập nhật trạng thái xử lý." />
+      <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
+        <Paper variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Phản ánh</TableCell>
+                <TableCell>Loại</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Ngày tạo</TableCell>
+                <TableCell>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.data?.data.map((item: Complaint) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <Typography fontWeight={900}>{item.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">{item.description}</Typography>
+                  </TableCell>
+                  <TableCell>{getComplaintTypeLabel(item.complaintType)}</TableCell>
+                  <TableCell><StatusChip value={item.status} /></TableCell>
+                  <TableCell>{formatDate(item.createdAt)}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "IN_REVIEW", resolution: "Admin đang rà soát phản ánh." })}>Đang xử lý</Button>
+                      <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
+                      <Button size="small" color="error" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      </QueryState>
+    </>
+  );
 }
 
 export function FraudPage() {
@@ -1895,8 +2209,118 @@ export function FraudPage() {
 }
 
 export function AuditLogsPage() {
+  const [keyword, setKeyword] = useState("");
+  const [actionType, setActionType] = useState("");
   const rows = useQuery({ queryKey: ["audit-logs"], queryFn: () => adminApi.auditLogs({ page: 1, limit: 50 }) });
-  return <SimpleObjectList title="Nhật ký kiểm toán" description="Lịch sử thao tác hệ thống phục vụ minh bạch và truy vết trách nhiệm." query={rows} primaryKey="action" />;
+  const filteredRows = (rows.data?.data ?? []).filter((row) => {
+    const record = row as Record<string, unknown>;
+    const action = String(record.action ?? record.actionType ?? "");
+    const normalized = normalizeSearchText(Object.values(record).join(" "));
+    const matchesKeyword = normalizeSearchText(keyword) ? normalized.includes(normalizeSearchText(keyword)) : true;
+    const matchesAction = actionType ? normalizeWorkflowStatus(action).includes(actionType) : true;
+    return matchesKeyword && matchesAction;
+  });
+
+  return (
+    <>
+      <PageHeader title="Nhật ký kiểm toán" description="Lịch sử thao tác hệ thống phục vụ minh bạch, truy vết trách nhiệm và rà soát rủi ro." />
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ mb: 2 }}>
+        <TextField label="Tìm theo hành động, người thao tác, mô tả..." value={keyword} onChange={(event) => setKeyword(event.target.value)} sx={{ flex: 1 }} />
+        <TextField select label="Nhóm hành động" value={actionType} onChange={(event) => setActionType(event.target.value)} sx={{ minWidth: 220 }}>
+          <MenuItem value="">Tất cả</MenuItem>
+          <MenuItem value="CREATE">Tạo mới</MenuItem>
+          <MenuItem value="UPDATE">Cập nhật</MenuItem>
+          <MenuItem value="APPROVE">Duyệt/xác minh</MenuItem>
+          <MenuItem value="REJECT">Từ chối</MenuItem>
+          <MenuItem value="PAY">Thanh toán</MenuItem>
+        </TextField>
+      </Stack>
+      <QueryState isLoading={rows.isLoading} error={rows.error} empty={!filteredRows.length} refetch={rows.refetch}>
+        <Paper variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Hành động</TableCell>
+                <TableCell>Người thao tác</TableCell>
+                <TableCell>Đối tượng</TableCell>
+                <TableCell>Mô tả</TableCell>
+                <TableCell>Thời gian</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredRows.map((row, index) => {
+                const record = row as Record<string, unknown>;
+                const action = String(record.action ?? record.actionType ?? "SYSTEM");
+                return (
+                  <TableRow key={String(record.id ?? index)}>
+                    <TableCell>
+                      <Chip label={action} size="small" sx={auditActionChipSx(action)} />
+                    </TableCell>
+                    <TableCell>{formatAuditValue(record.userName ?? record.actorName ?? record.performedBy ?? record.userId)}</TableCell>
+                    <TableCell>{getAuditEntityLabel(record)}</TableCell>
+                    <TableCell>{formatAuditValue(record.description ?? record.message ?? record.details ?? record.newValue ?? record.oldValue)}</TableCell>
+                    <TableCell>{formatDate(String(record.createdAt ?? record.timestamp ?? record.entryDate ?? ""))}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Paper>
+      </QueryState>
+    </>
+  );
+}
+
+const adminComplaintTypeLabels: Record<string, string> = {
+  FRAUD: "Gian lận",
+  MISSING_AID: "Thiếu hàng cứu trợ",
+  DELAY: "Chậm trễ",
+  QUALITY: "Chất lượng hỗ trợ",
+  APP: "Ứng dụng",
+  RESCUE_TEAM: "Đội cứu hộ",
+  OTHER: "Khác",
+};
+
+function getComplaintTypeLabel(value?: string | null) {
+  return adminComplaintTypeLabels[value ?? ""] ?? value ?? "Khác";
+}
+
+function auditActionChipSx(action: string) {
+  const normalized = normalizeWorkflowStatus(action);
+  const color = normalized.includes("REJECT") || normalized.includes("DELETE")
+    ? "#b42318"
+    : normalized.includes("APPROVE") || normalized.includes("VERIFY") || normalized.includes("PAY")
+      ? "var(--color-green-700)"
+      : normalized.includes("CREATE")
+        ? "var(--color-green-600)"
+        : "var(--color-text-muted)";
+
+  return {
+    borderRadius: 0,
+    border: `1px solid ${color}`,
+    color,
+    bgcolor: "rgba(255,255,255,.48)",
+    fontWeight: 900,
+  };
+}
+
+function getAuditEntityLabel(record: Record<string, unknown>) {
+  const entityName = formatAuditValue(record.entityName ?? record.entityType ?? record.module ?? record.referenceType);
+  const entityId = formatAuditValue(record.entityId ?? record.referenceId);
+  if (entityName !== "-" && entityId !== "-") return `${entityName} (${entityId})`;
+  if (entityName !== "-") return entityName;
+  return entityId;
+}
+
+function formatAuditValue(value: unknown) {
+  if (value === undefined || value === null || value === "") return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
 function SimpleObjectList({ title, description, query, primaryKey }: { title: string; description?: string; query: { isLoading: boolean; error: unknown; data?: { data: unknown[] }; refetch: () => void }; primaryKey: string }) {
@@ -1934,3 +2358,6 @@ function SimpleStaticList({ title, description = "Dữ liệu vận hành từ p
     </>
   );
 }
+
+
+
