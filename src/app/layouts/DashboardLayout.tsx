@@ -27,6 +27,7 @@ interface DashboardNavItem {
 
 const financialRoleAliases = [ROLES.financialOfficer, "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"];
 const opsRoleAliases = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
+const complaintRoleAliases = [ROLES.citizen];
 
 const dashboardNav: DashboardNavItem[] = [
   { label: "Tổng quan", to: "/dashboard", icon: <DashboardOutlinedIcon fontSize="small" /> },
@@ -34,6 +35,7 @@ const dashboardNav: DashboardNavItem[] = [
   { label: "Lịch sử quyên góp", to: "/donor/donations", roles: [ROLES.donor, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin], icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
   { label: "Chiến dịch", to: "/donor/campaigns", roles: [ROLES.donor], icon: <CampaignOutlinedIcon fontSize="small" /> },
   { label: "Hồ sơ", to: "/profile", icon: <PersonOutlineOutlinedIcon fontSize="small" /> },
+  { label: "Phản ánh", to: "/citizen/complaints", roles: complaintRoleAliases, icon: <CrisisAlertOutlinedIcon fontSize="small" /> },
   { label: "Yêu cầu cứu trợ", to: "/ops/sos", roles: [ROLES.coordinator], icon: <CrisisAlertOutlinedIcon fontSize="small" /> },
   { label: "Phân công cứu hộ", to: "/ops/missions", roles: [ROLES.coordinator], icon: <MapOutlinedIcon fontSize="small" /> },
   { label: "Duyệt khảo sát", to: "/ops/area-assessments", roles: [ROLES.admin, ROLES.coordinator], icon: <FactCheckOutlinedIcon fontSize="small" /> },
@@ -43,11 +45,11 @@ const dashboardNav: DashboardNavItem[] = [
   { label: "Kho hàng", to: "/ops/inventory", roles: opsRoleAliases, icon: <Inventory2OutlinedIcon fontSize="small" />, badge: 3 },
   { label: "Vận chuyển", to: "/ops/shipments", roles: opsRoleAliases, icon: <LocalShippingOutlinedIcon fontSize="small" /> },
   { label: "Tài chính", to: "/ops/disbursements", roles: opsRoleAliases, icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
-  { label: "Điểm trú tạm", to: "/citizen/shelters", roles: [ROLES.admin, ROLES.coordinator], icon: <MapOutlinedIcon fontSize="small" /> },
+  { label: "Điểm trú tạm", to: "/citizen/shelters", roles: [ROLES.admin, ROLES.coordinator, ROLES.citizen], icon: <MapOutlinedIcon fontSize="small" /> },
   { label: "Tình nguyện hỗ trợ", to: "/ops/volunteers", roles: [ROLES.coordinator], icon: <GroupsOutlinedIcon fontSize="small" /> },
   { label: "Tổ chức", to: "/ops/organizations", roles: [ROLES.admin], icon: <BusinessOutlinedIcon fontSize="small" /> },
   { label: "Người dùng", to: "/ops/users", roles: [ROLES.admin], icon: <GroupsOutlinedIcon fontSize="small" />, badge: 1 },
-  { label: "Khiếu nại", to: "/ops/complaints", roles: [ROLES.admin], icon: <CrisisAlertOutlinedIcon fontSize="small" /> },
+  { label: "Phản ánh", to: "/ops/complaints", roles: [ROLES.admin], icon: <CrisisAlertOutlinedIcon fontSize="small" /> },
   { label: "Kiểm toán", to: "/ops/audit-logs", roles: [ROLES.admin], icon: <FactCheckOutlinedIcon fontSize="small" /> },
   { label: "Nhiệm vụ đội cứu hộ", to: "/team/missions", roles: [ROLES.rescueTeam], icon: <MapOutlinedIcon fontSize="small" /> },
   { label: "Chuyến hàng đội", to: "/team/shipments", roles: [ROLES.rescueTeam], icon: <LocalShippingOutlinedIcon fontSize="small" /> },

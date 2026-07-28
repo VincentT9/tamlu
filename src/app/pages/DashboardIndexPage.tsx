@@ -35,6 +35,18 @@ const citizenActions = [
     to: "/citizen/volunteer-profile",
     icon: <FavoriteBorderOutlinedIcon />,
   },
+  {
+    title: "Điểm trú tạm",
+    description: "Xem nơi trú an toàn, sức chứa còn chỗ và check-in / check-out khi di tản.",
+    to: "/citizen/shelters",
+    icon: <MapOutlinedIcon />,
+  },
+  {
+    title: "Phản ánh và góp ý",
+    description: "Gửi phản ánh về ứng dụng, đội cứu trợ, chiến dịch hoặc trải nghiệm hỗ trợ để admin xử lý.",
+    to: "/citizen/complaints",
+    icon: <CrisisAlertOutlinedIcon />,
+  },
 ];
 
 function normalizeDashboardRole(value: string) {
@@ -105,8 +117,10 @@ export function DashboardIndexPage() {
         description="Theo dõi cứu hộ, xem chiến dịch đã xác minh và cập nhật khả năng đồng hành trong hệ thống Tâm Lũ."
       />
       <Grid container spacing={2.5}>
-        {citizenActions.map((item) => (
-          <Grid key={item.to} size={{ xs: 12, md: 6, xl: 3 }}>
+        {citizenActions
+          .filter((item) => roles.includes(ROLES.citizen) || item.to !== "/citizen/complaints")
+          .map((item) => (
+          <Grid key={item.to} size={{ xs: 12, md: 6, xl: 4 }}>
             <Card className="h-full">
               <Stack spacing={2} className="h-full">
                 <Box className="grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--color-green-700)] ring-1 ring-[var(--color-border)]">

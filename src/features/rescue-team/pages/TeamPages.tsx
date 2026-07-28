@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
 import { Alert, Box, Button, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
@@ -347,6 +348,7 @@ export function TeamAreaAssessmentsPage() {
   const showToast = useToast((state) => state.showToast);
   const [form, setForm] = useState({ campaignId: "", areaName: "", province: "", district: "", ward: "", householdsAffected: 1, floodSeverity: "HIGH", priorityLevel: "HIGH", notes: "" });
   const [needs, setNeeds] = useState<AreaNeedDraft[]>([]);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   const fieldLabels: Record<keyof typeof form, string> = {
     campaignId: "Mã chiến dịch",
     areaName: "Tên khu vực",
@@ -377,6 +379,7 @@ export function TeamAreaAssessmentsPage() {
       showToast("Đánh giá khu vực và nhu cầu cứu trợ đã được gửi.", "success");
       setForm({ campaignId: "", areaName: "", province: "", district: "", ward: "", householdsAffected: 1, floodSeverity: "HIGH", priorityLevel: "HIGH", notes: "" });
       setNeeds([]);
+      setShowAssessmentForm(false);
       queryClient.invalidateQueries({ queryKey: ["area-assessments-team"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
@@ -385,7 +388,16 @@ export function TeamAreaAssessmentsPage() {
   return (
     <>
       <PageHeader title="Đánh giá khu vực" description="Ghi nhận nhu cầu hiện trường để lập kế hoạch phân bổ cứu trợ." />
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setShowAssessmentForm((value) => !value)}
+        sx={{ mb: 2, alignSelf: { xs: "stretch", md: "flex-start" } }}
+      >
+        {showAssessmentForm ? "Ẩn form đánh giá" : "Tạo đánh giá khu vực"}
+      </Button>
       <Grid container spacing={2.5}>
+        {showAssessmentForm ? (
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
@@ -437,11 +449,85 @@ export function TeamAreaAssessmentsPage() {
             </Stack>
           </SectionPaper>
         </Grid>
-        <Grid size={{ xs: 12, lg: 8 }}>
+        ) : null}
+        <Grid size={{ xs: 12, lg: showAssessmentForm ? 8 : 12 }}>
           <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
-            <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Khu vực</TableCell><TableCell>Hộ ảnh hưởng</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
-              {rows.data?.data.map((row) => <TableRow key={row.id}><TableCell>{row.areaName}</TableCell><TableCell>{row.householdsAffected}</TableCell><TableCell><StatusChip value={row.priorityLevel} /></TableCell><TableCell><StatusChip value={row.status} /></TableCell></TableRow>)}
-            </TableBody></Table></Paper>
+            <Stack spacing={1.5}>
+              {rows.data?.data.map((row) => (
+                <Paper key={row.id} variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                  <Stack spacing={1.5}>
+                    <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1}>
+                      <Box>
+                        <Typography fontWeight={950} sx={{ color: "var(--color-green-800)" }}>
+                          {row.areaName || "Chưa đặt tên khu vực"}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "var(--color-text-muted)", lineHeight: 1.55 }}>
+                          {[row.ward, row.district, row.province].filter(Boolean).join(", ") || "Chưa nhập địa bàn"}
+                        </Typography>
+                      </Box>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        <StatusChip value={row.status} />
+                        <StatusChip value={row.priorityLevel} />
+                        <StatusChip value={row.floodSeverity} />
+                      </Stack>
+                    </Stack>
+
+                    <Grid container spacing={1.25}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
+                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Hộ bị ảnh hưởng</Typography>
+                          <Typography fontWeight={950}>{row.householdsAffected}</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
+                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Ngày gửi</Typography>
+                          <Typography fontWeight={950}>{formatDate(row.createdAt)}</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
+                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Mã khảo sát</Typography>
+                          <Typography fontWeight={950}>{row.id.slice(0, 8).toUpperCase()}</Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+
+                    <Box sx={{ borderTop: "1px solid var(--color-border)", pt: 1.25 }}>
+                      <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Nhu cầu khẩn cấp</Typography>
+                      <Stack spacing={0.75} sx={{ mt: 0.75 }}>
+                        {row.needs.length ? row.needs.map((need) => (
+                          <Box key={need.id} sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "baseline" }}>
+                            <Typography fontWeight={900}>{need.itemType}</Typography>
+                            <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
+                              {need.quantity} {need.unit}
+                            </Typography>
+                            {need.notes ? (
+                              <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
+                                {need.notes}
+                              </Typography>
+                            ) : null}
+                          </Box>
+                        )) : (
+                          <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
+                            Chưa nhập nhu cầu chi tiết.
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+
+                    {row.notes ? (
+                      <Box sx={{ borderTop: "1px solid var(--color-border)", pt: 1.25 }}>
+                        <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Ghi chú hiện trường</Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
+                          {row.notes}
+                        </Typography>
+                      </Box>
+                    ) : null}
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
           </QueryState>
         </Grid>
       </Grid>
@@ -452,6 +538,7 @@ export function TeamAreaAssessmentsPage() {
 export function TeamProofsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const [showProofForm, setShowProofForm] = useState(false);
   const [form, setForm] = useState({
     missionId: "",
     fileUrls: "",
@@ -490,6 +577,7 @@ export function TeamProofsPage() {
         signerRole: "Người nhận hỗ trợ",
         signatureUrl: "",
       });
+      setShowProofForm(false);
       queryClient.invalidateQueries({ queryKey: ["team-missions"] });
       queryClient.invalidateQueries({ queryKey: ["team-missions", "proofs"] });
     },
@@ -514,7 +602,16 @@ export function TeamProofsPage() {
   return (
     <>
       <PageHeader title="Minh chứng hiện trường" description="Nộp ảnh, tọa độ GPS và thông tin ký nhận sau khi đội cứu hộ trao vật tư hoặc hỗ trợ người dân." />
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setShowProofForm((value) => !value)}
+        sx={{ mb: 2, alignSelf: { xs: "stretch", md: "flex-start" } }}
+      >
+        {showProofForm ? "Ẩn form minh chứng" : "Nộp minh chứng"}
+      </Button>
       <Grid container spacing={2.5}>
+        {showProofForm ? (
         <Grid size={{ xs: 12, lg: 5 }}>
           <SectionPaper>
             <Stack spacing={2}>
@@ -565,7 +662,8 @@ export function TeamProofsPage() {
             </Stack>
           </SectionPaper>
         </Grid>
-        <Grid size={{ xs: 12, lg: 7 }}>
+        ) : null}
+        <Grid size={{ xs: 12, lg: showProofForm ? 7 : 12 }}>
           <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
             <Paper variant="outlined">
               <Table size="small">

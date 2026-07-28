@@ -47,6 +47,7 @@ interface NavItem {
 
 const financialRoleAliases = [ROLES.financialOfficer, "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"];
 const opsRoleAliases = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
+const complaintRoleAliases = [ROLES.citizen];
 
 const navItems: NavItem[] = [
   { label: "Trang chủ", to: "/", icon: DashboardIcon },
@@ -65,11 +66,12 @@ const navItems: NavItem[] = [
   { label: "Kho hàng", to: "/ops/warehouses", icon: Inventory2Icon, roles: opsRoleAliases },
   { label: "Vận chuyển", to: "/ops/shipments", icon: LocalShippingIcon, roles: [ROLES.admin, ROLES.coordinator] },
   { label: "Tài chính", to: "/ops/disbursements", icon: PaidIcon, roles: opsRoleAliases },
-  { label: "Điểm trú tạm", to: "/citizen/shelters", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator] },
+  { label: "Điểm trú tạm", to: "/citizen/shelters", icon: MapIcon, roles: [ROLES.admin, ROLES.coordinator, ROLES.citizen] },
+  { label: "Phản ánh", to: "/citizen/complaints", icon: SosIcon, roles: complaintRoleAliases },
   { label: "Tình nguyện hỗ trợ", to: "/ops/volunteers", icon: VolunteerActivismIcon, roles: [ROLES.coordinator] },
   { label: "Tổ chức", to: "/ops/organizations", icon: PeopleIcon, roles: [ROLES.admin] },
   { label: "Người dùng", to: "/ops/users", icon: PeopleIcon, roles: [ROLES.admin] },
-  { label: "Khiếu nại", to: "/ops/complaints", icon: SosIcon, roles: [ROLES.admin] },
+  { label: "Phản ánh", to: "/ops/complaints", icon: SosIcon, roles: [ROLES.admin] },
   { label: "Kiểm toán", to: "/ops/audit-logs", icon: DashboardIcon, roles: [ROLES.admin] },
   { label: "Nhiệm vụ đội cứu hộ", to: "/team/missions", icon: VolunteerActivismIcon, roles: [ROLES.rescueTeam] },
   { label: "Chuyến hàng đội", to: "/team/shipments", icon: LocalShippingIcon, roles: [ROLES.rescueTeam] },

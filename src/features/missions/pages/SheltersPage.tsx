@@ -1,8 +1,25 @@
-import { Alert, Box, Button, Grid, LinearProgress, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Grid,
+  LinearProgress,
+  MenuItem,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuthStore } from "@/features/auth/store";
 import { missionApi } from "@/features/missions/api";
+import type { ShelterCheckIn } from "@/features/missions/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { ROLES } from "@/shared/constants/roles";
 import { TamLuMap } from "@/shared/maps/TamLuMap";
@@ -13,14 +30,51 @@ import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { useToast } from "@/shared/ui/toast";
 
+function isCheckedOut(item: ShelterCheckIn) {
+  const action = String(item.action ?? item.status ?? "").toUpperCase();
+  return Boolean(item.checkedOutAt) || action.includes("CHECK_OUT") || action.includes("CHECKOUT") || action === "OUT";
+}
+
+function isCheckedIn(item: ShelterCheckIn) {
+  const action = String(item.action ?? item.status ?? "").toUpperCase();
+  return Boolean(item.checkedInAt) || action.includes("CHECK_IN") || action.includes("CHECKIN") || action === "IN";
+}
+
+function checkInKey(item: ShelterCheckIn) {
+  return item.householdId ?? item.personName?.trim().toLowerCase() ?? item.id;
+}
+
+function checkInTime(item: ShelterCheckIn) {
+  return item.checkedInAt ?? item.createdAt ?? item.checkedOutAt ?? "";
+}
+
+function activeCheckInRecords(logs: ShelterCheckIn[]) {
+  const latestByPerson = new Map<string, ShelterCheckIn>();
+  [...logs]
+    .sort((left, right) => new Date(checkInTime(right)).getTime() - new Date(checkInTime(left)).getTime())
+    .forEach((item) => {
+      const key = checkInKey(item);
+      if (!latestByPerson.has(key)) {
+        latestByPerson.set(key, item);
+      }
+    });
+
+  return [...latestByPerson.values()].filter((item) => isCheckedIn(item) && !isCheckedOut(item));
+}
+
 export function SheltersPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const roles = useAuthStore((state) => state.roles);
   const canManageShelters = roles.includes(ROLES.admin) || roles.includes(ROLES.coordinator);
-  const shelters = useQuery({ queryKey: ["shelters"], queryFn: () => missionApi.shelters({ page: 1, limit: 50 }) });
+
+  const shelters = useQuery({
+    queryKey: ["shelters"],
+    queryFn: () => missionApi.shelters({ page: 1, limit: 50 }),
+  });
+
   const [form, setForm] = useState({ shelterId: "", personName: "", numPeople: 1 });
-  const [activeCheckIn, setActiveCheckIn] = useState<{ shelterId: string; personName: string } | null>(null);
+  const [activeCheckIn, setActiveCheckIn] = useState<{ shelterId: string; personName: string; checkInId?: string | null } | null>(null);
   const [showShelterForm, setShowShelterForm] = useState(false);
   const [selectedShelterLogId, setSelectedShelterLogId] = useState("");
   const [shelterForm, setShelterForm] = useState({
@@ -33,23 +87,42 @@ export function SheltersPage() {
     contactPerson: "",
     contactPhone: "",
   });
+
+  const selectedCheckInShelterId = selectedShelterLogId || form.shelterId;
   const shelterCheckIns = useQuery({
-    queryKey: ["shelter-check-ins", selectedShelterLogId],
-    queryFn: () => missionApi.shelterCheckIns(selectedShelterLogId, { page: 1, limit: 20 }),
-    enabled: canManageShelters && Boolean(selectedShelterLogId),
+    queryKey: ["shelter-check-ins", selectedCheckInShelterId],
+    queryFn: () => missionApi.shelterCheckIns(selectedCheckInShelterId, { page: 1, limit: 50 }),
+    enabled: canManageShelters && Boolean(selectedCheckInShelterId),
+    retry: false,
   });
+
   const checkIn = useMutation({
-    mutationFn: () => missionApi.checkInShelter(form.shelterId, { personName: form.personName, numPeople: form.numPeople, householdId: null }),
-    onSuccess: () => {
+    mutationFn: () =>
+      missionApi.checkInShelter(form.shelterId, {
+        personName: form.personName,
+        numPeople: form.numPeople,
+        householdId: null,
+      }),
+    onSuccess: (data) => {
       showToast("Đã ghi nhận người dân vào điểm trú tạm.", "success");
-      setActiveCheckIn({ shelterId: form.shelterId, personName: form.personName });
+      setActiveCheckIn({ shelterId: form.shelterId, personName: form.personName, checkInId: data?.id });
       queryClient.invalidateQueries({ queryKey: ["shelters"] });
       queryClient.invalidateQueries({ queryKey: ["shelter-check-ins"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
+
   const checkOut = useMutation({
-    mutationFn: () => missionApi.checkOutShelter(form.shelterId, { personName: form.personName, householdId: null }),
+    mutationFn: (payload: { shelterId: string; personName?: string | null; numPeople?: number | null }) => {
+      const body: { personName?: string; numPeople: number } = {
+        numPeople: Math.max(Number(payload.numPeople ?? 1), 1),
+      };
+      const personName = payload.personName?.trim();
+      if (personName) {
+        body.personName = personName;
+      }
+      return missionApi.checkOutShelter(payload.shelterId, body);
+    },
     onSuccess: () => {
       showToast("Đã ghi nhận rời điểm trú tạm.", "success");
       setActiveCheckIn(null);
@@ -58,33 +131,87 @@ export function SheltersPage() {
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
+
   const createShelter = useMutation({
-    mutationFn: () => missionApi.createShelter({
-      ...shelterForm,
-      latitude: Number(shelterForm.latitude),
-      longitude: Number(shelterForm.longitude),
-      capacity: Number(shelterForm.capacity),
-      currentOccupancy: 0,
-      hasElectricity: true,
-      hasCleanWater: true,
-      hasMedical: false,
-      status: "ACTIVE",
-    }),
+    mutationFn: () =>
+      missionApi.createShelter({
+        ...shelterForm,
+        latitude: Number(shelterForm.latitude),
+        longitude: Number(shelterForm.longitude),
+        capacity: Number(shelterForm.capacity),
+        currentOccupancy: 0,
+        hasElectricity: true,
+        hasCleanWater: true,
+        hasMedical: false,
+        status: "ACTIVE",
+      }),
     onSuccess: () => {
       showToast("Điểm trú tạm đã được tạo.", "success");
       setShowShelterForm(false);
-      setShelterForm({ name: "", type: "COMMUNITY", address: "", latitude: 16.4637, longitude: 107.5909, capacity: 50, contactPerson: "", contactPhone: "" });
+      setShelterForm({
+        name: "",
+        type: "COMMUNITY",
+        address: "",
+        latitude: 16.4637,
+        longitude: 107.5909,
+        capacity: 50,
+        contactPerson: "",
+        contactPhone: "",
+      });
       queryClient.invalidateQueries({ queryKey: ["shelters"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
-  const markers = shelters.data?.data.map((shelter) => ({ id: shelter.id, title: shelter.name, subtitle: `${shelter.currentOccupancy}/${shelter.capacity}`, latitude: shelter.latitude, longitude: shelter.longitude, type: "shelter" as const })) ?? [];
+
+  const shelterOptions = [...(shelters.data?.data ?? [])].sort((left, right) => {
+    const leftAvailable = Math.max(left.capacity - left.currentOccupancy, 0);
+    const rightAvailable = Math.max(right.capacity - right.currentOccupancy, 0);
+    if (leftAvailable !== rightAvailable) {
+      return rightAvailable - leftAvailable;
+    }
+    return left.name.localeCompare(right.name);
+  });
+  const markers = shelterOptions.map((shelter) => ({
+    id: shelter.id,
+    title: shelter.name,
+    subtitle: `${shelter.currentOccupancy}/${shelter.capacity}`,
+    latitude: shelter.latitude,
+    longitude: shelter.longitude,
+    type: "shelter" as const,
+  }));
   const totalCapacity = shelters.data?.data.reduce((sum, shelter) => sum + shelter.capacity, 0) ?? 0;
   const totalOccupancy = shelters.data?.data.reduce((sum, shelter) => sum + shelter.currentOccupancy, 0) ?? 0;
   const occupancyPct = totalCapacity ? Math.min((totalOccupancy / totalCapacity) * 100, 100) : 0;
+  const checkedInRecords = canManageShelters ? activeCheckInRecords(shelterCheckIns.data?.data ?? []) : [];
+  const selectedShelter = shelterOptions.find((shelter) => shelter.id === selectedCheckInShelterId);
+  const normalizedPersonName = form.personName.trim().toLowerCase();
+  const currentCheckInRecord = checkedInRecords.find((item) => {
+    if (activeCheckIn?.checkInId && item.id === activeCheckIn.checkInId) return true;
+    return Boolean(normalizedPersonName && item.personName?.trim().toLowerCase() === normalizedPersonName);
+  });
+  const canCheckOutFromForm = Boolean(
+    form.shelterId &&
+      form.personName &&
+      (currentCheckInRecord || (activeCheckIn?.shelterId === form.shelterId && activeCheckIn.personName === form.personName)),
+  );
+
+  function handleCheckInAction() {
+    if (!form.shelterId || !form.personName) return;
+    if (canCheckOutFromForm) {
+      checkOut.mutate({
+        shelterId: form.shelterId,
+        personName: form.personName,
+        numPeople: currentCheckInRecord?.numPeople ?? form.numPeople,
+      });
+      return;
+    }
+    checkIn.mutate();
+  }
+
   return (
     <>
       <PageHeader title="Điểm trú tạm" description="Theo dõi sức chứa điểm trú tạm và ghi nhận người dân đến nơi an toàn." />
+
       {canManageShelters ? (
         <Stack spacing={2} sx={{ mb: 2.5 }}>
           <Button variant="contained" onClick={() => setShowShelterForm((value) => !value)} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
@@ -122,6 +249,7 @@ export function SheltersPage() {
           ) : null}
         </Stack>
       ) : null}
+
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <QueryState isLoading={shelters.isLoading} error={shelters.error} refetch={shelters.refetch}>
@@ -153,16 +281,17 @@ export function SheltersPage() {
             </Box>
           </QueryState>
         </Grid>
+
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
               <Typography variant="h6" fontWeight={900}>Ghi nhận vào điểm trú</Typography>
               <Typography variant="body2" color="text.secondary">
-                Ghi nhận người đến nơi để điều phối viên theo dõi sức chứa an toàn và hướng dẫn gia đình đến điểm còn chỗ.
+                Chọn điểm trú tạm, nhập tên người hoặc hộ gia đình, sau đó check-in hoặc check-out khi rời điểm trú.
               </Typography>
               <TextField select label="Điểm trú tạm" value={form.shelterId} onChange={(event) => setForm({ ...form, shelterId: event.target.value })}>
                 <MenuItem value="" disabled>{shelters.isLoading ? "Đang tải điểm trú..." : "Chọn điểm trú tạm còn chỗ"}</MenuItem>
-                {(shelters.data?.data ?? []).map((shelter) => (
+                {shelterOptions.map((shelter) => (
                   <MenuItem key={shelter.id} value={shelter.id}>
                     {shelter.name} - còn {Math.max(shelter.capacity - shelter.currentOccupancy, 0)} chỗ
                   </MenuItem>
@@ -172,72 +301,87 @@ export function SheltersPage() {
               <TextField label="Số người" type="number" value={form.numPeople} onChange={(event) => setForm({ ...form, numPeople: Number(event.target.value) })} />
               <Button
                 variant="contained"
-                color={activeCheckIn?.shelterId === form.shelterId && activeCheckIn.personName === form.personName ? "error" : "primary"}
+                color={canCheckOutFromForm ? "error" : "primary"}
                 disabled={!form.shelterId || !form.personName || checkIn.isPending || checkOut.isPending}
-                onClick={() => activeCheckIn?.shelterId === form.shelterId && activeCheckIn.personName === form.personName ? checkOut.mutate() : checkIn.mutate()}
+                onClick={handleCheckInAction}
               >
-                {activeCheckIn?.shelterId === form.shelterId && activeCheckIn.personName === form.personName ? "Check-out khỏi điểm trú" : "Check-in vào điểm trú"}
+                {canCheckOutFromForm ? "Check-out khỏi điểm trú" : "Check-in vào điểm trú"}
               </Button>
             </Stack>
           </SectionPaper>
         </Grid>
+
         {canManageShelters ? (
-          <Grid size={{ xs: 12 }}>
-            <SectionPaper>
-              <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={900}>Danh sách check-in theo điểm trú</Typography>
-                <TextField select label="Chọn điểm trú để xem lượt check-in" value={selectedShelterLogId} onChange={(event) => setSelectedShelterLogId(event.target.value)} sx={{ maxWidth: 520 }}>
-                  <MenuItem value="">Chưa chọn điểm trú</MenuItem>
-                  {(shelters.data?.data ?? []).map((shelter) => <MenuItem key={shelter.id} value={shelter.id}>{shelter.name}</MenuItem>)}
+        <Grid size={{ xs: 12 }}>
+          <SectionPaper>
+            <Stack spacing={1.5}>
+              <Typography variant="h6" fontWeight={900}>
+                Danh sách đã check-in{selectedShelter ? ` tại ${selectedShelter.name}` : ""}
+              </Typography>
+              {canManageShelters ? (
+                <TextField
+                  select
+                  label="Chọn điểm trú để xem lượt check-in"
+                  value={selectedShelterLogId}
+                  onChange={(event) => setSelectedShelterLogId(event.target.value)}
+                  sx={{ maxWidth: 520 }}
+                >
+                  <MenuItem value="">Dùng điểm trú đang chọn ở form</MenuItem>
+                  {shelterOptions.map((shelter) => <MenuItem key={shelter.id} value={shelter.id}>{shelter.name}</MenuItem>)}
                 </TextField>
-                {selectedShelterLogId ? (
-                  <QueryState isLoading={shelterCheckIns.isLoading} error={shelterCheckIns.error} empty={!shelterCheckIns.data?.data.length} refetch={shelterCheckIns.refetch}>
-                    <Paper variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Người/hộ gia đình</TableCell>
-                            <TableCell>Số người</TableCell>
-                            <TableCell>Trạng thái</TableCell>
-                            <TableCell>Thời gian vào</TableCell>
-                            <TableCell>Thao tác</TableCell>
+              ) : null}
+              {!selectedCheckInShelterId ? (
+                <Alert severity="info">Chọn một điểm trú tạm trong form để xem danh sách người đang check-in tại địa điểm đó.</Alert>
+              ) : (
+                <QueryState
+                  isLoading={shelterCheckIns.isLoading}
+                  error={shelterCheckIns.error}
+                  empty={!checkedInRecords.length}
+                  emptyTitle="Chưa có lượt check-in đang hoạt động"
+                  emptyText="Khi có người dân check-in tại điểm trú này, danh sách sẽ hiển thị tại đây."
+                  refetch={shelterCheckIns.refetch}
+                >
+                  <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Người/hộ gia đình</TableCell>
+                          <TableCell>Số người</TableCell>
+                          <TableCell>Trạng thái</TableCell>
+                          <TableCell>Thời gian vào</TableCell>
+                          <TableCell>Thao tác</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {checkedInRecords.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.personName ?? item.householdId ?? "Lượt check-in"}</TableCell>
+                            <TableCell>{item.numPeople ?? "-"}</TableCell>
+                            <TableCell><StatusChip value={item.action ?? item.status ?? "CHECK_IN"} /></TableCell>
+                            <TableCell>{checkInTime(item) ? formatDate(checkInTime(item)) : "-"}</TableCell>
+                            <TableCell>
+                              <Button
+                                size="small"
+                                color="error"
+                                disabled={checkOut.isPending}
+                                onClick={() => checkOut.mutate({ shelterId: selectedCheckInShelterId, personName: item.personName, numPeople: item.numPeople ?? 1 })}
+                              >
+                                Check-out
+                              </Button>
+                            </TableCell>
                           </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {shelterCheckIns.data?.data.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell>{item.personName ?? item.householdId ?? "Lượt check-in"}</TableCell>
-                              <TableCell>{item.numPeople ?? "-"}</TableCell>
-                              <TableCell><StatusChip value={item.status ?? "ACTIVE"} /></TableCell>
-                              <TableCell>{item.checkedInAt ? formatDate(item.checkedInAt) : "-"}</TableCell>
-                              <TableCell>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  disabled={checkOut.isPending || Boolean(item.checkedOutAt)}
-                                  onClick={() => missionApi.checkOutShelter(selectedShelterLogId, { checkInId: item.id, personName: item.personName ?? undefined }).then(() => {
-                                    showToast("Đã ghi nhận rời điểm trú tạm.", "success");
-                                    queryClient.invalidateQueries({ queryKey: ["shelter-check-ins"] });
-                                    queryClient.invalidateQueries({ queryKey: ["shelters"] });
-                                  }).catch((error) => showToast(getErrorMessage(error), "error"))}
-                                >
-                                  Check-out
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </Paper>
-                  </QueryState>
-                ) : (
-                  <Alert severity="info">Chọn một điểm trú để xem các lượt check-in đang được ghi nhận.</Alert>
-                )}
-              </Stack>
-            </SectionPaper>
-          </Grid>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Paper>
+                </QueryState>
+              )}
+            </Stack>
+          </SectionPaper>
+        </Grid>
         ) : null}
-        {shelters.data?.data.map((shelter) => (
+
+        {shelterOptions.map((shelter) => (
           <Grid size={{ xs: 12, md: 6, lg: 4 }} key={shelter.id}>
             <SectionPaper>
               <Stack spacing={1}>
@@ -249,7 +393,11 @@ export function SheltersPage() {
                     <Typography fontWeight={800}>Số người lưu trú</Typography>
                     <Typography color="text.secondary">{shelter.currentOccupancy}/{shelter.capacity}</Typography>
                   </Stack>
-                  <LinearProgress variant="determinate" value={shelter.capacity ? Math.min((shelter.currentOccupancy / shelter.capacity) * 100, 100) : 0} color={shelter.capacity && shelter.currentOccupancy / shelter.capacity > 0.85 ? "warning" : "success"} />
+                  <LinearProgress
+                    variant="determinate"
+                    value={shelter.capacity ? Math.min((shelter.currentOccupancy / shelter.capacity) * 100, 100) : 0}
+                    color={shelter.capacity && shelter.currentOccupancy / shelter.capacity > 0.85 ? "warning" : "success"}
+                  />
                 </Box>
               </Stack>
             </SectionPaper>

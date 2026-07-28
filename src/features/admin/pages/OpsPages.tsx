@@ -604,6 +604,7 @@ export function OpsMissionsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [showAllMissions, setShowAllMissions] = useState(false);
+  const [showMissionForm, setShowMissionForm] = useState(false);
   const [form, setForm] = useState<{ emergencyCaseId: string; rescueTeamId: string; priority: string; title: string; volunteerProfileIds: string[] }>({
     emergencyCaseId: "",
     rescueTeamId: "",
@@ -624,6 +625,7 @@ export function OpsMissionsPage() {
     onSuccess: () => {
       showToast("Nhiệm vụ đã được tạo.", "success");
       setForm({ emergencyCaseId: "", rescueTeamId: "", priority: PRIORITY.high, title: "", volunteerProfileIds: [] });
+      setShowMissionForm(false);
       queryClient.invalidateQueries({ queryKey: ["ops-missions"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
@@ -632,7 +634,16 @@ export function OpsMissionsPage() {
   return (
     <>
       <PageHeader title="Phân công nhiệm vụ" description="Tạo nhiệm vụ cứu hộ từ SOS đã xác minh và theo dõi tiến độ nhiệm vụ." />
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setShowMissionForm((value) => !value)}
+        sx={{ mb: 2, alignSelf: { xs: "stretch", md: "flex-start" } }}
+      >
+        {showMissionForm ? "Ẩn form phân công" : "Phân công nhiệm vụ"}
+      </Button>
       <Grid container spacing={2.5}>
+        {showMissionForm ? (
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
@@ -700,7 +711,8 @@ export function OpsMissionsPage() {
             </Stack>
           </SectionPaper>
         </Grid>
-        <Grid size={{ xs: 12, lg: 8 }}>
+        ) : null}
+        <Grid size={{ xs: 12, lg: showMissionForm ? 8 : 12 }}>
           <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
             <Paper variant="outlined">
               <Table size="small">
@@ -1161,6 +1173,7 @@ export function CampaignAdminPage() {
   const showToast = useToast((state) => state.showToast);
   const roles = useAuthStore((state) => state.roles);
   const isAdmin = roles.includes(ROLES.admin);
+  const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campaignForm, setCampaignForm] = useState({
     name: "",
     description: "",
@@ -1199,6 +1212,7 @@ export function CampaignAdminPage() {
         endDate: toDateInputValue(addDays(new Date(), 30)),
         coverImageUrl: "",
       });
+      setShowCampaignForm(false);
       queryClient.invalidateQueries({ queryKey: ["campaigns-admin"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
@@ -1215,6 +1229,16 @@ export function CampaignAdminPage() {
   return (
     <>
       <PageHeader title="Quản trị chiến dịch" description="Điều phối viên tạo chiến dịch gây quỹ ở dạng bản nháp. Admin xét duyệt và kích hoạt trước khi công khai." />
+      <Stack spacing={2.5}>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setShowCampaignForm((value) => !value)}
+        sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}
+      >
+        {showCampaignForm ? "Ẩn form tạo chiến dịch" : "Tạo chiến dịch gây quỹ"}
+      </Button>
+      {showCampaignForm ? (
       <SectionPaper>
         <Stack spacing={2}>
           <Box>
@@ -1279,6 +1303,7 @@ export function CampaignAdminPage() {
           </Box>
         </Stack>
       </SectionPaper>
+      ) : null}
       <QueryState isLoading={campaigns.isLoading} error={campaigns.error} empty={!campaigns.data?.data.length} refetch={campaigns.refetch}>
         <Paper variant="outlined">
           <Table size="small">
@@ -1321,6 +1346,7 @@ export function CampaignAdminPage() {
           </Table>
         </Paper>
       </QueryState>
+      </Stack>
     </>
   );
 }
@@ -2163,7 +2189,7 @@ export function ComplaintsPage() {
 
   return (
     <>
-      <PageHeader title="Khiếu nại và phản ánh" description="Theo dõi phản ánh của cộng đồng, phân loại vấn đề và cập nhật trạng thái xử lý." />
+      <PageHeader title="Phản ánh người dùng" description="Theo dõi phản ánh của cộng đồng, phân loại vấn đề và cập nhật trạng thái xử lý." />
       <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
         <Paper variant="outlined">
           <Table size="small">
@@ -2184,13 +2210,12 @@ export function ComplaintsPage() {
                     <Typography variant="body2" color="text.secondary">{item.description}</Typography>
                   </TableCell>
                   <TableCell>{getComplaintTypeLabel(item.complaintType)}</TableCell>
-                  <TableCell><StatusChip value={item.status} /></TableCell>
+                  <TableCell><StatusChip value={normalizeComplaintStatus(item.status)} /></TableCell>
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "IN_REVIEW", resolution: "Admin đang rà soát phản ánh." })}>Đang xử lý</Button>
-                      <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
-                      <Button size="small" color="error" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
+                      <Button size="small" disabled={update.isPending || normalizeComplaintStatus(item.status) === "RESOLVED"} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
+                      <Button size="small" color="error" disabled={update.isPending || normalizeComplaintStatus(item.status) === "REJECTED"} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -2278,11 +2303,21 @@ const adminComplaintTypeLabels: Record<string, string> = {
   QUALITY: "Chất lượng hỗ trợ",
   APP: "Ứng dụng",
   RESCUE_TEAM: "Đội cứu hộ",
+  COORDINATION: "Điều phối cứu trợ",
+  CAMPAIGN: "Chiến dịch cứu trợ",
+  EMERGENCY_CASE: "Yêu cầu SOS",
+  DONATION: "Quyên góp",
   OTHER: "Khác",
 };
 
 function getComplaintTypeLabel(value?: string | null) {
   return adminComplaintTypeLabels[value ?? ""] ?? value ?? "Khác";
+}
+
+function normalizeComplaintStatus(status?: string | null) {
+  const normalized = normalizeRole(String(status ?? ""));
+  if (["OPEN", "PENDING", "INVESTIGATING", "IN_REVIEW", "PROCESSING"].includes(normalized)) return "PROCESSING";
+  return normalized || "PROCESSING";
 }
 
 function auditActionChipSx(action: string) {

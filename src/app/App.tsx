@@ -56,6 +56,7 @@ import { ROLES } from "@/shared/constants/roles";
 const citizenRoles = [ROLES.citizen, ROLES.volunteer];
 const donorRoles = [ROLES.donor, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin];
 const financialRoleAliases = [ROLES.financialOfficer, "FINANCE", "FINANCIAL", "ACCOUNTANT", "ACCOUNTING", "KE_TOAN", "KETOAN"];
+const complaintRoles = [ROLES.citizen];
 const opsRoles = [ROLES.admin, ROLES.coordinator, ...financialRoleAliases];
 const coordinatorRoles = [ROLES.admin, ROLES.coordinator];
 const adminRoles = [ROLES.admin];
@@ -105,7 +106,7 @@ export function App() {
             <Route path="citizen/sos/:id" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.rescueTeam]}><SosDetailPage /></ProtectedRoute>} />
             <Route path="citizen/volunteer-profile" element={<ProtectedRoute roles={citizenRoles}><VolunteerProfilePage /></ProtectedRoute>} />
             <Route path="citizen/shelters" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.coordinator, ROLES.admin]}><SheltersPage /></ProtectedRoute>} />
-            <Route path="citizen/complaints" element={<ProtectedRoute roles={citizenRoles}><CitizenComplaintsPage /></ProtectedRoute>} />
+            <Route path="citizen/complaints" element={<ProtectedRoute roles={complaintRoles}><CitizenComplaintsPage /></ProtectedRoute>} />
 
             <Route path="donor/donations" element={<ProtectedRoute roles={donorRoles}><DonationHistoryPage /></ProtectedRoute>} />
             <Route path="donor/campaigns" element={<ProtectedRoute roles={donorRoles}><CampaignListPage /></ProtectedRoute>} />

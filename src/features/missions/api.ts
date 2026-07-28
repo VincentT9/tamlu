@@ -3,6 +3,18 @@ import type { Mission, RescueTeam, Shelter, Vehicle } from "@/shared/api/domain"
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 import { appendFiles, appendIfPresent } from "@/shared/utils/formData";
 
+export interface ShelterCheckIn {
+  id: string;
+  personName?: string | null;
+  householdId?: string | null;
+  numPeople?: number | null;
+  status?: string | null;
+  action?: string | null;
+  createdAt?: string | null;
+  checkedInAt?: string | null;
+  checkedOutAt?: string | null;
+}
+
 export const missionApi = {
   create: (body: {
     emergencyCaseId: string;
@@ -37,11 +49,11 @@ export const missionApi = {
   shelterSuggest: (params: { latitude: number; longitude: number; numPeople: number }) =>
     getData<Shelter[]>("/api/shelters/suggest", params),
   shelterCheckIns: (id: string, params?: QueryParams) =>
-    getData<PaginatedResult<{ id: string; personName?: string | null; householdId?: string | null; numPeople?: number | null; status?: string | null; checkedInAt?: string | null; checkedOutAt?: string | null }>>(`/api/shelters/${id}/check-ins`, params),
+    getData<PaginatedResult<ShelterCheckIn>>(`/api/shelters/${id}/occupancy-logs`, params),
   checkInShelter: (id: string, body: { personName: string; numPeople: number; householdId?: string | null }) =>
-    postData(`/api/shelters/${id}/check-in`, body),
-  checkOutShelter: (id: string, body: { personName?: string; householdId?: string | null; checkInId?: string | null }) =>
-    postData(`/api/shelters/${id}/check-out`, body),
+    postData<ShelterCheckIn>(`/api/shelters/${id}/check-in`, body),
+  checkOutShelter: (id: string, body: { personName?: string; householdId?: string; numPeople: number }) =>
+    postData<ShelterCheckIn>(`/api/shelters/${id}/check-out`, body),
   rescueTeams: (params?: QueryParams) => getData<PaginatedResult<RescueTeam>>("/api/rescue-teams", params),
   vehicles: (params?: QueryParams) => getData<PaginatedResult<Vehicle>>("/api/vehicles", params),
   myTeam: () => getData<unknown>("/api/team/my-team"),
