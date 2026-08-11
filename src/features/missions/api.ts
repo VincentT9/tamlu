@@ -1,5 +1,5 @@
 import { getData, postData, postFormData, putData } from "@/shared/api/client";
-import type { Mission, RescueTeam, Shelter, Vehicle } from "@/shared/api/domain";
+import type { Mission, RescueTeam, RescueUpdate, Shelter, Vehicle } from "@/shared/api/domain";
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 import { appendFiles, appendIfPresent } from "@/shared/utils/formData";
 
@@ -31,7 +31,7 @@ export const missionApi = {
   teamList: (params?: QueryParams) => getData<PaginatedResult<Mission>>("/api/team/missions", params),
   teamById: (id: string) => getData<Mission>(`/api/team/missions/${id}`),
   update: (id: string, body: { status: string; note?: string; latitude: number; longitude: number }) =>
-    postData(`/api/team/missions/${id}/updates`, body),
+    postData<RescueUpdate>(`/api/team/missions/${id}/updates`, body),
   uploadUpdateMedia: (id: string, updateId: string, files: FileList | File[], fileType?: string) => {
     const formData = new FormData();
     appendFiles(formData, "files", files);

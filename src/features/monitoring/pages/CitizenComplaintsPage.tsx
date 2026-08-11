@@ -29,6 +29,11 @@ const complaintTypeLabels: Record<string, string> = {
   ...Object.fromEntries(complaintTargets.map((item) => [item.value, item.label])),
 };
 
+function normalizeCitizenComplaintStatus(status?: string | null) {
+  const normalized = String(status ?? "").trim().toUpperCase();
+  return ["OPEN", "PENDING", "INVESTIGATING", "IN_REVIEW", "PROCESSING"].includes(normalized) ? "PROCESSING" : normalized;
+}
+
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function CitizenComplaintsPage() {
@@ -146,7 +151,7 @@ export function CitizenComplaintsPage() {
                   <Stack spacing={0.75}>
                     <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
                       <Typography fontWeight={900}>{item.title}</Typography>
-                      <StatusChip value={item.status} />
+                      <StatusChip value={normalizeCitizenComplaintStatus(item.status)} />
                     </Stack>
                     <Typography variant="body2" fontWeight={800} color="text.secondary">
                       {complaintTypeLabels[item.complaintType] ?? item.complaintType}

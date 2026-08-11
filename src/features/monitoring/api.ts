@@ -12,7 +12,7 @@ export const monitoringApi = {
   }) => postData<Complaint>("/api/complaints", body),
   myComplaints: (params?: QueryParams) => getData<PaginatedResult<Complaint>>("/api/complaints/my", params),
   adminComplaints: (params?: QueryParams) => getData<PaginatedResult<Complaint>>("/api/admin/complaints", params),
-  updateComplaint: (id: string, body: { status: string; assignedTo?: string | null; resolution?: string }) =>
+  updateComplaint: (id: string, body: { status: "INVESTIGATING" | "RESOLVED" | "REJECTED"; assignedTo?: string | null; resolution?: string }) =>
     putData<Complaint>(`/api/admin/complaints/${id}`, body),
   fraudCases: (params?: QueryParams) => getData<PaginatedResult<unknown>>("/api/admin/fraud-cases", params),
   createFraudCase: (body: unknown) => postData("/api/admin/fraud-cases", body),

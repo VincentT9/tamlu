@@ -13,9 +13,9 @@ export function VolunteerProfilePage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const profile = useQuery({ queryKey: ["my-volunteer-profile"], queryFn: volunteerApi.my, retry: false });
-  const [form, setForm] = useState({ skills: "", experience: "", availableAreas: "", status: "AVAILABLE" });
+  const [form, setForm] = useState({ skills: "", experience: "", availableAreas: "" });
   useEffect(() => {
-    if (profile.data) setForm({ skills: profile.data.skills, experience: profile.data.experience ?? "", availableAreas: profile.data.availableAreas ?? "", status: profile.data.status });
+    if (profile.data) setForm({ skills: profile.data.skills, experience: profile.data.experience ?? "", availableAreas: profile.data.availableAreas ?? "" });
   }, [profile.data]);
   const save = useMutation({
     mutationFn: () => (profile.data ? volunteerApi.updateMy(form) : volunteerApi.create(form)),
@@ -39,7 +39,14 @@ export function VolunteerProfilePage() {
                     Hãy giữ thông tin kỹ năng và khu vực hỗ trợ luôn chính xác để được phân công nhiệm vụ an toàn, phù hợp.
                   </Typography>
                 </Box>
-                {profile.data ? <StatusChip value={profile.data.status} /> : <Alert severity="info">Bạn chưa có hồ sơ tình nguyện. Vui lòng tạo hồ sơ bên dưới.</Alert>}
+                {profile.data ? (
+                  <Stack spacing={0.75} alignItems="flex-start">
+                    <StatusChip value={profile.data.idVerified ? profile.data.status : "PENDING"} />
+                    {!profile.data.idVerified ? (
+                      <Typography variant="body2" color="text.secondary">Hồ sơ đang chờ quản trị viên xác minh trước khi được điều phối.</Typography>
+                    ) : null}
+                  </Stack>
+                ) : <Alert severity="info">Bạn chưa có hồ sơ tình nguyện. Vui lòng tạo hồ sơ bên dưới.</Alert>}
               </Stack>
             </Paper>
           </Grid>

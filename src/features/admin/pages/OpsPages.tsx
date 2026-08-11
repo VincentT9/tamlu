@@ -2179,9 +2179,13 @@ export function ComplaintsPage() {
   const showToast = useToast((state) => state.showToast);
   const rows = useQuery({ queryKey: ["admin-complaints"], queryFn: () => monitoringApi.adminComplaints({ page: 1, limit: 50 }) });
   const update = useMutation({
-    mutationFn: ({ id, status, resolution }: { id: string; status: string; resolution: string }) => monitoringApi.updateComplaint(id, { status, resolution }),
-    onSuccess: () => {
+    mutationFn: ({ id, status, resolution }: { id: string; status: "INVESTIGATING" | "RESOLVED" | "REJECTED"; resolution: string }) => monitoringApi.updateComplaint(id, { status, resolution }),
+    onSuccess: (updatedComplaint) => {
       showToast("Trạng thái phản ánh đã được cập nhật.", "success");
+      queryClient.setQueryData<PaginatedResult<Complaint>>(["admin-complaints"], (current) => current
+        ? { ...current, data: current.data.map((item) => item.id === updatedComplaint.id ? { ...item, ...updatedComplaint } : item) }
+        : current,
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-complaints"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
@@ -2214,8 +2218,11 @@ export function ComplaintsPage() {
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" disabled={update.isPending || normalizeComplaintStatus(item.status) === "RESOLVED"} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
-                      <Button size="small" color="error" disabled={update.isPending || normalizeComplaintStatus(item.status) === "REJECTED"} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
+                      {normalizeComplaintStatus(item.status) === "PROCESSING" ? (
+                        <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "INVESTIGATING", resolution: "Phản ánh đang được xác minh." })}>Bắt đầu xử lý</Button>
+                      ) : null}
+                      <Button size="small" disabled={update.isPending || normalizeComplaintStatus(item.status) !== "INVESTIGATING"} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
+                      <Button size="small" color="error" disabled={update.isPending || ["RESOLVED", "REJECTED"].includes(normalizeComplaintStatus(item.status))} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -2281,9 +2288,9 @@ export function AuditLogsPage() {
                     <TableCell>
                       <Chip label={action} size="small" sx={auditActionChipSx(action)} />
                     </TableCell>
-                    <TableCell>{formatAuditValue(record.userName ?? record.actorName ?? record.performedBy ?? record.userId)}</TableCell>
+                    <TableCell>{formatAuditValue(record.userName ?? record.actorName ?? record.performedBy ?? getAuditActor(record) ?? record.userId)}</TableCell>
                     <TableCell>{getAuditEntityLabel(record)}</TableCell>
-                    <TableCell>{formatAuditValue(record.description ?? record.message ?? record.details ?? record.newValue ?? record.oldValue)}</TableCell>
+                    <TableCell>{getAuditDescription(record)}</TableCell>
                     <TableCell>{formatDate(String(record.createdAt ?? record.timestamp ?? record.entryDate ?? ""))}</TableCell>
                   </TableRow>
                 );
@@ -2316,7 +2323,7 @@ function getComplaintTypeLabel(value?: string | null) {
 
 function normalizeComplaintStatus(status?: string | null) {
   const normalized = normalizeRole(String(status ?? ""));
-  if (["OPEN", "PENDING", "INVESTIGATING", "IN_REVIEW", "PROCESSING"].includes(normalized)) return "PROCESSING";
+  if (["OPEN", "PENDING", "IN_REVIEW", "PROCESSING"].includes(normalized)) return "PROCESSING";
   return normalized || "PROCESSING";
 }
 
@@ -2345,6 +2352,31 @@ function getAuditEntityLabel(record: Record<string, unknown>) {
   if (entityName !== "-" && entityId !== "-") return `${entityName} (${entityId})`;
   if (entityName !== "-") return entityName;
   return entityId;
+}
+
+function getAuditActor(record: Record<string, unknown>) {
+  const user = record.user;
+  if (!user || typeof user !== "object") return undefined;
+  const value = user as Record<string, unknown>;
+  return value.fullName ?? value.email ?? value.id;
+}
+
+function getAuditDescription(record: Record<string, unknown>) {
+  const detail = formatAuditValue(record.description ?? record.message ?? record.details ?? record.newValue ?? record.oldValue);
+  if (detail !== "-") return detail;
+
+  const action = String(record.action ?? record.actionType ?? "SYSTEM").toUpperCase();
+  const entity = getAuditEntityLabel(record);
+  const labels: Record<string, string> = {
+    CREATE: "Đã tạo mới",
+    UPDATE: "Đã cập nhật",
+    DELETE: "Đã xóa",
+    LOGIN: "Đã đăng nhập",
+    LOGOUT: "Đã đăng xuất",
+    APPROVE: "Đã phê duyệt",
+    REJECT: "Đã từ chối",
+  };
+  return `${labels[action] ?? `Đã thực hiện ${action.toLowerCase()}`}${entity !== "-" ? `: ${entity}` : ""}.`;
 }
 
 function formatAuditValue(value: unknown) {

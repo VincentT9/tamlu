@@ -539,6 +539,8 @@ export function TeamProofsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [showProofForm, setShowProofForm] = useState(false);
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
+  const [signatureFiles, setSignatureFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
     missionId: "",
     fileUrls: "",
@@ -557,12 +559,18 @@ export function TeamProofsPage() {
       if (form.fileUrls.trim()) noteParts.push(`Media: ${form.fileUrls.trim()}`);
       if (form.signerName.trim()) noteParts.push(`Người ký nhận: ${form.signerName.trim()} (${form.signerRole})`);
       if (form.signatureUrl.trim()) noteParts.push(`Chữ ký/biên nhận: ${form.signatureUrl.trim()}`);
-      return missionApi.update(form.missionId, {
+      const update = await missionApi.update(form.missionId, {
         status: MISSION_STATUS.completed,
         note: noteParts.join("\n"),
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),
       });
+      if ((evidenceFiles.length || signatureFiles.length) && !update.id) {
+        throw new Error("Máy chủ không trả về mã bản ghi hiện trường để đính kèm minh chứng.");
+      }
+      if (evidenceFiles.length) await missionApi.uploadUpdateMedia(form.missionId, update.id, evidenceFiles, form.fileType);
+      if (signatureFiles.length) await missionApi.uploadUpdateMedia(form.missionId, update.id, signatureFiles, "SIGNATURE");
+      return update;
     },
     onSuccess: () => {
       showToast("Minh chứng hiện trường đã được nộp vào nhật ký nhiệm vụ.", "success");
@@ -578,6 +586,8 @@ export function TeamProofsPage() {
         signatureUrl: "",
       });
       setShowProofForm(false);
+      setEvidenceFiles([]);
+      setSignatureFiles([]);
       queryClient.invalidateQueries({ queryKey: ["team-missions"] });
       queryClient.invalidateQueries({ queryKey: ["team-missions", "proofs"] });
     },
@@ -626,6 +636,10 @@ export function TeamProofsPage() {
                 ))}
               </TextField>
               <TextField label="Link ảnh/video minh chứng" multiline minRows={3} value={form.fileUrls} onChange={(event) => setForm({ ...form, fileUrls: event.target.value })} helperText="Có thể nhập nhiều link, mỗi link một dòng hoặc phân tách bằng dấu phẩy." />
+              <Button component="label" variant="outlined">
+                {evidenceFiles.length ? `Đã chọn ${evidenceFiles.length} tệp minh chứng` : "Chọn ảnh, video hoặc tài liệu minh chứng"}
+                <input hidden type="file" multiple accept="image/*,video/*,.pdf" onChange={(event) => setEvidenceFiles(Array.from(event.target.files ?? []))} />
+              </Button>
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField select fullWidth label="Loại media" value={form.fileType} onChange={(event) => setForm({ ...form, fileType: event.target.value })}>
@@ -656,7 +670,11 @@ export function TeamProofsPage() {
                 </Grid>
               </Grid>
               <TextField label="Link chữ ký/biên nhận" value={form.signatureUrl} onChange={(event) => setForm({ ...form, signatureUrl: event.target.value })} placeholder="https://..." />
-              <Button variant="contained" startIcon={<DoneAllIcon />} disabled={!form.missionId || (!form.fileUrls && !form.signatureUrl && !form.caption) || createProof.isPending} onClick={() => createProof.mutate()}>
+              <Button component="label" variant="outlined">
+                {signatureFiles.length ? "Đã chọn tệp chữ ký" : "Chọn ảnh chữ ký hoặc biên nhận"}
+                <input hidden type="file" accept="image/*,.pdf" onChange={(event) => setSignatureFiles(Array.from(event.target.files ?? []))} />
+              </Button>
+              <Button variant="contained" startIcon={<DoneAllIcon />} disabled={!form.missionId || (!form.fileUrls && !form.signatureUrl && !form.caption && !evidenceFiles.length && !signatureFiles.length) || createProof.isPending} onClick={() => createProof.mutate()}>
                 Nộp minh chứng
               </Button>
             </Stack>
