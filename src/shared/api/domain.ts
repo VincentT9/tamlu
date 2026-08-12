@@ -391,6 +391,7 @@ export interface Complaint {
   description: string;
   complaintType: string;
   status: string;
+  resolution?: string | null;
   createdAt: string;
 }
 

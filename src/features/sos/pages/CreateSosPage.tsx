@@ -39,6 +39,16 @@ const schema = z.object({
   hasDisabled: z.boolean(),
   contactName: z.string().optional(),
   contactPhone: z.string().optional(),
+}).superRefine((values, context) => {
+  const selectedConditions = [values.hasElderly, values.hasChildren, values.hasInjured, values.hasDisabled].filter(Boolean).length;
+
+  if (selectedConditions > values.numPeople) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["numPeople"],
+      message: "Số nhóm cần lưu ý không được vượt quá số người cần cứu hộ.",
+    });
+  }
 });
 
 type SosInput = z.input<typeof schema>;
@@ -199,14 +209,22 @@ export function CreateSosPage() {
                     <Box>
                       <Typography fontWeight={900}>Xem trước vị trí cứu hộ</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Sử dụng GPS hiện tại hoặc nhập tọa độ thủ công, sau đó kiểm tra điểm đánh dấu trước khi gửi.
+                        Sử dụng GPS hiện tại, nhập tọa độ thủ công hoặc nhấp đúp vào bản đồ để chọn điểm cứu hộ.
                       </Typography>
                     </Box>
                     <Button variant="outlined" startIcon={<MyLocationIcon />} onClick={useLocation}>
                       Dùng GPS hiện tại
                     </Button>
                   </Stack>
-                  <TamLuMap markers={mapMarkers} height={360} />
+                  <TamLuMap
+                    markers={mapMarkers}
+                    center={Number.isFinite(latitude) && Number.isFinite(longitude) ? [latitude, longitude] : undefined}
+                    height={360}
+                    onLocationSelect={([selectedLatitude, selectedLongitude]) => {
+                      form.setValue("latitude", selectedLatitude, { shouldDirty: true, shouldValidate: true });
+                      form.setValue("longitude", selectedLongitude, { shouldDirty: true, shouldValidate: true });
+                    }}
+                  />
                 </Stack>
               </Box>
             </Grid>
@@ -226,6 +244,11 @@ export function CreateSosPage() {
                 </Paper>
               </Grid>
             ))}
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="body2" color="text.secondary">
+                Mỗi lựa chọn tương ứng với ít nhất một người. Ví dụ, nếu chỉ có 1 người cần cứu hộ, chỉ chọn một nhóm cần lưu ý phù hợp.
+              </Typography>
+            </Grid>
             {!isAuthenticated ? (
               <>
                 <Grid size={{ xs: 12, md: 6 }}>

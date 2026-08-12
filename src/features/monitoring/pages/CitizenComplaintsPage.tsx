@@ -116,12 +116,12 @@ export function CitizenComplaintsPage() {
                 minRows={4}
               />
               <TextField
-                label="Mã tham chiếu UUID nếu có"
+                label="Mã tham chiếu (nếu có)"
                 value={form.referenceId}
                 onChange={(event) => setForm({ ...form, referenceId: event.target.value })}
                 helperText={
                   hasInvalidReferenceId
-                    ? "Mã này không phải UUID nên sẽ được lưu trong nội dung phản ánh, không gửi vào trường tham chiếu hệ thống."
+                    ? "Mã này sẽ được ghi kèm nội dung phản ánh để quản trị viên đối chiếu."
                     : "Có thể để trống nếu phản ánh chung về ứng dụng hoặc trải nghiệm sử dụng."
                 }
               />
@@ -157,6 +157,12 @@ export function CitizenComplaintsPage() {
                       {complaintTypeLabels[item.complaintType] ?? item.complaintType}
                     </Typography>
                     <Typography color="text.secondary">{item.description}</Typography>
+                    {item.resolution ? (
+                      <Alert severity={normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "warning" : "success"} sx={{ mt: 0.5 }}>
+                        <Typography variant="body2" fontWeight={800}>Phản hồi từ quản trị viên</Typography>
+                        <Typography variant="body2">{item.resolution}</Typography>
+                      </Alert>
+                    ) : null}
                     <Typography variant="caption">{formatDate(item.createdAt)}</Typography>
                   </Stack>
                 </Paper>

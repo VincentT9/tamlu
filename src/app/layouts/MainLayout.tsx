@@ -96,9 +96,16 @@ export function MainLayout() {
                 </NavLink>
               ))}
               {isAuthenticated ? (
-                <Button variant="outline" onClick={logout}>
-                  Đăng xuất
-                </Button>
+                <>
+                  <Link to="/dashboard" onClick={() => setOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Bảng điều khiển
+                    </Button>
+                  </Link>
+                  <Button variant="outline" onClick={logout}>
+                    Đăng xuất
+                  </Button>
+                </>
               ) : (
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <Link to="/login" onClick={() => setOpen(false)}>

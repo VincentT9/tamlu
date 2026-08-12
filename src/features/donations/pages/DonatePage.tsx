@@ -44,8 +44,10 @@ export function DonatePage() {
     },
   });
   const mutation = useMutation({
-    mutationFn: (values: DonateForm) =>
-      donationApi.createDonation({
+    mutationFn: (values: DonateForm) => {
+      const paymentResultUrl = `${window.location.origin}/payment/result?campaignId=${encodeURIComponent(campaignId)}`;
+
+      return donationApi.createDonation({
         campaignId,
         amount: values.amount,
         paymentMethod: "BANK_TRANSFER",
@@ -54,7 +56,10 @@ export function DonatePage() {
         donorPhone: values.donorPhone,
         message: values.message,
         isAnonymous: !values.donorName,
-      }),
+        returnUrl: paymentResultUrl,
+        cancelUrl: `${paymentResultUrl}&status=cancelled`,
+      });
+    },
     onSuccess: (donation) => {
       showToast("Yêu cầu ủng hộ đã được khởi tạo.", "success");
       if (donation.paymentUrl) window.location.href = donation.paymentUrl;

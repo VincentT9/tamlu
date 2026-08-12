@@ -72,7 +72,7 @@ const navItems: NavItem[] = [
   { label: "Tổ chức", to: "/ops/organizations", icon: PeopleIcon, roles: [ROLES.admin] },
   { label: "Người dùng", to: "/ops/users", icon: PeopleIcon, roles: [ROLES.admin] },
   { label: "Phản ánh", to: "/ops/complaints", icon: SosIcon, roles: [ROLES.admin] },
-  { label: "Kiểm toán", to: "/ops/audit-logs", icon: DashboardIcon, roles: [ROLES.admin] },
+  { label: "Nhật ký hệ thống", to: "/ops/audit-logs", icon: DashboardIcon, roles: [ROLES.admin] },
   { label: "Nhiệm vụ đội cứu hộ", to: "/team/missions", icon: VolunteerActivismIcon, roles: [ROLES.rescueTeam] },
   { label: "Chuyến hàng đội", to: "/team/shipments", icon: LocalShippingIcon, roles: [ROLES.rescueTeam] },
   { label: "Đánh giá khu vực", to: "/team/area-assessments", icon: DashboardIcon, roles: [ROLES.rescueTeam] },

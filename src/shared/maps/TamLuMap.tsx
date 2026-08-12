@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 export interface MapMarker {
   id: string;
@@ -15,6 +16,7 @@ interface TamLuMapProps {
   markers: MapMarker[];
   center?: [number, number];
   height?: number;
+  onLocationSelect?: (location: [number, number]) => void;
 }
 
 const colors: Record<NonNullable<MapMarker["type"]>, string> = {
@@ -36,7 +38,27 @@ function markerIcon(type: MapMarker["type"]) {
   });
 }
 
-export function TamLuMap({ markers, center = [16.4637, 107.5909], height = 440 }: TamLuMapProps) {
+function MapViewport({ center }: { center: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center, map.getZoom(), { animate: true });
+  }, [center, map]);
+
+  return null;
+}
+
+function MapLocationSelector({ onLocationSelect }: { onLocationSelect: (location: [number, number]) => void }) {
+  useMapEvents({
+    dblclick(event) {
+      onLocationSelect([Number(event.latlng.lat.toFixed(6)), Number(event.latlng.lng.toFixed(6))]);
+    },
+  });
+
+  return null;
+}
+
+export function TamLuMap({ markers, center = [16.4637, 107.5909], height = 440, onLocationSelect }: TamLuMapProps) {
   const visibleMarkers = markers.filter(
     (marker) => Number.isFinite(marker.latitude) && Number.isFinite(marker.longitude),
   );
@@ -52,11 +74,19 @@ export function TamLuMap({ markers, center = [16.4637, 107.5909], height = 440 }
         boxShadow: "inset 0 1px 0 rgba(255,255,255,.65)",
       }}
     >
-      <MapContainer center={center} zoom={10} scrollWheelZoom style={{ height: "100%", width: "100%" }}>
+      <MapContainer
+        center={center}
+        zoom={10}
+        scrollWheelZoom
+        doubleClickZoom={!onLocationSelect}
+        style={{ height: "100%", width: "100%" }}
+      >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Vietnam Basic Tiles &middot; &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://tiles.mattech.vn/styles/basic/{z}/{x}/{y}.png"
         />
+        <MapViewport center={center} />
+        {onLocationSelect ? <MapLocationSelector onLocationSelect={onLocationSelect} /> : null}
         {visibleMarkers.map((marker) => (
           <Marker
             key={marker.id}

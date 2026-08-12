@@ -95,6 +95,7 @@ export function TeamMissionDetailPage() {
   const showToast = useToast((state) => state.showToast);
   const [status, setStatus] = useState<string>(MISSION_STATUS.inProgress);
   const [note, setNote] = useState("");
+  const [updateFiles, setUpdateFiles] = useState<File[]>([]);
   const [coords, setCoords] = useState({ latitude: 16.4637, longitude: 107.5909 });
   const mission = useQuery({ queryKey: ["team-mission", id], queryFn: () => missionApi.teamById(id), enabled: Boolean(id), refetchInterval: 30000 });
   const emergencyCaseId = mission.data?.emergencyCaseId;
@@ -105,9 +106,17 @@ export function TeamMissionDetailPage() {
     refetchInterval: 30000,
   });
   const update = useMutation({
-    mutationFn: () => missionApi.update(id, { status, note, ...coords }),
+    mutationFn: async () => {
+      const createdUpdate = await missionApi.update(id, { status, note, ...coords });
+      if (updateFiles.length) {
+        if (!createdUpdate.id) throw new Error("Máy chủ không trả về mã cập nhật để đính kèm tệp hiện trường.");
+        await missionApi.uploadUpdateMedia(id, createdUpdate.id, updateFiles, "IMAGE");
+      }
+      return createdUpdate;
+    },
     onSuccess: () => {
       showToast("Đã gửi cập nhật nhiệm vụ.", "success");
+      setUpdateFiles([]);
       queryClient.invalidateQueries({ queryKey: ["team-mission", id] });
       queryClient.invalidateQueries({ queryKey: ["team-missions"] });
     },
@@ -190,7 +199,7 @@ export function TeamMissionDetailPage() {
 
   return (
     <>
-      <PageHeader title={mission.data?.code ?? "Chi tiết nhiệm vụ"} description="Cập nhật GPS và trạng thái nhiệm vụ khi tình hình hiện trường thay đổi." />
+      <PageHeader title={sos?.title ?? mission.data?.code ?? "Chi tiết nhiệm vụ"} description={mission.data?.code ? `Mã nhiệm vụ: ${mission.data.code}. Cập nhật GPS và trạng thái nhiệm vụ khi tình hình hiện trường thay đổi.` : "Cập nhật GPS và trạng thái nhiệm vụ khi tình hình hiện trường thay đổi."} />
       <QueryState isLoading={mission.isLoading} error={mission.error} refetch={mission.refetch}>
         {mission.data ? (
           <Grid container spacing={2.5}>
@@ -289,6 +298,10 @@ export function TeamMissionDetailPage() {
                   <TextField label="Vĩ độ" type="number" value={coords.latitude} onChange={(event) => setCoords({ ...coords, latitude: Number(event.target.value) })} disabled={missionIsFinal} />
                   <TextField label="Kinh độ" type="number" value={coords.longitude} onChange={(event) => setCoords({ ...coords, longitude: Number(event.target.value) })} disabled={missionIsFinal} />
                   <TextField label="Ghi chú" multiline minRows={3} value={note} onChange={(event) => setNote(event.target.value)} disabled={missionIsFinal} />
+                  <Button component="label" variant="outlined" disabled={missionIsFinal || update.isPending || complete.isPending}>
+                    {updateFiles.length ? `Đã chọn ${updateFiles.length} tệp hiện trường` : "Đính kèm ảnh hoặc video hiện trường"}
+                    <input hidden type="file" multiple accept="image/*,video/*" onChange={(event) => setUpdateFiles(Array.from(event.target.files ?? []))} />
+                  </Button>
                   <Button startIcon={<GpsFixedIcon />} onClick={locate} disabled={missionIsFinal}>Dùng GPS hiện tại</Button>
                   <Button variant="contained" onClick={submitMissionUpdate} disabled={updateDisabled}>
                     {status === MISSION_STATUS.completed ? "Hoàn tất nhiệm vụ" : "Gửi cập nhật"}

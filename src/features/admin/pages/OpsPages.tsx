@@ -17,8 +17,8 @@ import { monitoringApi } from "@/features/monitoring/api";
 import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
-import type { AreaAssessment, Complaint, EmergencyCase, Procurement, User } from "@/shared/api/domain";
-import { getErrorMessage } from "@/shared/api/client";
+import type { AreaAssessment, Complaint, EmergencyCase, Procurement, User, Warehouse } from "@/shared/api/domain";
+import { getErrorMessage, postFormData } from "@/shared/api/client";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
@@ -851,7 +851,102 @@ export function InventoryPage() {
 }
 
 export function WarehousesPage() {
-  return <InventoryPage />;
+  const queryClient = useQueryClient();
+  const showToast = useToast((state) => state.showToast);
+  const warehouses = useQuery({ queryKey: ["warehouses", "manage"], queryFn: inventoryApi.warehouses });
+  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [editingWarehouseId, setEditingWarehouseId] = useState("");
+  const [form, setForm] = useState({ name: "", address: "", latitude: 16.4637, longitude: 107.5909, managerName: "", phone: "", status: "ACTIVE" });
+  const resetForm = () => {
+    setEditingWarehouseId("");
+    setForm({ name: "", address: "", latitude: 16.4637, longitude: 107.5909, managerName: "", phone: "", status: "ACTIVE" });
+  };
+  const saveWarehouse = useMutation({
+    mutationFn: () => {
+      const payload: Partial<Warehouse> = {
+        ...form,
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude),
+      };
+      return editingWarehouseId ? inventoryApi.updateWarehouse(editingWarehouseId, payload) : inventoryApi.createWarehouse(payload);
+    },
+    onSuccess: () => {
+      showToast(editingWarehouseId ? "Đã cập nhật kho hàng." : "Đã tạo kho hàng.", "success");
+      resetForm();
+      setShowWarehouseForm(false);
+      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
+  const openEdit = (warehouse: Warehouse) => {
+    setEditingWarehouseId(warehouse.id);
+    setForm({
+      name: warehouse.name,
+      address: warehouse.address,
+      latitude: warehouse.latitude,
+      longitude: warehouse.longitude,
+      managerName: warehouse.managerName ?? "",
+      phone: warehouse.phone ?? "",
+      status: warehouse.status,
+    });
+    setShowWarehouseForm(true);
+  };
+
+  return (
+    <>
+      <PageHeader title="Quản lý kho hàng" description="Tạo và cập nhật thông tin kho phục vụ tiếp nhận, giữ chỗ và điều phối vật tư cứu trợ." />
+      <Stack spacing={2.5}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            if (showWarehouseForm) resetForm();
+            setShowWarehouseForm((value) => !value);
+          }}
+          sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}
+        >
+          {showWarehouseForm ? "Ẩn biểu mẫu kho" : "Thêm kho hàng"}
+        </Button>
+        {showWarehouseForm ? (
+          <SectionPaper>
+            <Stack spacing={2}>
+              <Typography variant="h6" fontWeight={900}>{editingWarehouseId ? "Cập nhật kho hàng" : "Tạo kho hàng"}</Typography>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Tên kho" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Địa chỉ" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Vĩ độ" type="number" value={form.latitude} onChange={(event) => setForm({ ...form, latitude: Number(event.target.value) })} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Kinh độ" type="number" value={form.longitude} onChange={(event) => setForm({ ...form, longitude: Number(event.target.value) })} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Người phụ trách" value={form.managerName} onChange={(event) => setForm({ ...form, managerName: event.target.value })} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Số điện thoại" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></Grid>
+              </Grid>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                <Button variant="contained" disabled={!form.name.trim() || !form.address.trim() || saveWarehouse.isPending} onClick={() => saveWarehouse.mutate()}>{editingWarehouseId ? "Lưu thay đổi" : "Tạo kho"}</Button>
+                <Button variant="outlined" onClick={() => { resetForm(); setShowWarehouseForm(false); }}>Hủy</Button>
+              </Stack>
+            </Stack>
+          </SectionPaper>
+        ) : null}
+        <QueryState isLoading={warehouses.isLoading} error={warehouses.error} empty={!warehouses.data?.length} refetch={warehouses.refetch}>
+          <Paper variant="outlined">
+            <Table size="small">
+              <TableHead><TableRow><TableCell>Kho hàng</TableCell><TableCell>Địa chỉ</TableCell><TableCell>Người phụ trách</TableCell><TableCell>Trạng thái</TableCell><TableCell align="right">Thao tác</TableCell></TableRow></TableHead>
+              <TableBody>
+                {(warehouses.data ?? []).map((warehouse) => (
+                  <TableRow key={warehouse.id} hover>
+                    <TableCell><Typography fontWeight={900}>{warehouse.name}</Typography><Typography variant="caption" color="text.secondary">{warehouse.latitude}, {warehouse.longitude}</Typography></TableCell>
+                    <TableCell>{warehouse.address}</TableCell>
+                    <TableCell>{warehouse.managerName ?? "Chưa phân công"}{warehouse.phone ? <Typography variant="body2" color="text.secondary">{warehouse.phone}</Typography> : null}</TableCell>
+                    <TableCell><StatusChip value={warehouse.status} /></TableCell>
+                    <TableCell align="right"><Button size="small" onClick={() => openEdit(warehouse)}>Chỉnh sửa</Button></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        </QueryState>
+      </Stack>
+    </>
+  );
 }
 
 export function ShipmentsPage() {
@@ -1184,8 +1279,29 @@ export function CampaignAdminPage() {
     coverImageUrl: "",
   });
   const campaigns = useQuery({ queryKey: ["campaigns-admin"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }) });
+  const minimumCampaignStartDate = toDateInputValue(new Date());
+  const hasValidCampaignDates = campaignForm.startDate >= minimumCampaignStartDate && campaignForm.endDate >= campaignForm.startDate;
+  const uploadCampaignCover = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return postFormData<{ url?: string }>("/api/upload", formData);
+    },
+    onSuccess: (uploaded) => {
+      if (!uploaded.url) {
+        showToast("Tải ảnh thành công nhưng máy chủ không trả về đường dẫn ảnh.", "error");
+        return;
+      }
+      setCampaignForm((current) => ({ ...current, coverImageUrl: uploaded.url ?? "" }));
+      showToast("Đã tải ảnh bìa chiến dịch.", "success");
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
   const createCampaign = useMutation({
     mutationFn: async () => {
+      if (!hasValidCampaignDates) {
+        throw new Error("Ngày bắt đầu không được trong quá khứ và ngày kết thúc phải sau ngày bắt đầu.");
+      }
       const coverImageUrl = campaignForm.coverImageUrl.trim();
       const created = await donationApi.createCampaign({
         ...campaignForm,
@@ -1258,14 +1374,14 @@ export function CampaignAdminPage() {
               <TextField fullWidth label="Khu vực ảnh hưởng" value={campaignForm.affectedArea} onChange={(event) => setCampaignForm({ ...campaignForm, affectedArea: event.target.value })} />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField fullWidth label="Ngày bắt đầu" type="date" value={campaignForm.startDate} onChange={(event) => setCampaignForm({ ...campaignForm, startDate: event.target.value })} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth label="Ngày bắt đầu" type="date" value={campaignForm.startDate} onChange={(event) => setCampaignForm({ ...campaignForm, startDate: event.target.value })} InputLabelProps={{ shrink: true }} slotProps={{ htmlInput: { min: minimumCampaignStartDate } }} error={Boolean(campaignForm.startDate && campaignForm.startDate < minimumCampaignStartDate)} helperText={campaignForm.startDate && campaignForm.startDate < minimumCampaignStartDate ? "Ngày bắt đầu không được trong quá khứ." : undefined} />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField fullWidth label="Ngày kết thúc" type="date" value={campaignForm.endDate} onChange={(event) => setCampaignForm({ ...campaignForm, endDate: event.target.value })} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth label="Ngày kết thúc" type="date" value={campaignForm.endDate} onChange={(event) => setCampaignForm({ ...campaignForm, endDate: event.target.value })} InputLabelProps={{ shrink: true }} slotProps={{ htmlInput: { min: campaignForm.startDate || minimumCampaignStartDate } }} error={Boolean(campaignForm.endDate && campaignForm.endDate < campaignForm.startDate)} helperText={campaignForm.endDate && campaignForm.endDate < campaignForm.startDate ? "Ngày kết thúc phải sau ngày bắt đầu." : undefined} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={1}>
-                <Button component="label" variant="outlined" startIcon={<AddIcon />} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
+                <Button component="label" variant="outlined" startIcon={<AddIcon />} disabled={uploadCampaignCover.isPending} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
                   Chọn ảnh bìa chiến dịch
                   <input
                     hidden
@@ -1274,7 +1390,7 @@ export function CampaignAdminPage() {
                     onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (!file) return;
-                      showToast("Backend hiện chỉ nhận URL ảnh bìa. Vui lòng nhập URL ảnh; chiến dịch vẫn có thể tạo không cần ảnh bìa.", "warning");
+                      uploadCampaignCover.mutate(file);
                       event.currentTarget.value = "";
                     }}
                   />
@@ -1290,7 +1406,7 @@ export function CampaignAdminPage() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              disabled={!campaignForm.name || !campaignForm.affectedArea || createCampaign.isPending}
+              disabled={!campaignForm.name || !campaignForm.affectedArea || !hasValidCampaignDates || createCampaign.isPending || uploadCampaignCover.isPending}
               onClick={() => {
                 if (isInlineImageDataUrl(campaignForm.coverImageUrl)) {
                   showToast("Ảnh dạng base64 không được gửi lên backend. Chiến dịch sẽ được tạo không kèm ảnh bìa.", "warning");
@@ -2218,10 +2334,7 @@ export function ComplaintsPage() {
                   <TableCell>{formatDate(item.createdAt)}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
-                      {normalizeComplaintStatus(item.status) === "PROCESSING" ? (
-                        <Button size="small" disabled={update.isPending} onClick={() => update.mutate({ id: item.id, status: "INVESTIGATING", resolution: "Phản ánh đang được xác minh." })}>Bắt đầu xử lý</Button>
-                      ) : null}
-                      <Button size="small" disabled={update.isPending || normalizeComplaintStatus(item.status) !== "INVESTIGATING"} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
+                      <Button size="small" disabled={update.isPending || !["PROCESSING", "INVESTIGATING"].includes(normalizeComplaintStatus(item.status))} onClick={() => update.mutate({ id: item.id, status: "RESOLVED", resolution: "Phản ánh đã được xử lý." })}>Đã xử lý</Button>
                       <Button size="small" color="error" disabled={update.isPending || ["RESOLVED", "REJECTED"].includes(normalizeComplaintStatus(item.status))} onClick={() => update.mutate({ id: item.id, status: "REJECTED", resolution: "Phản ánh không đủ căn cứ xử lý." })}>Từ chối</Button>
                     </Stack>
                   </TableCell>
@@ -2255,7 +2368,7 @@ export function AuditLogsPage() {
 
   return (
     <>
-      <PageHeader title="Nhật ký kiểm toán" description="Lịch sử thao tác hệ thống phục vụ minh bạch, truy vết trách nhiệm và rà soát rủi ro." />
+      <PageHeader title="Nhật ký hệ thống" description="Lịch sử thao tác hệ thống phục vụ minh bạch, truy vết trách nhiệm và rà soát rủi ro." />
       <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ mb: 2 }}>
         <TextField label="Tìm theo hành động, người thao tác, mô tả..." value={keyword} onChange={(event) => setKeyword(event.target.value)} sx={{ flex: 1 }} />
         <TextField select label="Nhóm hành động" value={actionType} onChange={(event) => setActionType(event.target.value)} sx={{ minWidth: 220 }}>

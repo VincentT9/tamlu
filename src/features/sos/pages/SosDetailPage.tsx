@@ -87,6 +87,9 @@ export function SosDetailPage() {
   });
   const item = detail.data;
   const canAssign = canCoordinate && isVerifiedSosStatus(item?.status);
+  const sortedStatusLogs = item?.statusLogs
+    ? [...item.statusLogs].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    : [];
 
   return (
     <>
@@ -133,11 +136,11 @@ export function SosDetailPage() {
                         pr: { lg: 0.75 },
                       }}
                     >
-                      {item.statusLogs.map((log, index) => (
+                      {sortedStatusLogs.map((log, index) => (
                         <Stack key={log.id} direction="row" spacing={1.5}>
                           <Stack alignItems="center">
                             <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: "primary.main", mt: 0.75 }} />
-                            {index < item.statusLogs.length - 1 ? <Box sx={{ width: 2, flex: 1, bgcolor: "divider", mt: 0.5 }} /> : null}
+                            {index < sortedStatusLogs.length - 1 ? <Box sx={{ width: 2, flex: 1, bgcolor: "divider", mt: 0.5 }} /> : null}
                           </Stack>
                           <Box sx={{ pb: 1.5, minWidth: 0 }}>
                             <StatusChip value={log.status} />
