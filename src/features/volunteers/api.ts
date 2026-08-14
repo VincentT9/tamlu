@@ -9,6 +9,8 @@ export const volunteerApi = {
   updateMy: (body: Partial<VolunteerProfile>) => putData<VolunteerProfile>("/api/volunteer-profiles/my", body),
   coordinatorList: (params?: QueryParams) =>
     getData<PaginatedResult<VolunteerProfile>>("/api/coordinator/volunteers", params),
+  coordinatorAvailable: (params?: QueryParams) =>
+    getData<PaginatedResult<VolunteerProfile>>("/api/coordinator/volunteers", { ...params, status: "AVAILABLE" }),
   verify: (id: string, idVerified: boolean) =>
     putData<VolunteerProfile>(`/api/admin/volunteer-profiles/${id}/verify`, { idVerified }),
 };

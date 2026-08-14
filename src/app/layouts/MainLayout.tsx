@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import clsx from "clsx";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useAuthStore } from "@/features/auth/store";
 import { Button } from "@/components/Button";
 
@@ -51,6 +52,14 @@ export function MainLayout() {
           <div className="hidden items-center gap-2 lg:flex">
             {isAuthenticated ? (
               <>
+                <Link
+                  to="/dashboard"
+                  aria-label="Mở bảng điều hướng"
+                  title="Mở bảng điều hướng"
+                  className="grid h-10 w-10 place-items-center rounded-[14px] border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-green-800)] transition hover:bg-[var(--color-green-50)] focus:outline-none focus:ring-2 focus:ring-[var(--color-green-600)] focus:ring-offset-2 focus:ring-offset-white"
+                >
+                  <MenuIcon fontSize="small" />
+                </Link>
                 <Link to="/dashboard" className="rounded-[14px] border border-[var(--color-border)] bg-[var(--color-bg-page)] px-3 py-2 text-sm font-bold text-[var(--color-green-800)] hover:bg-[var(--color-bg-card-strong)]">
                   {user?.fullName ?? "Bảng điều khiển"}
                 </Link>

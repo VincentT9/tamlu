@@ -1,7 +1,7 @@
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Box, Button, Link as MuiLink, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Checkbox, FormControlLabel, Link as MuiLink, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import { useToast } from "@/shared/ui/toast";
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  remember: z.boolean(),
 });
 
 type LoginForm = z.infer<typeof schema>;
@@ -22,15 +23,15 @@ export function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
   const showToast = useToast((state) => state.showToast);
-  const form = useForm<LoginForm>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } });
+  const form = useForm<LoginForm>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "", remember: false } });
   const mutation = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (data) => {
+    mutationFn: ({ email, password }: LoginForm) => authApi.login({ email, password }),
+    onSuccess: (data, values) => {
       if (!data.token) {
         showToast(data.message ?? "Tài khoản của quý vị đang chờ quản trị viên phê duyệt.", "warning");
         return;
       }
-      setSession({ token: data.token, user: data.user, roles: data.roles });
+      setSession({ token: data.token, user: data.user, roles: data.roles, remember: values.remember });
       showToast("Chào mừng quý vị quay lại Tâm Lũ.", "success");
       navigate("/dashboard", { replace: true });
     },
@@ -110,8 +111,27 @@ export function LoginPage() {
           </Stack>
           {mutation.error ? <Alert severity="error">{getErrorMessage(mutation.error)}</Alert> : null}
           <Stack component="form" spacing={2} onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
-            <TextField label="Email" type="email" {...form.register("email")} error={Boolean(form.formState.errors.email)} helperText={form.formState.errors.email?.message} />
-            <TextField label="Mật khẩu" type="password" {...form.register("password")} error={Boolean(form.formState.errors.password)} helperText={form.formState.errors.password?.message} />
+            <TextField
+              label="Email"
+              type="email"
+              autoComplete="username"
+              {...form.register("email")}
+              error={Boolean(form.formState.errors.email)}
+              helperText={form.formState.errors.email?.message}
+            />
+            <TextField
+              label="Mật khẩu"
+              type="password"
+              autoComplete="current-password"
+              {...form.register("password")}
+              error={Boolean(form.formState.errors.password)}
+              helperText={form.formState.errors.password?.message}
+            />
+            <FormControlLabel
+              control={<Checkbox {...form.register("remember")} />}
+              label="Ghi nhớ đăng nhập trên thiết bị này"
+              sx={{ alignSelf: "flex-start", color: "var(--color-text-muted)" }}
+            />
             <Button type="submit" variant="contained" size="large" disabled={mutation.isPending}>
               Đăng nhập
             </Button>

@@ -31,7 +31,9 @@ export const sosApi = {
   },
   my: (params?: QueryParams) => getData<PaginatedResult<EmergencyCase>>("/api/emergency-cases/my", params),
   byId: (id: string) => getData<EmergencyCase>(`/api/emergency-cases/${id}`),
-  confirm: (id: string, note?: string) => postData(`/api/emergency-cases/${id}/confirm`, { note }),
+  confirm: (id: string, body: { note?: string; rating?: number }) => postData(`/api/emergency-cases/${id}/confirm`, body),
+  updateCitizenStatus: (id: string, body: { status: string; note?: string }) =>
+    putData<EmergencyCase>(`/api/emergency-cases/${id}/status`, body),
   coordinatorList: (params?: QueryParams) =>
     getData<PaginatedResult<EmergencyCase>>("/api/coordinator/emergency-cases", params),
   verify: (id: string, body: { result: "APPROVED" | "REJECTED"; note?: string }) =>

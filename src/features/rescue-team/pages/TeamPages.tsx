@@ -3,7 +3,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
 import { Alert, Box, Button, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { aidApi } from "@/features/aid/api";
 import { donationApi } from "@/features/donations/api";
@@ -124,8 +124,19 @@ export function TeamMissionDetailPage() {
   });
   const complete = useMutation({
     mutationFn: async () => {
+      const completionNote = note.trim() || "Đội cứu hộ xác nhận đã hoàn tất nhiệm vụ.";
+      if (updateFiles.length) {
+        const finalUpdate = await missionApi.update(id, {
+          status: MISSION_STATUS.completed,
+          note: completionNote,
+          ...coords,
+        });
+        if (!finalUpdate.id) throw new Error("Máy chủ không trả về mã cập nhật để đính kèm ảnh báo cáo hoàn tất.");
+        await missionApi.uploadUpdateMedia(id, finalUpdate.id, updateFiles, "IMAGE");
+        return finalUpdate;
+      }
       try {
-        return await missionApi.complete(id, { peopleRescued: 1, notes: note });
+        return await missionApi.complete(id, { peopleRescued: 1, notes: completionNote });
       } catch {
         return missionApi.update(id, {
           status: MISSION_STATUS.completed,
@@ -552,6 +563,7 @@ export function TeamProofsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const [showProofForm, setShowProofForm] = useState(false);
+  const [expandedMissionId, setExpandedMissionId] = useState("");
   const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
   const [signatureFiles, setSignatureFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
@@ -701,12 +713,18 @@ export function TeamProofsPage() {
                 <TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Cập nhật gần nhất</TableCell></TableRow></TableHead>
                 <TableBody>
                   {missions.data?.data.map((mission) => (
-                    <TableRow key={mission.id}>
-                      <TableCell>{mission.code}</TableCell>
+                    <Fragment key={mission.id}>
+                    <TableRow>
+                      <TableCell><Button variant="text" onClick={() => setExpandedMissionId((current) => current === mission.id ? "" : mission.id)} sx={{ p: 0, minWidth: 0, fontWeight: 900 }}>{mission.code}</Button></TableCell>
                       <TableCell><StatusChip value={mission.priority} /></TableCell>
                       <TableCell><StatusChip value={mission.status} /></TableCell>
                       <TableCell>{mission.updates.at(-1)?.createdAt ? formatDate(mission.updates.at(-1)?.createdAt) : "Chưa có cập nhật"}</TableCell>
                     </TableRow>
+                    {expandedMissionId === mission.id ? <TableRow><TableCell colSpan={4} sx={{ bgcolor: "var(--color-surface-muted)" }}><Stack spacing={1.5}>
+                      <Typography fontWeight={900}>Minh chứng và cập nhật hiện trường</Typography>
+                      {(mission.updates ?? []).length ? (mission.updates ?? []).slice().reverse().map((update) => <Box key={update.id}><Typography variant="body2" color="text.secondary">{update.createdAt ? formatDate(update.createdAt) : "Cập nhật hiện trường"}</Typography><Typography sx={{ whiteSpace: "pre-wrap" }}>{update.note ?? "Không có ghi chú"}</Typography><Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 1 }}>{(update.media ?? []).map((media) => isVideoEvidence(media.fileType, media.fileUrl) ? <video key={media.id} controls src={media.fileUrl} style={{ width: 220, maxWidth: "100%" }} /> : <Box key={media.id} component="img" src={media.fileUrl} alt="Minh chứng hiện trường" sx={{ width: 160, height: 112, objectFit: "cover", border: "1px solid var(--color-border)" }} />)}</Stack></Box>) : <Alert severity="info">Chưa có minh chứng được cập nhật cho nhiệm vụ này.</Alert>}
+                    </Stack></TableCell></TableRow> : null}
+                    </Fragment>
                   ))}
                 </TableBody>
               </Table>

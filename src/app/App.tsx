@@ -22,6 +22,7 @@ import {
   ProcurementPage,
   ShipmentsPage,
   UsersPage,
+  VehiclesPage,
   VolunteersPage,
   WarehousesPage,
 } from "@/features/admin/pages/OpsPages";
@@ -115,6 +116,7 @@ export function App() {
             <Route path="ops/sos" element={<ProtectedRoute roles={coordinatorRoles}><OpsSosPage /></ProtectedRoute>} />
             <Route path="ops/missions" element={<ProtectedRoute roles={coordinatorRoles}><OpsMissionsPage /></ProtectedRoute>} />
             <Route path="ops/warehouses" element={<ProtectedRoute roles={opsRoles}><WarehousesPage /></ProtectedRoute>} />
+            <Route path="ops/vehicles" element={<ProtectedRoute roles={adminRoles}><VehiclesPage /></ProtectedRoute>} />
             <Route path="ops/inventory" element={<ProtectedRoute roles={opsRoles}><InventoryPage /></ProtectedRoute>} />
             <Route path="ops/shipments" element={<ProtectedRoute roles={opsRoles}><ShipmentsPage /></ProtectedRoute>} />
             <Route path="ops/area-assessments" element={<ProtectedRoute roles={coordinatorRoles}><AreaAssessmentsPage /></ProtectedRoute>} />
@@ -124,6 +126,7 @@ export function App() {
             <Route path="ops/disbursements" element={<ProtectedRoute roles={financeRoles}><DisbursementsPage /></ProtectedRoute>} />
             <Route path="ops/volunteers" element={<ProtectedRoute roles={coordinatorRoles}><VolunteersPage /></ProtectedRoute>} />
             <Route path="ops/organizations" element={<ProtectedRoute roles={adminRoles}><OrganizationsPage /></ProtectedRoute>} />
+            <Route path="organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
             <Route path="ops/users" element={<ProtectedRoute roles={adminRoles}><UsersPage /></ProtectedRoute>} />
             <Route path="ops/complaints" element={<ProtectedRoute roles={adminRoles}><ComplaintsPage /></ProtectedRoute>} />
             <Route path="ops/fraud" element={<ProtectedRoute roles={adminRoles}><FraudPage /></ProtectedRoute>} />

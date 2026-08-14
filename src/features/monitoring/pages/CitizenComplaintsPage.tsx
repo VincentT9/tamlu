@@ -1,6 +1,6 @@
-import { Alert, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { monitoringApi } from "@/features/monitoring/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatDate } from "@/shared/utils/format";
@@ -34,6 +34,17 @@ function normalizeCitizenComplaintStatus(status?: string | null) {
   return ["OPEN", "PENDING", "INVESTIGATING", "IN_REVIEW", "PROCESSING"].includes(normalized) ? "PROCESSING" : normalized;
 }
 
+function getComplaintReporter(record: Record<string, unknown>) {
+  const reporter = record.createdByUser ?? record.reporter ?? record.user ?? record.createdBy;
+  const person = reporter && typeof reporter === "object" ? reporter as Record<string, unknown> : undefined;
+  const name = String(person?.fullName ?? person?.name ?? record.reporterName ?? record.userName ?? "Chưa có tên người phản ánh");
+  const contacts = [person?.email ?? record.reporterEmail, person?.phone ?? person?.phoneNumber ?? record.reporterPhone]
+    .filter((value) => value !== undefined && value !== null && value !== "")
+    .map(String);
+
+  return { name, contact: contacts.length ? contacts.join(" · ") : "Chưa có thông tin liên hệ." };
+}
+
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function CitizenComplaintsPage() {
@@ -45,6 +56,7 @@ export function CitizenComplaintsPage() {
     complaintType: "APP",
     referenceId: "",
   });
+  const [expandedComplaintId, setExpandedComplaintId] = useState("");
 
   const rows = useQuery({
     queryKey: ["my-complaints"],
@@ -145,29 +157,74 @@ export function CitizenComplaintsPage() {
             emptyText="Các phản ánh đã gửi sẽ hiển thị tại đây để quý vị theo dõi trạng thái xử lý."
             refetch={rows.refetch}
           >
-            <Stack spacing={1.5}>
-              {rows.data?.data.map((item) => (
-                <Paper key={item.id} variant="outlined" sx={{ p: 2.25, borderRadius: 0 }}>
-                  <Stack spacing={0.75}>
-                    <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
-                      <Typography fontWeight={900}>{item.title}</Typography>
-                      <StatusChip value={normalizeCitizenComplaintStatus(item.status)} />
-                    </Stack>
-                    <Typography variant="body2" fontWeight={800} color="text.secondary">
-                      {complaintTypeLabels[item.complaintType] ?? item.complaintType}
-                    </Typography>
-                    <Typography color="text.secondary">{item.description}</Typography>
-                    {item.resolution ? (
-                      <Alert severity={normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "warning" : "success"} sx={{ mt: 0.5 }}>
-                        <Typography variant="body2" fontWeight={800}>Phản hồi từ quản trị viên</Typography>
-                        <Typography variant="body2">{item.resolution}</Typography>
-                      </Alert>
-                    ) : null}
-                    <Typography variant="caption">{formatDate(item.createdAt)}</Typography>
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
+            <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+              <Table size="small" sx={{ minWidth: 640, tableLayout: "fixed" }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tiêu đề phản ánh</TableCell>
+                    <TableCell sx={{ width: 170 }}>Trạng thái</TableCell>
+                    <TableCell sx={{ width: 175 }}>Thời gian tạo</TableCell>
+                    <TableCell sx={{ width: 82 }} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.data?.data.map((item) => {
+                    const record = item as typeof item & Record<string, unknown>;
+                    const expanded = expandedComplaintId === item.id;
+                    const reporter = getComplaintReporter(record);
+                    return (
+                      <Fragment key={item.id}>
+                        <TableRow hover>
+                          <TableCell sx={{ verticalAlign: "top" }}>
+                            <Button
+                              variant="text"
+                              onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}
+                              sx={{ display: "block", maxWidth: "100%", minWidth: 0, p: 0, textAlign: "left", textTransform: "none", fontWeight: 900, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.45 }}
+                            >
+                              {item.title}
+                            </Button>
+                          </TableCell>
+                          <TableCell sx={{ width: 170, verticalAlign: "top" }}><StatusChip value={normalizeCitizenComplaintStatus(item.status)} /></TableCell>
+                          <TableCell sx={{ width: 175, verticalAlign: "top", whiteSpace: "nowrap" }}>{formatDate(item.createdAt)}</TableCell>
+                          <TableCell sx={{ width: 82, verticalAlign: "top" }}>
+                            <Button size="small" onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}>{expanded ? "Thu gọn" : "Xem"}</Button>
+                          </TableCell>
+                        </TableRow>
+                        {expanded ? (
+                          <TableRow>
+                            <TableCell colSpan={4} sx={{ bgcolor: "var(--color-surface-muted)", p: 2.25 }}>
+                              <Grid container spacing={2.5}>
+                                <Grid size={{ xs: 12, md: 7 }}>
+                                  <Stack spacing={1.25}>
+                                    <Typography variant="overline" color="text.secondary" fontWeight={900}>Nội dung phản ánh</Typography>
+                                    <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.7 }}>{item.description || "Chưa có nội dung chi tiết."}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Loại phản ánh: {complaintTypeLabels[item.complaintType] ?? item.complaintType}</Typography>
+                                    {item.resolution ? (
+                                      <Alert severity={normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "warning" : "success"}>
+                                        <Typography variant="body2" fontWeight={900}>{normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "Lý do từ chối" : "Phương án xử lý"}</Typography>
+                                        <Typography variant="body2">{item.resolution}</Typography>
+                                      </Alert>
+                                    ) : <Alert severity="info">Đội vận hành đang tiếp nhận phản ánh. Phương án xử lý sẽ được cập nhật tại đây.</Alert>}
+                                  </Stack>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 5 }}>
+                                  <Stack spacing={1.25}>
+                                    <Typography variant="overline" color="text.secondary" fontWeight={900}>Thông tin người phản ánh</Typography>
+                                    <Typography fontWeight={900}>{reporter.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{reporter.contact}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Trạng thái xử lý: <StatusChip value={normalizeCitizenComplaintStatus(item.status)} /></Typography>
+                                  </Stack>
+                                </Grid>
+                              </Grid>
+                            </TableCell>
+                          </TableRow>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Paper>
           </QueryState>
         </Grid>
       </Grid>

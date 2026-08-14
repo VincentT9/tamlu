@@ -1,4 +1,4 @@
-import { getData, postData, putData } from "@/shared/api/client";
+import { deleteData, getData, postData, putData } from "@/shared/api/client";
 import type { Category, InventoryItem, Shipment, Warehouse } from "@/shared/api/domain";
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 
@@ -8,6 +8,7 @@ export const inventoryApi = {
     getData<PaginatedResult<InventoryItem>>(`/api/warehouses/${id}/items`, params),
   createWarehouse: (body: Partial<Warehouse>) => postData<Warehouse>("/api/warehouses", body),
   updateWarehouse: (id: string, body: Partial<Warehouse>) => putData<Warehouse>(`/api/warehouses/${id}`, body),
+  deleteWarehouse: (id: string) => deleteData<void>(`/api/warehouses/${id}`),
   suggestWarehouses: (body: {
     latitude: number;
     longitude: number;

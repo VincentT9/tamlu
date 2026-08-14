@@ -1,4 +1,4 @@
-import { getData, postData, postFormData, putData } from "@/shared/api/client";
+import { deleteData, getData, postData, postFormData, putData } from "@/shared/api/client";
 import type { Mission, RescueTeam, RescueUpdate, Shelter, Vehicle } from "@/shared/api/domain";
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 import { appendFiles, appendIfPresent } from "@/shared/utils/formData";
@@ -26,6 +26,8 @@ export const missionApi = {
     destinationShelterId?: string | null;
     volunteerProfileIds?: string[];
   }) => postData<Mission>("/api/missions", body),
+  assignVolunteers: (id: string, volunteerIds: string[]) =>
+    postData<Mission>(`/api/missions/${id}/volunteers`, { volunteerIds }),
   byId: (id: string) => getData<Mission>(`/api/missions/${id}`),
   coordinatorList: (params?: QueryParams) => getData<PaginatedResult<Mission>>("/api/coordinator/missions", params),
   teamList: (params?: QueryParams) => getData<PaginatedResult<Mission>>("/api/team/missions", params),
@@ -50,11 +52,14 @@ export const missionApi = {
     getData<Shelter[]>("/api/shelters/suggest", params),
   shelterCheckIns: (id: string, params?: QueryParams) =>
     getData<PaginatedResult<ShelterCheckIn>>(`/api/shelters/${id}/occupancy-logs`, params),
-  checkInShelter: (id: string, body: { personName: string; numPeople: number; householdId?: string | null }) =>
+  checkInShelter: (id: string, body: { personName?: string; numPeople: number; householdId?: string | null }) =>
     postData<ShelterCheckIn>(`/api/shelters/${id}/check-in`, body),
   checkOutShelter: (id: string, body: { personName?: string; householdId?: string; numPeople: number }) =>
     postData<ShelterCheckIn>(`/api/shelters/${id}/check-out`, body),
   rescueTeams: (params?: QueryParams) => getData<PaginatedResult<RescueTeam>>("/api/rescue-teams", params),
   vehicles: (params?: QueryParams) => getData<PaginatedResult<Vehicle>>("/api/vehicles", params),
+  createVehicle: (body: Partial<Vehicle>) => postData<Vehicle>("/api/vehicles", body),
+  updateVehicle: (id: string, body: Partial<Vehicle>) => putData<Vehicle>(`/api/vehicles/${id}`, body),
+  deleteVehicle: (id: string) => deleteData<void>(`/api/vehicles/${id}`),
   myTeam: () => getData<unknown>("/api/team/my-team"),
 };

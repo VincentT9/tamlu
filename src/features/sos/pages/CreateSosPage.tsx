@@ -40,13 +40,11 @@ const schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().optional(),
 }).superRefine((values, context) => {
-  const selectedConditions = [values.hasElderly, values.hasChildren, values.hasInjured, values.hasDisabled].filter(Boolean).length;
-
-  if (selectedConditions > values.numPeople) {
+  if (values.numPeople === 1 && values.hasElderly && values.hasChildren) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ["numPeople"],
-      message: "Số nhóm cần lưu ý không được vượt quá số người cần cứu hộ.",
+      path: ["hasChildren"],
+      message: "Khi có 1 người cần cứu hộ, chỉ chọn một trong hai mục: người cao tuổi hoặc trẻ em.",
     });
   }
 });
@@ -105,6 +103,9 @@ export function CreateSosPage() {
   };
   const latitude = Number(form.watch("latitude"));
   const longitude = Number(form.watch("longitude"));
+  const numPeople = Number(form.watch("numPeople"));
+  const hasElderly = form.watch("hasElderly");
+  const hasChildren = form.watch("hasChildren");
   const mapMarkers = Number.isFinite(latitude) && Number.isFinite(longitude)
     ? [{ id: "sos-location", title: "Vị trí SOS", subtitle: form.watch("address") || "Điểm cứu hộ đã chọn", latitude, longitude, type: "sos" as const }]
     : [];
@@ -238,7 +239,19 @@ export function CreateSosPage() {
                     control={form.control}
                     name={name}
                     render={({ field }) => (
-                      <FormControlLabel control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />} label={getConditionLabel(name)} />
+                      <FormControlLabel
+                        control={(
+                          <Switch
+                            checked={field.value}
+                            disabled={
+                              numPeople === 1
+                              && ((name === "hasElderly" && hasChildren) || (name === "hasChildren" && hasElderly))
+                            }
+                            onChange={(_, checked) => field.onChange(checked)}
+                          />
+                        )}
+                        label={getConditionLabel(name)}
+                      />
                     )}
                   />
                 </Paper>
@@ -246,7 +259,7 @@ export function CreateSosPage() {
             ))}
             <Grid size={{ xs: 12 }}>
               <Typography variant="body2" color="text.secondary">
-                Mỗi lựa chọn tương ứng với ít nhất một người. Ví dụ, nếu chỉ có 1 người cần cứu hộ, chỉ chọn một nhóm cần lưu ý phù hợp.
+                Với 1 người cần cứu hộ, chỉ chọn một trong hai trường hợp: người cao tuổi hoặc trẻ em. Thông tin người bị thương và người khuyết tật có thể ghi nhận đồng thời khi cần.
               </Typography>
             </Grid>
             {!isAuthenticated ? (

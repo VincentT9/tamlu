@@ -2,7 +2,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Button, Grid, ImageList, ImageListItem, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid, ImageList, ImageListItem, MenuItem, Rating, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
@@ -24,16 +24,18 @@ import { useToast } from "@/shared/ui/toast";
 export function SosDetailPage() {
   const { id = "" } = useParams();
   const [note, setNote] = useState("");
+  const [rating, setRating] = useState<number | null>(5);
   const [assignment, setAssignment] = useState({ rescueTeamId: "", destinationShelterId: "", volunteerProfileIds: [] as string[] });
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
   const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
   const canCoordinate = hasAnyRole([ROLES.admin, ROLES.coordinator]);
+  const isCitizen = hasAnyRole([ROLES.citizen]);
   const detail = useQuery({ queryKey: ["sos", id], queryFn: () => sosApi.byId(id), enabled: Boolean(id), refetchInterval: 30000 });
   const teams = useQuery({ queryKey: ["rescue-teams", "sos-detail"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }), enabled: canCoordinate });
   const shelters = useQuery({ queryKey: ["shelters", "sos-detail"], queryFn: () => missionApi.shelters({ page: 1, limit: 50 }), enabled: canCoordinate });
   const missions = useQuery({ queryKey: ["ops-missions", "sos-detail"], queryFn: () => missionApi.coordinatorList({ page: 1, limit: 50 }), enabled: canCoordinate });
-  const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "sos-detail"], queryFn: () => volunteerApi.coordinatorList({ page: 1, limit: 50 }), enabled: canCoordinate });
+  const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "available-sos-detail"], queryFn: () => volunteerApi.coordinatorAvailable({ page: 1, limit: 50 }), enabled: canCoordinate });
   const activeMissionTeamIds = new Set((missions.data?.data ?? [])
     .filter((mission) => !["COMPLETED", "CANCELLED", "CANCELED", "FAILED"].includes(normalizeStatusValue(mission.status)))
     .map((mission) => mission.rescueTeamId)
@@ -47,7 +49,7 @@ export function SosDetailPage() {
   });
   const verifiedVolunteers = (volunteers.data?.data ?? []).filter((volunteer) => volunteer.idVerified || volunteer.status?.toUpperCase() === "VERIFIED");
   const confirm = useMutation({
-    mutationFn: () => sosApi.confirm(id, note),
+    mutationFn: () => sosApi.confirm(id, { note, rating: rating ?? undefined }),
     onSuccess: () => {
       showToast("Đã xác nhận hoàn tất cứu hộ. Cảm ơn bạn.", "success");
       detail.refetch();
@@ -63,18 +65,30 @@ export function SosDetailPage() {
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
+  const cancelSos = useMutation({
+    mutationFn: () => sosApi.updateCitizenStatus(id, { status: "CANCELLED", note }),
+    onSuccess: () => {
+      showToast("Yêu cầu SOS đã được hủy.", "success");
+      queryClient.invalidateQueries({ queryKey: ["sos", id] });
+      queryClient.invalidateQueries({ queryKey: ["sos", "my"] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
+  });
   const assign = useMutation({
     mutationFn: async () => {
       if (!detail.data) throw new Error("Không tìm thấy yêu cầu SOS.");
-      return missionApi.create({
+      const mission = await missionApi.create({
         emergencyCaseId: detail.data.id,
         title: detail.data.title,
         priority: detail.data.priorityLevel,
         rescueTeamId: assignment.rescueTeamId,
         vehicleIds: [],
         destinationShelterId: assignment.destinationShelterId,
-        volunteerProfileIds: assignment.volunteerProfileIds,
       });
+      if (assignment.volunteerProfileIds.length) {
+        await missionApi.assignVolunteers(mission.id, assignment.volunteerProfileIds);
+      }
+      return mission;
     },
     onSuccess: () => {
       showToast("Đã phân công cứu hộ. Trạng thái SOS đã được backend cập nhật theo nhiệm vụ mới.", "success");
@@ -87,6 +101,8 @@ export function SosDetailPage() {
   });
   const item = detail.data;
   const canAssign = canCoordinate && isVerifiedSosStatus(item?.status);
+  const canCancelSos = isCitizen && !["COMPLETED", "CANCELLED", "CANCELED"].includes(normalizeStatusValue(item?.status ?? ""));
+  const canConfirmSos = isCitizen && normalizeStatusValue(item?.status ?? "") === "COMPLETED";
   const sortedStatusLogs = item?.statusLogs
     ? [...item.statusLogs].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     : [];
@@ -278,17 +294,33 @@ export function SosDetailPage() {
                       Phân công
                     </Button>
                   </Grid>
-                  {item.status === SOS_STATUS.completed ? (
-                    <Grid size={{ xs: 12 }}>
-                      <Stack spacing={1}>
-                        <TextField label="Ghi chú xác nhận" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
-                        <Button startIcon={<CheckCircleIcon />} variant="contained" color="success" onClick={() => confirm.mutate()} disabled={confirm.isPending}>
-                          Xác nhận đã hoàn tất cứu hộ
-                        </Button>
-                      </Stack>
-                    </Grid>
-                  ) : null}
                 </Grid>
+              </SectionPaper>
+            ) : null}
+            {canConfirmSos ? (
+              <SectionPaper>
+                <Stack spacing={1.25}>
+                  <Typography variant="h6" fontWeight={900}>Xác nhận và đánh giá cứu hộ</Typography>
+                  <Typography variant="body2" color="text.secondary">Quý vị có thể xác nhận kết quả cứu hộ và gửi phản hồi để hệ thống cải thiện chất lượng hỗ trợ.</Typography>
+                  <TextField label="Phản hồi cứu hộ" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="body2" color="text.secondary">Đánh giá hỗ trợ</Typography>
+                    <Rating value={rating} onChange={(_, value) => setRating(value)} />
+                  </Stack>
+                  <Button startIcon={<CheckCircleIcon />} variant="contained" color="success" onClick={() => confirm.mutate()} disabled={confirm.isPending}>
+                    Xác nhận đã hoàn tất cứu hộ
+                  </Button>
+                </Stack>
+              </SectionPaper>
+            ) : null}
+            {canCancelSos ? (
+              <SectionPaper>
+                <Stack spacing={1.25}>
+                  <Typography variant="h6" fontWeight={900}>Cập nhật yêu cầu SOS</Typography>
+                  <Typography variant="body2" color="text.secondary">Nếu tình hình đã an toàn hoặc yêu cầu không còn cần thiết, quý vị có thể hủy yêu cầu này.</Typography>
+                  <TextField label="Lý do hủy" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
+                  <Button color="error" variant="outlined" onClick={() => cancelSos.mutate()} disabled={cancelSos.isPending}>Hủy yêu cầu SOS</Button>
+                </Stack>
               </SectionPaper>
             ) : null}
           </Stack>

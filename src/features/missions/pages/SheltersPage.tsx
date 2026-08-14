@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/features/auth/store";
 import { missionApi } from "@/features/missions/api";
 import type { ShelterCheckIn } from "@/features/missions/api";
@@ -65,6 +65,7 @@ function activeCheckInRecords(logs: ShelterCheckIn[]) {
 export function SheltersPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
+  const user = useAuthStore((state) => state.user);
   const roles = useAuthStore((state) => state.roles);
   const canManageShelters = roles.includes(ROLES.admin) || roles.includes(ROLES.coordinator);
 
@@ -74,7 +75,13 @@ export function SheltersPage() {
   });
 
   const [form, setForm] = useState({ shelterId: "", personName: "", numPeople: 1 });
-  const [activeCheckIn, setActiveCheckIn] = useState<{ shelterId: string; personName: string; checkInId?: string | null } | null>(null);
+  const [activeCheckIn, setActiveCheckIn] = useState<{
+    shelterId: string;
+    shelterName?: string;
+    personName: string;
+    numPeople: number;
+    checkInId?: string | null;
+  } | null>(null);
   const [showShelterForm, setShowShelterForm] = useState(false);
   const [selectedShelterLogId, setSelectedShelterLogId] = useState("");
   const [shelterForm, setShelterForm] = useState({
@@ -87,6 +94,22 @@ export function SheltersPage() {
     contactPerson: "",
     contactPhone: "",
   });
+
+  const checkInStorageKey = user?.id ? `tamlu:shelter-check-in:${user.id}` : "";
+
+  useEffect(() => {
+    if (!checkInStorageKey) {
+      setActiveCheckIn(null);
+      return;
+    }
+
+    try {
+      const saved = localStorage.getItem(checkInStorageKey);
+      setActiveCheckIn(saved ? JSON.parse(saved) : null);
+    } catch {
+      setActiveCheckIn(null);
+    }
+  }, [checkInStorageKey]);
 
   const selectedCheckInShelterId = selectedShelterLogId || form.shelterId;
   const shelterCheckIns = useQuery({
@@ -105,7 +128,17 @@ export function SheltersPage() {
       }),
     onSuccess: (data) => {
       showToast("Đã ghi nhận người dân vào điểm trú tạm.", "success");
-      setActiveCheckIn({ shelterId: form.shelterId, personName: form.personName, checkInId: data?.id });
+      const nextCheckIn = {
+        shelterId: form.shelterId,
+        shelterName: shelterOptions.find((shelter) => shelter.id === form.shelterId)?.name,
+        personName: form.personName,
+        numPeople: Math.max(Number(form.numPeople), 1),
+        checkInId: data?.id,
+      };
+      setActiveCheckIn(nextCheckIn);
+      if (checkInStorageKey) {
+        localStorage.setItem(checkInStorageKey, JSON.stringify(nextCheckIn));
+      }
       queryClient.invalidateQueries({ queryKey: ["shelters"] });
       queryClient.invalidateQueries({ queryKey: ["shelter-check-ins"] });
     },
@@ -126,6 +159,10 @@ export function SheltersPage() {
     onSuccess: () => {
       showToast("Đã ghi nhận rời điểm trú tạm.", "success");
       setActiveCheckIn(null);
+      if (checkInStorageKey) {
+        localStorage.removeItem(checkInStorageKey);
+      }
+      setForm({ shelterId: "", personName: "", numPeople: 1 });
       queryClient.invalidateQueries({ queryKey: ["shelters"] });
       queryClient.invalidateQueries({ queryKey: ["shelter-check-ins"] });
     },
@@ -189,22 +226,18 @@ export function SheltersPage() {
     if (activeCheckIn?.checkInId && item.id === activeCheckIn.checkInId) return true;
     return Boolean(normalizedPersonName && item.personName?.trim().toLowerCase() === normalizedPersonName);
   });
-  const canCheckOutFromForm = Boolean(
-    form.shelterId &&
-      form.personName &&
-      (currentCheckInRecord || (activeCheckIn?.shelterId === form.shelterId && activeCheckIn.personName === form.personName)),
-  );
+  const canCheckOutFromForm = Boolean(activeCheckIn || (form.shelterId && form.personName && currentCheckInRecord));
 
   function handleCheckInAction() {
-    if (!form.shelterId || !form.personName) return;
-    if (canCheckOutFromForm) {
+    if (activeCheckIn) {
       checkOut.mutate({
-        shelterId: form.shelterId,
-        personName: form.personName,
-        numPeople: currentCheckInRecord?.numPeople ?? form.numPeople,
+        shelterId: activeCheckIn.shelterId,
+        personName: activeCheckIn.personName,
+        numPeople: activeCheckIn.numPeople,
       });
       return;
     }
+    if (!form.shelterId || !form.personName.trim()) return;
     checkIn.mutate();
   }
 
@@ -289,6 +322,12 @@ export function SheltersPage() {
               <Typography variant="body2" color="text.secondary">
                 Chọn điểm trú tạm, nhập tên người hoặc hộ gia đình, sau đó check-in hoặc check-out khi rời điểm trú.
               </Typography>
+              {activeCheckIn ? (
+                <Stack spacing={1.5}>
+                  <Alert severity="info">Tài khoản đang lưu trú tại {activeCheckIn.shelterName ?? "điểm trú tạm đã chọn"}. Hãy check-out trước khi chỉnh sửa hoặc check-in điểm mới.</Alert>
+                  <Typography fontWeight={900}>{activeCheckIn.personName} · {activeCheckIn.numPeople} người</Typography>
+                </Stack>
+              ) : <>
               <TextField select label="Điểm trú tạm" value={form.shelterId} onChange={(event) => setForm({ ...form, shelterId: event.target.value })}>
                 <MenuItem value="" disabled>{shelters.isLoading ? "Đang tải điểm trú..." : "Chọn điểm trú tạm còn chỗ"}</MenuItem>
                 {shelterOptions.map((shelter) => (
@@ -299,10 +338,11 @@ export function SheltersPage() {
               </TextField>
               <TextField label="Người/hộ gia đình" value={form.personName} onChange={(event) => setForm({ ...form, personName: event.target.value })} />
               <TextField label="Số người" type="number" value={form.numPeople} onChange={(event) => setForm({ ...form, numPeople: Number(event.target.value) })} />
+              </>}
               <Button
                 variant="contained"
                 color={canCheckOutFromForm ? "error" : "primary"}
-                disabled={!form.shelterId || !form.personName || checkIn.isPending || checkOut.isPending}
+                disabled={(!activeCheckIn && (!form.shelterId || !form.personName.trim())) || checkIn.isPending || checkOut.isPending}
                 onClick={handleCheckInAction}
               >
                 {canCheckOutFromForm ? "Check-out khỏi điểm trú" : "Check-in vào điểm trú"}

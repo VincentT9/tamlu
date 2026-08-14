@@ -9,6 +9,9 @@ export interface User {
   roleName?: string | null;
   roleCode?: string | null;
   roles?: string[] | null;
+  roleId?: number | string | null;
+  roleIds?: Array<number | string> | null;
+  userRoles?: Array<string | number | Record<string, unknown>> | null;
   avatarUrl?: string | null;
   status: string;
   createdAt?: string;
@@ -399,6 +402,9 @@ export interface Organization {
   id: string;
   name: string;
   type: string;
+  registrationNumber?: string | null;
+  description?: string | null;
+  website?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
