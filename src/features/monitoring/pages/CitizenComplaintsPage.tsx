@@ -1,10 +1,11 @@
-import { Alert, Button, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { monitoringApi } from "@/features/monitoring/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatDate } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
@@ -157,7 +158,7 @@ export function CitizenComplaintsPage() {
             emptyText="Các phản ánh đã gửi sẽ hiển thị tại đây để quý vị theo dõi trạng thái xử lý."
             refetch={rows.refetch}
           >
-            <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+            <DataTableFrame label="Danh sách phản ánh đã gửi">
               <Table size="small" sx={{ minWidth: 640, tableLayout: "fixed" }}>
                 <TableHead>
                   <TableRow>
@@ -224,7 +225,7 @@ export function CitizenComplaintsPage() {
                   })}
                 </TableBody>
               </Table>
-            </Paper>
+            </DataTableFrame>
           </QueryState>
         </Grid>
       </Grid>

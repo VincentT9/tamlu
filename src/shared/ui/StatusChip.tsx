@@ -8,41 +8,52 @@ interface StatusChipProps {
 
 export function StatusChip({ value, size = "small" }: StatusChipProps) {
   if (!value) return <Chip size={size} variant="outlined" label="Không rõ" sx={chipSx("neutral")} />;
-  const tone = toneForStatus(value);
+  const normalized = normalizeStatus(value);
+  const tone = toneForStatus(normalized);
   return (
     <Chip
       size={size}
       variant="filled"
-      label={STATUS_LABELS[value] ?? value}
+      label={STATUS_LABELS[normalized] ?? value}
       sx={chipSx(tone)}
     />
   );
 }
 
 function toneForStatus(value: string) {
-  const normalized = value.toLowerCase();
-  if (["active", "approved", "verified", "delivered", "completed", "resolved", "paid", "success"].some((item) => normalized.includes(item))) return "safe";
-  if (["pending", "assigned", "submitted", "review", "in_progress", "in progress", "en_route", "in_transit", "shipped"].some((item) => normalized.includes(item))) return "water";
-  if (["high", "urgent", "warning", "low_stock", "paused"].some((item) => normalized.includes(item))) return "warning";
-  if (["critical", "rejected", "failed", "cancelled", "closed", "error"].some((item) => normalized.includes(item))) return "critical";
+  if (["PENDING", "DRAFT", "SUBMITTED", "OPEN", "REVIEW", "INITIATED", "PREPARING"].includes(value)) return "pending";
+  if (["VERIFIED", "APPROVED"].includes(value)) return "verified";
+  if (["ASSIGNED", "INVESTIGATING", "RESERVED"].includes(value)) return "assigned";
+  if (["IN_PROGRESS", "IN_TRANSIT", "IN_USE", "EN_ROUTE", "ON_SITE", "SHIPPED", "PROCESSING"].includes(value)) return "progress";
+  if (["COMPLETED", "DELIVERED", "CONFIRMED", "ACTIVE", "RESOLVED", "CLOSED", "PAID", "SUCCESS", "AVAILABLE", "EXECUTED"].includes(value)) return "success";
+  if (["REJECTED", "CANCELLED", "CANCELED", "SUSPENDED", "FAILED", "ERROR", "INACTIVE", "CRITICAL"].includes(value)) return "danger";
+  if (["HIGH", "URGENT", "WARNING", "LOW_STOCK", "PAUSED"].includes(value)) return "warning";
   return "neutral";
+}
+
+function normalizeStatus(value: string) {
+  return value.trim().toUpperCase().replace(/[\s-]+/g, "_");
 }
 
 function chipSx(tone: string) {
   const tones: Record<string, { bg: string; color: string; border: string }> = {
-    water: { bg: "var(--color-green-100)", color: "var(--color-green-800)", border: "var(--color-border)" },
-    safe: { bg: "var(--color-green-100)", color: "var(--color-green-800)", border: "var(--color-border)" },
-    warning: { bg: "var(--color-cream-100)", color: "var(--color-green-800)", border: "var(--color-border-strong)" },
-    critical: { bg: "#fff1f2", color: "#b91c1c", border: "#fecdd3" },
-    neutral: { bg: "#ffffff", color: "var(--color-text-muted)", border: "var(--color-border)" },
+    pending: { bg: "var(--status-pending-bg)", color: "var(--status-pending-text)", border: "#ddd5c1" },
+    verified: { bg: "var(--status-verified-bg)", color: "var(--status-verified-text)", border: "#c4dce6" },
+    assigned: { bg: "var(--status-assigned-bg)", color: "var(--status-assigned-text)", border: "#d5cfeb" },
+    progress: { bg: "var(--status-progress-bg)", color: "var(--status-progress-text)", border: "#efd3b2" },
+    success: { bg: "var(--status-success-bg)", color: "var(--status-success-text)", border: "#c7e0cd" },
+    danger: { bg: "var(--status-danger-bg)", color: "var(--status-danger-text)", border: "#efc6c2" },
+    warning: { bg: "var(--status-progress-bg)", color: "var(--status-progress-text)", border: "#efd3b2" },
+    neutral: { bg: "var(--color-surface-subtle)", color: "var(--color-text-muted)", border: "var(--color-border)" },
   };
   const selected = tones[tone] ?? tones.neutral;
   return {
     bgcolor: selected.bg,
     color: selected.color,
     border: `1px solid ${selected.border}`,
-    borderRadius: 0,
+    borderRadius: "999px",
     fontWeight: 850,
-    "& .MuiChip-label": { px: 1.15 },
+    letterSpacing: 0,
+    "& .MuiChip-label": { px: 1.25 },
   };
 }

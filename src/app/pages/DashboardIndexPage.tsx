@@ -109,6 +109,45 @@ export function DashboardIndexPage() {
   if (roles.includes(ROLES.admin) || roles.includes(ROLES.coordinator) || hasFinanceRole(roles)) {
     return <OpsDashboardPage />;
   }
+  if (roles.includes(ROLES.donor)) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Tổng quan nhà hảo tâm"
+          title="Trung tâm đồng hành cứu trợ"
+          description="Theo dõi đóng góp cá nhân, lựa chọn chiến dịch đang hoạt động và kiểm tra việc sử dụng nguồn quỹ công khai."
+        />
+        <Grid container spacing={2.5}>
+          {[
+            { title: "Chiến dịch cứu trợ", description: "Xem chi tiết các chiến dịch đang hoạt động và lựa chọn nơi cần đồng hành.", to: "/donor/campaigns", icon: <CampaignOutlinedIcon /> },
+            { title: "Lịch sử quyên góp", description: "Theo dõi các khoản đóng góp đã thực hiện bằng tài khoản này.", to: "/donor/donations", icon: <FavoriteBorderOutlinedIcon /> },
+            { title: "Bản đồ cứu trợ", description: "Theo dõi khu vực cứu trợ và thông tin điều phối được công khai.", to: "/relief-map", icon: <MapOutlinedIcon /> },
+          ].map((item) => (
+            <Grid key={item.to} size={{ xs: 12, md: 6, xl: 4 }}>
+              <Card className="h-full">
+                <Stack spacing={2} className="h-full">
+                  <Box className="grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--color-green-700)] ring-1 ring-[var(--color-border)]">
+                    {item.icon}
+                  </Box>
+                  <Box className="flex-1">
+                    <Typography fontWeight={950} sx={{ color: "var(--color-green-800)" }}>
+                      {item.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.75, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
+                      {item.description}
+                    </Typography>
+                  </Box>
+                  <Button component={Link} to={item.to} variant="outlined">
+                    Mở mục này
+                  </Button>
+                </Stack>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </>
+    );
+  }
   return (
     <>
       <PageHeader

@@ -57,6 +57,7 @@ export function CreateSosPage() {
   const showToast = useToast((state) => state.showToast);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [fileError, setFileError] = useState("");
   const form = useForm<SosInput, unknown, SosForm>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -89,6 +90,7 @@ export function CreateSosPage() {
       showToast("Yêu cầu SOS đã được gửi.", "success");
       navigate(isAuthenticated ? "/citizen/sos" : "/", { state: isAuthenticated ? { createdSosId: sos.id } : undefined });
     },
+    onError: (error) => showToast(getErrorMessage(error), "error"),
   });
 
   const useLocation = () => {
@@ -125,7 +127,7 @@ export function CreateSosPage() {
       }
     }
 
-    mutation.mutate({ ...values, contactName, contactPhone });
+    if (!fileError) mutation.mutate({ ...values, contactName, contactPhone });
   };
 
   return (
@@ -262,22 +264,24 @@ export function CreateSosPage() {
                 Với 1 người cần cứu hộ, chỉ chọn một trong hai trường hợp: người cao tuổi hoặc trẻ em. Thông tin người bị thương và người khuyết tật có thể ghi nhận đồng thời khi cần.
               </Typography>
             </Grid>
-            {!isAuthenticated ? (
-              <>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField fullWidth label="Tên liên hệ" {...form.register("contactName")} error={Boolean(form.formState.errors.contactName)} helperText={form.formState.errors.contactName?.message} />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Số điện thoại liên hệ"
-                    {...form.register("contactPhone")}
-                    error={Boolean(form.formState.errors.contactPhone)}
-                    helperText={form.formState.errors.contactPhone?.message ?? "Số điện thoại 9-11 chữ số cho yêu cầu SOS ẩn danh"}
-                  />
-                </Grid>
-              </>
-            ) : null}
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" fontWeight={850}>Thông tin người cần cứu hoặc người liên hệ tại hiện trường</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isAuthenticated ? "Có thể để trống để dùng thông tin tài khoản, hoặc nhập người khác khi gửi yêu cầu hộ." : "Bắt buộc với yêu cầu SOS ẩn danh."}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField fullWidth label="Tên liên hệ" {...form.register("contactName")} error={Boolean(form.formState.errors.contactName)} helperText={form.formState.errors.contactName?.message} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                fullWidth
+                label="Số điện thoại liên hệ"
+                {...form.register("contactPhone")}
+                error={Boolean(form.formState.errors.contactPhone)}
+                helperText={form.formState.errors.contactPhone?.message ?? (isAuthenticated ? "Để trống để dùng số điện thoại tài khoản." : "Số điện thoại 9-11 chữ số.")}
+              />
+            </Grid>
             <Grid size={{ xs: 12 }}>
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0, boxShadow: "none" }}>
               <Stack spacing={1}>
@@ -294,8 +298,26 @@ export function CreateSosPage() {
                   }}
                 >
                   Chọn tệp
-                  <input hidden multiple type="file" accept="image/*,video/*" onChange={(event) => setFiles(event.target.files)} />
+                  <input
+                    hidden
+                    multiple
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(event) => {
+                      const nextFiles = event.target.files;
+                      const oversized = Array.from(nextFiles ?? []).find((file) => file.size > 50 * 1024 * 1024);
+                      const nextError = (nextFiles?.length ?? 0) > 5
+                        ? "Chỉ được tải tối đa 5 tệp trong một yêu cầu."
+                        : oversized
+                          ? `Tệp ${oversized.name} vượt quá giới hạn 50MB.`
+                          : "";
+                      setFileError(nextError);
+                      setFiles(nextError ? null : nextFiles);
+                      if (nextError) event.currentTarget.value = "";
+                    }}
+                  />
                 </Button>
+                {fileError ? <Alert severity="error">{fileError}</Alert> : null}
                 <Typography variant="body2" color="text.secondary">
                   {files?.length ? `Đã chọn ${files.length} tệp. Giới hạn hệ thống là 5 tệp, mỗi tệp tối đa 50MB.` : "Hình ảnh hoặc video giúp điều phối viên xác minh tình huống nhanh hơn."}
                 </Typography>

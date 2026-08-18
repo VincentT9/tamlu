@@ -15,9 +15,9 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
   if (isLoading) {
     return (
       <Stack spacing={1.25} sx={{ minHeight: 220, py: 2 }} aria-label="Đang tải nội dung">
-        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-green-100)" }} />
-        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-green-50)" }} />
-        <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 0, bgcolor: "var(--color-cream-100)" }} />
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 1.5, bgcolor: "var(--color-green-100)" }} />
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 1.5, bgcolor: "var(--color-green-50)" }} />
+        <Skeleton variant="rounded" height={64} sx={{ borderRadius: 1.5, bgcolor: "var(--color-cream-200)" }} />
       </Stack>
     );
   }
@@ -49,7 +49,7 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
             mb: 2,
             width: 56,
             height: 56,
-            borderRadius: 0,
+            borderRadius: "50%",
             border: "1px solid",
             borderColor: "var(--color-border)",
             bgcolor: "var(--color-green-50)",

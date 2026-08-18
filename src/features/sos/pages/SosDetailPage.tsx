@@ -32,8 +32,12 @@ export function SosDetailPage() {
   const canCoordinate = hasAnyRole([ROLES.admin, ROLES.coordinator]);
   const isCitizen = hasAnyRole([ROLES.citizen]);
   const detail = useQuery({ queryKey: ["sos", id], queryFn: () => sosApi.byId(id), enabled: Boolean(id), refetchInterval: 30000 });
-  const teams = useQuery({ queryKey: ["rescue-teams", "sos-detail"], queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }), enabled: canCoordinate });
-  const shelters = useQuery({ queryKey: ["shelters", "sos-detail"], queryFn: () => missionApi.shelters({ page: 1, limit: 50 }), enabled: canCoordinate });
+  const teams = useQuery({ queryKey: ["rescue-teams", "sos-detail", "AVAILABLE"], queryFn: () => missionApi.rescueTeams({ status: "AVAILABLE", page: 1, limit: 50 }), enabled: canCoordinate });
+  const shelters = useQuery({
+    queryKey: ["shelters", "suggest", detail.data?.latitude, detail.data?.longitude, detail.data?.numPeople],
+    queryFn: () => missionApi.shelterSuggest({ latitude: detail.data!.latitude, longitude: detail.data!.longitude, numPeople: detail.data!.numPeople }),
+    enabled: canCoordinate && Boolean(detail.data),
+  });
   const missions = useQuery({ queryKey: ["ops-missions", "sos-detail"], queryFn: () => missionApi.coordinatorList({ page: 1, limit: 50 }), enabled: canCoordinate });
   const volunteers = useQuery({ queryKey: ["coordinator-volunteers", "available-sos-detail"], queryFn: () => volunteerApi.coordinatorAvailable({ page: 1, limit: 50 }), enabled: canCoordinate });
   const activeMissionTeamIds = new Set((missions.data?.data ?? [])
@@ -43,10 +47,7 @@ export function SosDetailPage() {
   const availableTeams = (teams.data?.data ?? []).filter((team) => {
     return isAvailableRescueTeamStatus(team.status) && !activeMissionTeamIds.has(team.id);
   });
-  const availableShelters = (shelters.data?.data ?? []).filter((shelter) => {
-    const remainingCapacity = shelter.capacity - shelter.currentOccupancy;
-    return isActiveShelterStatus(shelter.status) && remainingCapacity >= (detail.data?.numPeople ?? 1);
-  });
+  const availableShelters = shelters.data ?? [];
   const verifiedVolunteers = (volunteers.data?.data ?? []).filter((volunteer) => volunteer.idVerified || volunteer.status?.toUpperCase() === "VERIFIED");
   const confirm = useMutation({
     mutationFn: () => sosApi.confirm(id, { note, rating: rating ?? undefined }),
@@ -83,7 +84,7 @@ export function SosDetailPage() {
         priority: detail.data.priorityLevel,
         rescueTeamId: assignment.rescueTeamId,
         vehicleIds: [],
-        destinationShelterId: assignment.destinationShelterId,
+        destinationShelterId: assignment.destinationShelterId || null,
       });
       if (assignment.volunteerProfileIds.length) {
         await missionApi.assignVolunteers(mission.id, assignment.volunteerProfileIds);
@@ -247,10 +248,10 @@ export function SosDetailPage() {
                       value={assignment.destinationShelterId}
                       onChange={(event) => setAssignment({ ...assignment, destinationShelterId: event.target.value })}
                       disabled={!canAssign}
-                      helperText={canAssign ? "Chỉ hiển thị điểm đang hoạt động và còn đủ chỗ." : "Chỉ chọn điểm trú sau khi SOS đã xác minh."}
+                      helperText={canAssign ? "Chọn một gợi ý hoặc để hệ thống tự tìm điểm còn đủ chỗ." : "Chỉ chọn điểm trú sau khi SOS đã xác minh."}
                     >
-                      <MenuItem value="" disabled>
-                        {shelters.isLoading ? "Đang tải điểm trú tạm..." : availableShelters.length ? "Chọn điểm trú tạm còn chỗ" : "Không có điểm trú tạm còn đủ chỗ"}
+                      <MenuItem value="">
+                        {shelters.isLoading ? "Đang tải điểm trú tạm..." : "Để hệ thống tự chọn điểm phù hợp"}
                       </MenuItem>
                       {availableShelters.map((shelter) => (
                         <MenuItem key={shelter.id} value={shelter.id}>
@@ -287,7 +288,7 @@ export function SosDetailPage() {
                       fullWidth
                       variant="contained"
                       startIcon={<AddIcon />}
-                      disabled={!canAssign || !assignment.rescueTeamId || !assignment.destinationShelterId || assign.isPending}
+                      disabled={!canAssign || !assignment.rescueTeamId || assign.isPending}
                       onClick={() => assign.mutate()}
                       sx={{ minHeight: 48 }}
                     >
@@ -342,10 +343,6 @@ function normalizeStatusValue(value: string) {
 function isAvailableRescueTeamStatus(status?: string | null) {
   if (!status) return false;
   return ["AVAILABLE", "READY", "ACTIVE", "IDLE", "SAN_SANG"].includes(normalizeStatusValue(status));
-}
-
-function isActiveShelterStatus(status?: string | null) {
-  return ["ACTIVE", "OPEN", "AVAILABLE", "READY", "DANG_HOAT_DONG"].includes(normalizeStatusValue(status ?? ""));
 }
 
 function isPendingSosStatus(status?: string | null) {

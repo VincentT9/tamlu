@@ -22,26 +22,26 @@ export function AppProviders({ children }: { children: ReactNode }) {
       createTheme({
         palette: {
           mode: "light",
-          primary: { main: "#3d6b1f", dark: "#2f5210", light: "#eef2ce", contrastText: "#ffffff" },
-          secondary: { main: "#eef2ce", dark: "#dce6b0", light: "#f6f8e8", contrastText: "#2f5210" },
-          success: { main: "#3d6b1f", dark: "#2f5210", light: "#eef2ce", contrastText: "#ffffff" },
-          warning: { main: "#8a6400", dark: "#644800", light: "#eef2ce", contrastText: "#ffffff" },
-          error: { main: "#c62828", dark: "#981d1d", light: "#ffe1df", contrastText: "#ffffff" },
-          background: { default: "#f6f8e8", paper: "#eef2ce" },
-          text: { primary: "#2f5210", secondary: "#5d7047" },
-          divider: "rgba(37,77,9,.18)",
+          primary: { main: "#0e5c6b", dark: "#0a4650", light: "#e3eef3", contrastText: "#ffffff" },
+          secondary: { main: "#e08a2e", dark: "#b96b18", light: "#fbebd9", contrastText: "#16232a" },
+          success: { main: "#2e7d4f", dark: "#235f3c", light: "#e4f1e7", contrastText: "#ffffff" },
+          warning: { main: "#b36a17", dark: "#8f500d", light: "#fbebd9", contrastText: "#ffffff" },
+          error: { main: "#b23b2e", dark: "#8e2c23", light: "#fbe7e5", contrastText: "#ffffff" },
+          background: { default: "#f7f9f9", paper: "#ffffff" },
+          text: { primary: "#16232a", secondary: "#52636b" },
+          divider: "#dce3e3",
         },
         typography: {
           fontFamily: "Inter, system-ui, sans-serif",
-          h1: { letterSpacing: 0, fontWeight: 900, color: "#2f5210" },
-          h2: { letterSpacing: 0, fontWeight: 900, color: "#2f5210" },
-          h3: { letterSpacing: 0, fontWeight: 900, color: "#2f5210" },
-          h4: { letterSpacing: 0, fontWeight: 900, color: "#2f5210" },
-          h5: { letterSpacing: 0, fontWeight: 850, color: "#2f5210" },
-          h6: { letterSpacing: 0, fontWeight: 850, color: "#2f5210" },
+          h1: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
+          h2: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
+          h3: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
+          h4: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
+          h5: { letterSpacing: 0, fontWeight: 800, color: "#16232a" },
+          h6: { letterSpacing: 0, fontWeight: 800, color: "#16232a" },
           button: { textTransform: "none", fontWeight: 800 },
         },
-        shape: { borderRadius: 18 },
+        shape: { borderRadius: 12 },
         components: {
           MuiCssBaseline: {
             styleOverrides: {
@@ -55,7 +55,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             styleOverrides: {
               root: {
                 minHeight: 42,
-                borderRadius: 14,
+                borderRadius: 10,
                 boxShadow: "none",
                 textTransform: "none",
                 fontWeight: 800,
@@ -81,7 +81,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             },
           },
           MuiCard: {
-            styleOverrides: { root: { borderRadius: 18, borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", boxShadow: "var(--shadow-surface)" } },
+            styleOverrides: { root: { borderRadius: 12, borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", boxShadow: "var(--shadow-surface)" } },
           },
           MuiPaper: {
             styleOverrides: {
@@ -101,18 +101,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
           MuiOutlinedInput: {
             styleOverrides: {
               root: {
-                borderRadius: 14,
+                borderRadius: 10,
                 backgroundColor: "#ffffff",
                 color: "var(--color-text)",
                 "& fieldset": { borderColor: "var(--color-border)" },
                 "&:hover fieldset": { borderColor: "var(--color-border-strong)" },
-                "&.Mui-focused fieldset": { borderColor: "var(--color-green-600)", boxShadow: "0 0 0 3px rgba(77,141,22,.14)" },
+                "&.Mui-focused fieldset": { borderColor: "var(--color-green-600)", boxShadow: "0 0 0 3px rgba(14,92,107,.12)" },
               },
               input: { color: "var(--color-text)" },
             },
           },
           MuiTableContainer: {
-            styleOverrides: { root: { borderRadius: 18 } },
+            styleOverrides: { root: { borderRadius: 12 } },
           },
           MuiTableCell: {
             styleOverrides: {
@@ -129,6 +129,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               },
               root: {
                 borderBottomColor: "var(--color-border)",
+                fontVariantNumeric: "tabular-nums",
               },
             },
           },
@@ -191,7 +192,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           },
           MuiAlert: {
             styleOverrides: {
-              root: { borderRadius: 16, alignItems: "center", border: "1px solid var(--color-border)" },
+              root: { borderRadius: 10, alignItems: "center", border: "1px solid var(--color-border)" },
               standardInfo: { backgroundColor: "var(--color-green-50)", color: "var(--color-text)", borderColor: "var(--color-border)" },
               standardSuccess: { backgroundColor: "var(--color-green-50)", color: "var(--color-text)", borderColor: "var(--color-border)" },
               standardWarning: { backgroundColor: "var(--color-cream-100)", color: "var(--color-text)", borderColor: "var(--color-border-strong)" },

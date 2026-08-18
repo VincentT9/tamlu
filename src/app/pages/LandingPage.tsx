@@ -460,8 +460,55 @@ export function LandingPage() {
           </Grid>
         </Box>
 
-        <Box id="mission" sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 5, md: 8 } }}>
-          <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
+        <Box
+          id="mission"
+          sx={{
+            position: "relative",
+            overflow: "hidden",
+            bgcolor: reliefTheme.frame,
+          }}
+        >
+          <Box
+            component="img"
+            src={heroRescueImageUrl}
+            alt=""
+            aria-hidden="true"
+            sx={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: { xs: "47% 50%", md: "53% 50%", xl: "55% 50%" },
+              opacity: 1,
+              filter: "saturate(.92) contrast(1.04) brightness(1.03)",
+              transform: { xs: "scale(1.48)", md: "scale(1.08)" },
+              transformOrigin: { xs: "47% 50%", md: "53% 50%" },
+            }}
+          />
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(circle at 58% 48%, rgba(246,248,232,.02) 0%, rgba(246,248,232,.16) 38%, rgba(246,248,232,.58) 76%, rgba(246,248,232,.90) 100%), linear-gradient(90deg, rgba(246,248,232,.94) 0%, rgba(246,248,232,.78) 38%, rgba(246,248,232,.32) 68%, rgba(246,248,232,.66) 100%), linear-gradient(180deg, rgba(246,248,232,.68) 0%, rgba(246,248,232,.12) 48%, rgba(246,248,232,.86) 100%)",
+            }}
+          />
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: "absolute",
+              inset: { xs: "18% -42% auto 12%", md: "6% -18% auto 30%" },
+              height: { xs: 360, md: 640 },
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(247,249,216,.42) 0%, rgba(77,141,22,.08) 34%, transparent 68%)",
+              filter: "blur(18px)",
+            }}
+          />
+          <Box sx={{ position: "relative", zIndex: 1, px: { xs: 2, sm: 3, md: 6, lg: 8 }, pt: { xs: 5, md: 8 }, pb: { xs: 3, md: 4 } }}>
+            <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
             <Grid size={{ xs: 12, md: 5 }}>
               <Chip label="Sứ mệnh của chúng tôi" sx={{ mb: 2, bgcolor: reliefTheme.panel, color: reliefTheme.waterSoft, fontWeight: 900, borderRadius: 999 }} />
               <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.03, fontWeight: 950, letterSpacing: "-0.035em" }}>
@@ -473,27 +520,26 @@ export function LandingPage() {
                 Tâm Lũ kết nối nguồn đóng góp với nhu cầu thực địa khẩn cấp thông qua chiến dịch đã xác minh, sổ công khai, bằng chứng bàn giao và điều phối đối tác. Người ủng hộ theo dõi được dòng hỗ trợ. Đơn vị vận hành nắm được việc cần xử lý. Các gia đình có thêm con đường trở lại an toàn.
               </Typography>
             </Grid>
-          </Grid>
-        </Box>
+            </Grid>
+          </Box>
 
-        <Box sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 5, md: 8 } }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, lg: 6 }}>
+        <Box sx={{ position: "relative", zIndex: 1, px: { xs: 2, sm: 3, md: 6, lg: 8 }, pt: { xs: 3, md: 4 }, pb: { xs: 5, md: 8 } }}>
+          <Grid container spacing={2} alignItems="stretch">
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 sx={{
                   height: "100%",
-                  minHeight: { xs: 360, md: 390 },
+                  minHeight: { xs: 240, md: 260 },
                   p: reliefShape.cardPadding,
                   borderRadius: reliefShape.cardRadius,
                   border: `1px solid ${reliefTheme.line}`,
                   bgcolor: reliefTheme.panel,
                   background: reliefTheme.panel,
                   color: reliefTheme.text,
-                  overflow: "hidden",
-                  position: "relative",
+                  display: "flex",
                 }}
               >
-                <Stack spacing={2} sx={{ maxWidth: 520, position: "relative", zIndex: 1 }}>
+                <Stack spacing={2} sx={{ width: "100%", justifyContent: "space-between" }}>
                   <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Phối hợp cùng các đối tác cứu trợ địa phương</Typography>
                   <Typography sx={{ fontSize: { xs: 28, md: 36 }, lineHeight: 1.08, fontWeight: 950 }}>
                     Hỗ trợ các gia đình vùng lũ bằng nguồn lực minh bạch và có trách nhiệm.
@@ -507,45 +553,17 @@ export function LandingPage() {
                     Hỗ trợ ngay
                   </Button>
                 </Stack>
-                <Box
-                  role="img"
-                  aria-label="Minh họa bàn giao hàng cứu trợ trong ánh sáng phục hồi"
-                  sx={{
-                    position: "absolute",
-                    left: { xs: 18, md: 32 },
-                    right: { xs: 18, md: 32 },
-                    bottom: { xs: 18, md: 28 },
-                    width: "auto",
-                    height: { xs: 160, md: 180 },
-                    borderRadius: 3,
-                    boxShadow: "none",
-                    background:
-                      "linear-gradient(135deg, rgba(246,248,232,.86), rgba(238,242,206,.76)), repeating-linear-gradient(90deg, rgba(77,141,22,.10) 0 1px, transparent 1px 34px)",
-                    overflow: "visible",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      left: "12%",
-                      bottom: "24%",
-                      width: "76%",
-                      height: "30%",
-                      borderRadius: 2,
-                      background: "var(--color-green-100)",
-                      border: `1px solid ${reliefTheme.line}`,
-                    },
-                  }}
-                />
-                <Box aria-hidden="true" sx={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 80%, rgba(247,249,216,.58), transparent 38%)" }} />
               </Paper>
             </Grid>
-            <Grid size={{ xs: 12, lg: 6 }}>
-              <Stack spacing={2}>
-                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
+                <Paper sx={{ ...glassCardSx, p: reliefShape.cardPadding, borderRadius: reliefShape.cardRadius, minHeight: { xs: 240, md: 260 }, height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                   <Typography sx={{ color: reliefTheme.faint, fontWeight: 800 }}>Gia đình được hỗ trợ qua các chiến dịch đã xác minh</Typography>
                   <Typography sx={{ mt: 1, fontSize: { xs: 64, md: 92 }, lineHeight: 1, fontWeight: 950 }}>500+</Typography>
                   <Typography sx={{ mt: 1.5, color: reliefTheme.text, letterSpacing: 1 }}>5/5 mức độ tin cậy cộng đồng</Typography>
                 </Paper>
-                <Paper sx={{ ...glassCardSx, p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+                <Paper sx={{ ...glassCardSx, p: reliefShape.cardPadding, borderRadius: reliefShape.cardRadius, minHeight: { xs: 240, md: 260 }, height: "100%", display: "flex", alignItems: "center" }}>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Box
                       aria-label="Ảnh đại diện tình nguyện viên cứu trợ"
@@ -576,9 +594,9 @@ export function LandingPage() {
                     </Box>
                   </Stack>
                 </Paper>
-              </Stack>
             </Grid>
           </Grid>
+        </Box>
         </Box>
 
         <Box sx={{ px: { xs: 2, sm: 3, md: 6, lg: 8 }, py: { xs: 4, md: 6 }, borderTop: `1px solid ${reliefTheme.line}`, borderBottom: `1px solid ${reliefTheme.line}` }}>

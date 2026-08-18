@@ -15,35 +15,51 @@
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --brand-green: #539f05;
   --brand-yellow: #f4fda1;
-  --color-bg-page: #f6f8e8;
-  --color-bg-card: #eef2ce;
-  --color-bg-card-soft: #f2f5da;
-  --color-bg-card-strong: #e5ebb9;
-  --color-text-heading: #2f5210;
-  --color-text-icon: #3d6b1f;
-  --color-cta-bg: #3d6b1f;
-  --color-cta-hover: #2f5210;
+  --color-primary: #0e5c6b;
+  --color-primary-hover: #0a4650;
+  --color-accent: #e08a2e;
+  --color-bg-page: #f7f9f9;
+  --color-bg-card: #ffffff;
+  --color-bg-card-soft: #f2f6f6;
+  --color-bg-card-strong: #e7efef;
+  --color-text-heading: #16232a;
+  --color-text-icon: #0e5c6b;
+  --color-cta-bg: #0e5c6b;
+  --color-cta-hover: #0a4650;
   --color-cta-text: #ffffff;
   --color-green-50: var(--color-bg-card-soft);
   --color-green-100: var(--color-bg-card);
-  --color-green-200: #dce6b0;
+  --color-green-200: #d7e4e6;
   --color-green-600: var(--color-text-icon);
   --color-green-700: var(--color-cta-bg);
   --color-green-800: var(--color-text-heading);
-  --color-green-900: #203c09;
+  --color-green-900: #0d1a20;
   --color-cream-50: var(--color-bg-page);
   --color-cream-100: var(--color-bg-card);
-  --color-cream-200: var(--color-bg-card-strong);
+  --color-cream-200: #eef3f3;
   --color-surface: var(--color-bg-card);
+  --color-surface-subtle: var(--color-bg-card-soft);
   --color-surface-muted: var(--color-bg-card-soft);
   --color-surface-accent: var(--color-bg-card-strong);
   --color-text: var(--color-text-heading);
-  --color-text-muted: #5d7047;
-  --color-border: rgba(47, 82, 16, 0.20);
-  --color-border-strong: rgba(61, 107, 31, 0.34);
-  --color-progress-track: #d8e4a6;
+  --color-text-muted: #52636b;
+  --color-border: #dce3e3;
+  --color-border-strong: #b9c8ca;
+  --color-progress-track: #e2eaea;
   --color-progress-fill: var(--color-cta-bg);
-  --shadow-surface: 0 16px 46px rgba(47, 82, 16, 0.08);
+  --shadow-surface: 0 12px 32px rgba(14, 92, 107, 0.08);
+  --status-pending-bg: #f0ede4;
+  --status-pending-text: #756742;
+  --status-verified-bg: #e3eef3;
+  --status-verified-text: #1d6e8c;
+  --status-assigned-bg: #ebe8f5;
+  --status-assigned-text: #584c9e;
+  --status-progress-bg: #fbebd9;
+  --status-progress-text: #9a570f;
+  --status-success-bg: #e4f1e7;
+  --status-success-text: #2e7149;
+  --status-danger-bg: #fbe7e5;
+  --status-danger-text: #a43529;
   background: var(--color-bg-page);
   color: var(--color-text);
 }
@@ -79,7 +95,7 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(77, 141, 22, 0.35);
+  outline: 3px solid rgba(14, 92, 107, 0.28);
   outline-offset: 2px;
 }
 
@@ -89,24 +105,11 @@ a {
 
 .MuiTable-root {
   min-width: 720px;
+  font-variant-numeric: tabular-nums;
 }
 
 .MuiCardMedia-root {
   background-color: var(--color-bg-card);
-}
-
-.MuiPaper-root,
-.MuiCard-root,
-.MuiTableContainer-root,
-.MuiAlert-root,
-.MuiOutlinedInput-root,
-.MuiSkeleton-root,
-.tamlu-motion-surface {
-  border-radius: 18px !important;
-}
-
-section {
-  border-radius: 28px;
 }
 
 .MuiPaper-root,
@@ -116,6 +119,11 @@ section {
     transform 180ms ease,
     box-shadow 180ms ease,
     border-color 180ms ease;
+}
+
+.tamlu-data {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .tamlu-motion-surface:hover {

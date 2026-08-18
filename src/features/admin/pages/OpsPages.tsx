@@ -23,6 +23,7 @@ import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
@@ -55,6 +56,7 @@ export function OpsDashboardPage() {
   const user = useAuthStore((state) => state.user);
   const roles = useAuthStore((state) => state.roles);
   const isAdmin = hasOperationalRole(roles, "ADMIN");
+  const isFinancialOfficer = hasOperationalRole(roles, "FINANCIAL_OFFICER");
   const complaints = useQuery({
     queryKey: ["dashboard-pending-complaints"],
     queryFn: () => monitoringApi.adminComplaints({ page: 1, limit: 100 }),
@@ -63,14 +65,15 @@ export function OpsDashboardPage() {
   });
   const summary = dashboard.data;
   const pendingComplaints = (complaints.data?.data ?? []).filter((item) => !["RESOLVED", "REJECTED"].includes(normalizeComplaintStatus(item.status))).length;
-  const pending = isAdmin ? pendingComplaints : summary?.pendingRequests ?? 0;
-  const pendingLabel = isAdmin ? "Phản ánh đang chờ" : "SOS đang chờ";
-  const pendingRoute = isAdmin ? "/ops/complaints" : "/ops/sos";
   const missions = summary?.activeMissions ?? 0;
   const stock = summary?.lowStockItems ?? 0;
   const campaigns = summary?.activeCampaigns ?? 0;
   const warehouses = summary?.totalWarehouses ?? 0;
   const donations = summary?.totalDonations ?? 0;
+  const pending = isAdmin ? pendingComplaints : isFinancialOfficer ? campaigns : summary?.pendingRequests ?? 0;
+  const pendingLabel = isAdmin ? "Phản ánh đang chờ" : isFinancialOfficer ? "Chiến dịch đang hoạt động" : "SOS đang chờ";
+  const pendingRoute = isAdmin ? "/ops/complaints" : isFinancialOfficer ? "/ops/procurements" : "/ops/sos";
+  const pendingAction = isAdmin ? "Mở phản ánh đang chờ" : isFinancialOfficer ? "Mở nghiệp vụ tài chính" : "Mở hàng đợi SOS";
   const readiness = Math.max(12, Math.min(96, Math.round(((missions + campaigns + warehouses) / Math.max(missions + campaigns + warehouses + pending + stock, 1)) * 100)));
   const sosTrend = [
     { day: "T2", value: Math.max(2, pending - 3) },
@@ -96,15 +99,52 @@ export function OpsDashboardPage() {
   const taskCompletion = Math.min(100, Math.round(((missions + campaigns) / Math.max(missions + campaigns + pending, 1)) * 100));
   const deliveryTrust = Math.min(99, Math.max(34, 100 - stock * 7));
 
+  if (isFinancialOfficer) {
+    return (
+      <>
+        <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
+          <Box>
+            <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0 }}>
+              Bảng tài chính cứu trợ
+            </Typography>
+            <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
+              Theo dõi nguồn quỹ và truy cập các nghiệp vụ duyệt chi, mua sắm và giải ngân.
+            </Typography>
+          </Box>
+        </Stack>
+        <QueryState isLoading={dashboard.isLoading} error={dashboard.error} refetch={dashboard.refetch}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 2.25 }}>
+            <DashboardPanel title="Chiến dịch đang hoạt động" action="Đang công khai">
+              <Stack spacing={2.5}>
+                <Typography sx={{ fontSize: { xs: 54, md: 64 }, lineHeight: 1, fontWeight: 500 }}>{campaigns}</Typography>
+                <Typography sx={{ color: "var(--color-text-muted)", lineHeight: 1.6 }}>Các chiến dịch đang tiếp nhận và phân bổ nguồn quỹ.</Typography>
+                <Button component={Link} to="/ops/procurements" variant="contained" color="secondary">Mở danh sách mua sắm</Button>
+              </Stack>
+            </DashboardPanel>
+            <DashboardPanel title="Tổng giá trị quyên góp" action="Sổ quỹ">
+              <Stack spacing={2.5}>
+                <Typography sx={{ fontSize: { xs: 38, md: 48 }, lineHeight: 1.1, fontWeight: 500, overflowWrap: "anywhere" }}>{formatMoney(donations)}</Typography>
+                <Typography sx={{ color: "var(--color-text-muted)", lineHeight: 1.6 }}>Nguồn tiền được ghi nhận để phục vụ mua sắm và hỗ trợ trực tiếp.</Typography>
+                <Button component={Link} to="/ops/disbursements" variant="outlined">Mở nghiệp vụ giải ngân</Button>
+              </Stack>
+            </DashboardPanel>
+          </Box>
+        </QueryState>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
         <Box>
-          <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
-            Bảng điều phối
+          <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0 }}>
+            {isAdmin ? "Bảng quản trị toàn hệ thống" : "Bảng điều phối cứu trợ"}
           </Typography>
           <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
-            Trung tâm điều phối cứu trợ khẩn cấp cho tiếp nhận SOS, nhiệm vụ, kho hàng và nguồn quỹ công khai.
+            {isAdmin
+              ? "Giám sát phản ánh, cứu hộ, chiến dịch, kho vận và các hoạt động cần phê duyệt trên toàn hệ thống."
+              : "Theo dõi yêu cầu SOS, nhiệm vụ hiện trường, kho hàng và nguồn lực đang được điều phối."}
           </Typography>
         </Box>
         <Stack direction="row" spacing={1.25} alignItems="center">
@@ -131,10 +171,10 @@ export function OpsDashboardPage() {
             <Stack spacing={2.4}>
               <Stack direction="row" alignItems="flex-end" spacing={1.25}>
                 <Typography sx={{ fontSize: { xs: 54, md: 58 }, lineHeight: .9, fontWeight: 400 }}>{pending}</Typography>
-                <Chip label="+ khẩn cấp" sx={{ mb: .7, bgcolor: "rgba(245,184,91,.16)", color: "#ffd07a", border: "1px solid rgba(245,184,91,.30)", fontWeight: 900 }} />
+                <Chip label="+ khẩn cấp" sx={{ mb: .7, bgcolor: "var(--status-progress-bg)", color: "var(--status-progress-text)", border: "1px solid #efd3b2", fontWeight: 900 }} />
               </Stack>
-              <Button component={Link} to={pendingRoute} variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 0, justifyContent: "space-between" }}>
-                {isAdmin ? "Mở phản ánh đang chờ" : "Mở hàng đợi SOS"}
+              <Button component={Link} to={pendingRoute} variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 1.25, justifyContent: "space-between" }}>
+                {pendingAction}
               </Button>
             </Stack>
           </DashboardPanel>
@@ -146,7 +186,7 @@ export function OpsDashboardPage() {
                 <AreaChart data={sosTrend} margin={{ left: -24, right: 8, top: 26, bottom: 0 }}>
                   <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 11 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} />
-                  <Area type="monotone" dataKey="value" stroke="var(--color-green-700)" strokeWidth={2.5} fill="rgba(61,107,31,.12)" dot={false} />
+                  <Area type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2.5} fill="rgba(14,92,107,.12)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </Box>
@@ -288,7 +328,7 @@ export function OpsDashboardPage() {
 const panelSx = {
   p: { xs: 3, md: 3 },
   minHeight: 188,
-  borderRadius: 0,
+  borderRadius: 1.5,
   border: "1px solid var(--color-border)",
   bgcolor: "var(--color-surface)",
   color: "var(--color-text)",
@@ -297,8 +337,8 @@ const panelSx = {
 };
 
 const miniLabelSx = { color: "var(--color-text-muted)", fontSize: 11, fontWeight: 750 };
-const opsIconButtonSx = { width: 42, height: 42, color: "var(--color-green-700)", border: "1px solid var(--color-border)", bgcolor: "#ffffff", borderRadius: 0, "&:hover": { bgcolor: "var(--color-green-50)" } };
-const smallRoundButtonSx = { width: 34, height: 34, color: "var(--color-green-700)", bgcolor: "#ffffff", borderRadius: 0, "&:hover": { bgcolor: "var(--color-green-50)" } };
+const opsIconButtonSx = { width: 42, height: 42, color: "var(--color-green-700)", border: "1px solid var(--color-border)", bgcolor: "#ffffff", borderRadius: 1.25, "&:hover": { bgcolor: "var(--color-green-50)" } };
+const smallRoundButtonSx = { width: 34, height: 34, color: "var(--color-green-700)", bgcolor: "#ffffff", borderRadius: 1.25, "&:hover": { bgcolor: "var(--color-green-50)" } };
 
 function DashboardPanel({ title, action, children, sx }: { title: string; action?: string; children: React.ReactNode; sx?: object }) {
   return (
@@ -306,7 +346,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
       <Stack spacing={2}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
           <Typography sx={{ fontSize: 15, fontWeight: 900 }}>{title}</Typography>
-          {action ? <Chip label={action} size="small" sx={{ bgcolor: "var(--color-green-50)", color: "var(--color-green-800)", fontWeight: 800, border: "1px solid var(--color-border)", borderRadius: 0 }} /> : null}
+          {action ? <Chip label={action} size="small" sx={{ bgcolor: "var(--color-green-50)", color: "var(--color-green-800)", fontWeight: 800, border: "1px solid var(--color-border)" }} /> : null}
         </Stack>
         {children}
       </Stack>
@@ -316,7 +356,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
 
 function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object }) {
   return (
-    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 0, bgcolor: "#ffffff", color: "var(--color-green-800)", fontSize: 11, fontWeight: 950, boxShadow: "none", border: "1px solid var(--color-border)", ...sx }}>
+    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 1, bgcolor: "#ffffff", color: "var(--color-green-800)", fontSize: 11, fontWeight: 950, boxShadow: "none", border: "1px solid var(--color-border)", ...sx }}>
       {children}
     </Box>
   );
@@ -324,7 +364,7 @@ function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object 
 
 function PercentTag({ children, tone = "amber" }: { children: React.ReactNode; tone?: "amber" | "cyan" }) {
   return (
-    <Box sx={{ px: 1, py: .45, borderRadius: 0, bgcolor: tone === "amber" ? "#ffffff" : "var(--color-green-700)", color: tone === "amber" ? "var(--color-green-800)" : "#ffffff", fontSize: 12, fontWeight: 950 }}>
+    <Box sx={{ px: 1, py: .45, borderRadius: 1, bgcolor: tone === "amber" ? "#ffffff" : "var(--color-green-700)", color: tone === "amber" ? "var(--color-green-800)" : "#ffffff", fontSize: 12, fontWeight: 950, border: "1px solid var(--color-border)" }}>
       {children}
     </Box>
   );
@@ -649,8 +689,8 @@ export function OpsMissionsPage() {
   const verifiedCases = useQuery({ queryKey: ["ops-sos", SOS_STATUS.verified, "mission-select"], queryFn: () => sosApi.coordinatorList({ status: SOS_STATUS.verified, page: 1, limit: 50 }), refetchInterval: 30000 });
   const missionCases = useQuery({ queryKey: ["ops-sos", "mission-history"], queryFn: () => sosApi.coordinatorList({ page: 1, limit: 100 }), refetchInterval: 30000 });
   const teams = useQuery({
-    queryKey: ["rescue-teams"],
-    queryFn: () => missionApi.rescueTeams({ page: 1, limit: 50 }),
+    queryKey: ["rescue-teams", "AVAILABLE"],
+    queryFn: () => missionApi.rescueTeams({ status: "AVAILABLE", page: 1, limit: 50 }),
     refetchInterval: 30000,
   });
   const volunteers = useQuery({
@@ -1116,7 +1156,7 @@ export function ShipmentsPage() {
     enabled: Boolean(sourceWarehouseId),
   });
   const allocationPlans = useQuery({ queryKey: ["allocation-plans", "shipment-form"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
-  const vehicles = useQuery({ queryKey: ["vehicles", "shipment-form"], queryFn: () => missionApi.vehicles({ page: 1, limit: 50 }) });
+  const vehicles = useQuery({ queryKey: ["vehicles", "shipment-form", "AVAILABLE"], queryFn: () => missionApi.vehicles({ status: "AVAILABLE", page: 1, limit: 50 }) });
   const readyVehicles = (vehicles.data?.data ?? []).filter((vehicle) => isReadyVehicleStatus(vehicle.status));
   const selectedVehicle = readyVehicles.find((vehicle) => vehicle.id === shipmentForm.vehicleId);
   const hasValidShipmentItems = shipmentForm.items.every((item) => item.inventoryItemId && Number(item.quantity) > 0);
@@ -1585,7 +1625,7 @@ export function CampaignAdminPage() {
             <TableBody>
               {campaigns.data?.data.map((campaign) => (
                 <TableRow key={campaign.id}>
-                  <TableCell>{campaign.name}</TableCell>
+                  <TableCell sx={{ fontWeight: 800 }}>{campaign.name}</TableCell>
                   <TableCell>{formatMoney(campaign.currentAmount)}</TableCell>
                   <TableCell>{formatMoney(campaign.targetAmount)}</TableCell>
                   <TableCell><StatusChip value={campaign.status} /></TableCell>
@@ -2500,11 +2540,12 @@ export function ComplaintsPage() {
   const [resolutionDrafts, setResolutionDrafts] = useState<Record<string, string>>({});
   const rows = useQuery({ queryKey: ["admin-complaints"], queryFn: () => monitoringApi.adminComplaints({ page: 1, limit: 50 }) });
   const update = useMutation({
-    mutationFn: ({ id, status, resolution }: { id: string; status: "INVESTIGATING" | "RESOLVED" | "REJECTED"; resolution: string }) => monitoringApi.updateComplaint(id, { status, resolution }),
+    mutationFn: ({ id, status, resolution }: { id: string; status: "INVESTIGATING" | "RESOLVED" | "REJECTED"; resolution: string }) =>
+      monitoringApi.updateComplaint(id, { status, resolution }),
     onSuccess: (updatedComplaint) => {
       showToast("Trạng thái phản ánh đã được cập nhật.", "success");
       setResolutionDrafts((current) => ({ ...current, [updatedComplaint.id]: updatedComplaint.resolution ?? "" }));
-      queryClient.setQueryData<PaginatedResult<Complaint>>(["admin-complaints"], (current) => current
+      queryClient.setQueryData(["admin-complaints"], (current: typeof rows.data) => current
         ? { ...current, data: current.data.map((item) => item.id === updatedComplaint.id ? { ...item, ...updatedComplaint } : item) }
         : current,
       );
@@ -2517,7 +2558,7 @@ export function ComplaintsPage() {
     <>
       <PageHeader title="Phản ánh người dùng" description="Theo dõi phản ánh của cộng đồng, phân loại vấn đề và cập nhật trạng thái xử lý." />
       <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
-        <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+        <DataTableFrame label="Danh sách phản ánh người dùng">
           <Table size="small" sx={{ minWidth: 720, tableLayout: "fixed" }}>
             <TableHead>
               <TableRow>
@@ -2536,11 +2577,18 @@ export function ComplaintsPage() {
                 const selectedStatus = statusDrafts[item.id] ?? initialStatus;
                 const resolution = resolutionDrafts[item.id] ?? item.resolution ?? "";
                 const requiresResolution = selectedStatus === "RESOLVED" || selectedStatus === "REJECTED";
+                const isTerminalStatus = normalizedStatus === "RESOLVED" || normalizedStatus === "REJECTED";
+                const statusOptions = normalizedStatus === "OPEN"
+                  ? [{ value: "INVESTIGATING", label: "Đang xử lý" }]
+                  : [
+                      { value: "RESOLVED", label: "Đã xử lý" },
+                      { value: "REJECTED", label: "Từ chối" },
+                    ];
 
                 return (
                   <Fragment key={item.id}>
-                    <TableRow hover>
-                      <TableCell sx={{ verticalAlign: "top" }}>
+                    <TableRow hover sx={{ height: 64 }}>
+                      <TableCell sx={{ py: 1.5, verticalAlign: "middle" }}>
                         <Button
                           variant="text"
                           onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}
@@ -2549,9 +2597,9 @@ export function ComplaintsPage() {
                           {item.title}
                         </Button>
                       </TableCell>
-                      <TableCell sx={{ width: 180, verticalAlign: "top" }}><StatusChip value={normalizeComplaintStatus(item.status)} /></TableCell>
-                      <TableCell sx={{ width: 180, verticalAlign: "top", whiteSpace: "nowrap" }}>{formatDate(item.createdAt)}</TableCell>
-                      <TableCell sx={{ width: 88, verticalAlign: "top" }}>
+                      <TableCell sx={{ width: 180, py: 1.5, verticalAlign: "middle" }}><StatusChip value={normalizeComplaintStatus(item.status)} /></TableCell>
+                      <TableCell sx={{ width: 180, py: 1.5, verticalAlign: "middle", whiteSpace: "nowrap" }}>{formatDate(item.createdAt)}</TableCell>
+                      <TableCell sx={{ width: 88, py: 1.5, verticalAlign: "middle", textAlign: "right" }}>
                         <Button size="small" onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}>{expanded ? "Thu gọn" : "Xem"}</Button>
                       </TableCell>
                     </TableRow>
@@ -2575,26 +2623,24 @@ export function ComplaintsPage() {
                                 <Typography variant="caption" color="text.secondary">Mã phản ánh: {item.id}</Typography>
                               </Stack>
                             </Grid>
-                            <Grid size={{ xs: 12 }}>
+                            {!isTerminalStatus ? <Grid size={{ xs: 12 }}>
                               <Stack spacing={1.5} sx={{ borderTop: "1px solid var(--color-border)", pt: 2 }}>
                                 <Typography variant="subtitle2" fontWeight={900}>Cập nhật trạng thái phản ánh</Typography>
-                                <Grid container spacing={1.5}>
-                                  <Grid size={{ xs: 12, md: 3 }}>
-                                    <TextField fullWidth select label="Trạng thái" value={selectedStatus} onChange={(event) => setStatusDrafts((current) => ({ ...current, [item.id]: event.target.value as "INVESTIGATING" | "RESOLVED" | "REJECTED" }))}>
-                                      <MenuItem value="INVESTIGATING">Đang xử lý</MenuItem>
-                                      <MenuItem value="RESOLVED">Đã xử lý</MenuItem>
-                                      <MenuItem value="REJECTED">Từ chối</MenuItem>
+                                <Grid container spacing={1.5} alignItems="flex-start">
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <TextField fullWidth select label="Trạng thái" value={selectedStatus} onChange={(event) => setStatusDrafts((current) => ({ ...current, [item.id]: event.target.value as "INVESTIGATING" | "RESOLVED" | "REJECTED" }))} sx={{ "& .MuiInputBase-root": { height: 88 } }}>
+                                      {statusOptions.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
                                     </TextField>
                                   </Grid>
-                                  <Grid size={{ xs: 12, md: 7 }}>
-                                    <TextField fullWidth label={selectedStatus === "REJECTED" ? "Lý do từ chối" : "Phương án xử lý"} value={resolution} onChange={(event) => setResolutionDrafts((current) => ({ ...current, [item.id]: event.target.value }))} multiline minRows={2} required={requiresResolution} helperText={requiresResolution ? "Nội dung này sẽ hiển thị cho người đã gửi phản ánh." : "Có thể ghi nhận hướng xử lý đang thực hiện."} />
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <TextField fullWidth label={selectedStatus === "REJECTED" ? "Lý do từ chối" : "Phương án xử lý"} value={resolution} onChange={(event) => setResolutionDrafts((current) => ({ ...current, [item.id]: event.target.value }))} multiline minRows={2} maxRows={4} required={requiresResolution} helperText={requiresResolution ? "Nội dung này sẽ hiển thị cho người đã gửi phản ánh." : "Có thể ghi nhận hướng xử lý đang thực hiện."} sx={{ "& .MuiInputBase-root": { height: 88, alignItems: "flex-start" }, "& textarea": { maxHeight: 54, overflowY: "auto", overflowWrap: "anywhere" } }} />
                                   </Grid>
-                                  <Grid size={{ xs: 12, md: 2 }} sx={{ display: "flex", alignItems: "stretch" }}>
-                                    <Button fullWidth variant="contained" disabled={update.isPending || (requiresResolution && !resolution.trim())} onClick={() => update.mutate({ id: item.id, status: selectedStatus, resolution: resolution.trim() })}>Cập nhật</Button>
+                                  <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex", alignItems: "flex-start" }}>
+                                    <Button fullWidth variant="contained" disabled={update.isPending || (requiresResolution && !resolution.trim())} onClick={() => update.mutate({ id: item.id, status: selectedStatus, resolution: resolution.trim() })} sx={{ minHeight: 88 }}>Cập nhật</Button>
                                   </Grid>
                                 </Grid>
                               </Stack>
-                            </Grid>
+                            </Grid> : null}
                           </Grid>
                         </TableCell>
                       </TableRow>
@@ -2604,7 +2650,7 @@ export function ComplaintsPage() {
               })}
             </TableBody>
           </Table>
-        </Paper>
+        </DataTableFrame>
       </QueryState>
     </>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import clsx from "clsx";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuthStore } from "@/features/auth/store";
 import { Button } from "@/components/Button";
@@ -60,12 +61,24 @@ export function MainLayout() {
                 >
                   <MenuIcon fontSize="small" />
                 </Link>
-                <Link to="/dashboard" className="rounded-[14px] border border-[var(--color-border)] bg-[var(--color-bg-page)] px-3 py-2 text-sm font-bold text-[var(--color-green-800)] hover:bg-[var(--color-bg-card-strong)]">
-                  {user?.fullName ?? "Bảng điều khiển"}
-                </Link>
-                <Button variant="ghost" className="min-h-10 px-4" onClick={logout}>
-                  Đăng xuất
-                </Button>
+                <details className="group relative">
+                  <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-[14px] border border-[var(--color-border)] bg-[var(--color-bg-page)] px-3 py-2 text-sm font-bold text-[var(--color-green-800)] transition hover:bg-[var(--color-bg-card-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--color-green-600)] [&::-webkit-details-marker]:hidden">
+                    <span className="max-w-44 truncate">{user?.fullName ?? "Tài khoản"}</span>
+                    <KeyboardArrowDownIcon aria-hidden="true" fontSize="small" className="transition group-open:rotate-180" />
+                  </summary>
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-56 rounded-[16px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2 shadow-[var(--shadow-surface)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2">
+                      <p className="truncate text-sm font-black text-[var(--color-green-800)]">{user?.fullName ?? "Người dùng Tâm Lũ"}</p>
+                      <p className="truncate text-xs text-[var(--color-text-muted)]">{user?.email ?? "Tài khoản đã xác thực"}</p>
+                    </div>
+                    <Link to="/profile" className="mt-1 block rounded-[10px] px-3 py-2.5 text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-green-50)] hover:text-[var(--color-green-800)]">
+                      Thông tin cá nhân
+                    </Link>
+                    <button type="button" onClick={logout} className="w-full rounded-[10px] px-3 py-2.5 text-left text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-green-50)] hover:text-[var(--color-green-800)] focus:outline-none focus:ring-2 focus:ring-[var(--color-green-600)]">
+                      Đăng xuất
+                    </button>
+                  </div>
+                </details>
               </>
             ) : (
               <>
@@ -106,9 +119,9 @@ export function MainLayout() {
               ))}
               {isAuthenticated ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setOpen(false)}>
+                  <Link to="/profile" onClick={() => setOpen(false)}>
                     <Button variant="outline" className="w-full">
-                      Bảng điều khiển
+                      Thông tin cá nhân
                     </Button>
                   </Link>
                   <Button variant="outline" onClick={logout}>

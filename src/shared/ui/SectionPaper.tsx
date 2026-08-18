@@ -9,12 +9,11 @@ export function SectionPaper({ children, sx }: { children: ReactNode; sx?: SxPro
       sx={[
         {
           p: { xs: 2.25, md: 3 },
-          borderRadius: 3,
+          borderRadius: 1.5,
           borderColor: "var(--color-border)",
           bgcolor: "var(--color-surface)",
           color: "var(--color-text)",
           boxShadow: "var(--shadow-surface)",
-          backdropFilter: "blur(18px)",
           overflow: "visible",
         },
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
