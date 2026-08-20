@@ -57,7 +57,7 @@ export function LoginPage() {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1.08fr .92fr" },
           overflow: "hidden",
-          borderRadius: 3,
+          borderRadius: 2,
           borderColor: "var(--color-border)",
           bgcolor: "var(--color-surface)",
           color: "var(--color-text)",
@@ -83,15 +83,15 @@ export function LoginPage() {
             <Stack direction="row" spacing={1.25} alignItems="center">
               <Box component="img" src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" sx={{ width: 72, height: 72, objectFit: "contain" }} />
               <Box>
-                <Typography fontWeight={950}>Tâm Lũ</Typography>
-                <Typography variant="caption" sx={{ color: "var(--color-text-muted)", fontWeight: 750 }}>
+                <Typography fontWeight={800}>Tâm Lũ</Typography>
+                <Typography variant="caption" sx={{ color: "var(--color-text-muted)", fontWeight: 700 }}>
                   Kết nối yêu thương, cứu trợ lũ lụt
                 </Typography>
               </Box>
             </Stack>
           </Box>
           <Stack spacing={2} sx={{ position: "relative", zIndex: 1, maxWidth: 500 }}>
-            <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
+            <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.08, fontWeight: 800, letterSpacing: 0 }}>
               Truy cập bảo mật cho lực lượng cứu trợ.
             </Typography>
             <Typography sx={{ color: "var(--color-text-muted)", lineHeight: 1.65 }}>
@@ -104,7 +104,7 @@ export function LoginPage() {
             <Box sx={{ display: "grid", placeItems: "center", width: 48, height: 48, borderRadius: 2, bgcolor: "var(--color-green-50)", color: "var(--color-green-700)", border: "1px solid var(--color-border)" }}>
               <LockOpenIcon />
             </Box>
-            <Typography variant="h4" fontWeight={950}>
+            <Typography variant="h4" fontWeight={800}>
               Đăng nhập
             </Typography>
             <Typography sx={{ color: "var(--color-text-muted)" }}>Truy cập điều phối cứu hộ, hồ sơ đóng góp và dịch vụ công dân.</Typography>

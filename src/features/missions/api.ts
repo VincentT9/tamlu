@@ -15,6 +15,12 @@ export interface ShelterCheckIn {
   checkedOutAt?: string | null;
 }
 
+export interface ShelterSuggestion {
+  shelter: Shelter;
+  distanceKm: number;
+  remainingCapacity: number;
+}
+
 export const missionApi = {
   create: (body: {
     emergencyCaseId: string;
@@ -49,7 +55,7 @@ export const missionApi = {
   createShelter: (body: Partial<Shelter>) => postData<Shelter>("/api/shelters", body),
   shelterMap: () => getData<Shelter[]>("/api/shelters/map"),
   shelterSuggest: (params: { latitude: number; longitude: number; numPeople: number }) =>
-    getData<Shelter[]>("/api/shelters/suggest", params),
+    getData<ShelterSuggestion[]>("/api/shelters/suggest", params),
   shelterCheckIns: (id: string, params?: QueryParams) =>
     getData<PaginatedResult<ShelterCheckIn>>(`/api/shelters/${id}/occupancy-logs`, params),
   checkInShelter: (id: string, body: { personName?: string; numPeople: number; householdId?: string | null }) =>

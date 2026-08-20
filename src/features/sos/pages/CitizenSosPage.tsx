@@ -42,23 +42,23 @@ export function CitizenSosPage() {
         <Grid container spacing={2}>
           {cases.data?.data.map((item) => (
             <Grid size={{ xs: 12, md: 6, xl: 4 }} key={item.id}>
-              <Card className="h-full">
-                <Stack spacing={1.5}>
+              <Card className="tamlu-motion-surface h-full border-t-[3px] border-t-[var(--color-green-600)] transition-[transform,border-color] hover:-translate-y-0.5 hover:border-[var(--color-border-strong)]">
+                <Stack spacing={1.5} className="h-full">
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <StatusChip value={item.status} />
                     <StatusChip value={item.priorityLevel} />
                   </Stack>
                   <Stack spacing={0.5}>
-                    <Typography fontWeight={900}>{item.title}</Typography>
+                    <Typography component="h2" sx={{ fontSize: 20, fontWeight: 800, overflowWrap: "anywhere" }}>{item.title}</Typography>
                     <Typography variant="body2" color="text.secondary">{item.address || "Chưa cung cấp địa chỉ"}</Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
                     {item.numPeople} người cần cứu hộ - Tạo lúc {formatDate(item.createdAt)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", flex: 1 }}>
                     {item.description}
                   </Typography>
-                  <Button component={Link} to={`/citizen/sos/${item.id}`} variant="outlined">
+                  <Button component={Link} to={`/citizen/sos/${item.id}`} variant="outlined" fullWidth>
                     Xem chi tiết
                   </Button>
                 </Stack>

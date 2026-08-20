@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { transparencyApi } from "@/features/transparency/api";
 import { formatDate, formatMoney } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { PublicPageFrame } from "@/shared/ui/PublicPageFrame";
 import { QueryState } from "@/shared/ui/QueryState";
@@ -86,7 +87,7 @@ export function TransparencyPage() {
           </Grid>
           <Grid size={{ xs: 12, lg: 5 }}>
             <SectionPaper>
-              <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                 Cơ cấu chi tiêu
               </Typography>
               <Box sx={{ height: 280 }}>
@@ -105,10 +106,11 @@ export function TransparencyPage() {
           </Grid>
           <Grid size={{ xs: 12, lg: 7 }}>
             <SectionPaper>
-              <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                 Sổ thu chi công khai
               </Typography>
-              <Table size="small">
+              <DataTableFrame label="Sổ thu chi công khai">
+                <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Loại giao dịch</TableCell>
@@ -129,14 +131,15 @@ export function TransparencyPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+                </Table>
+              </DataTableFrame>
             </SectionPaper>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <SectionPaper>
               <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1.5} sx={{ mb: 2 }}>
                 <Box>
-                  <Typography variant="h6" fontWeight={900}>
+                  <Typography variant="h6" fontWeight={800}>
                     Bản đồ hậu cần đã xác minh
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -160,13 +163,14 @@ export function TransparencyPage() {
                       mt: { xs: 2, md: 0 },
                       width: { xs: "100%", md: 280 },
                       p: 2,
-                      borderRadius: 0,
+                      borderRadius: 2,
                       bgcolor: "var(--color-surface)",
-                      backdropFilter: "blur(14px)",
+                      borderColor: "var(--color-border-strong)",
+                      boxShadow: "var(--shadow-surface)",
                     }}
                   >
                     <Stack spacing={1.25}>
-                      <Typography fontWeight={900}>Lớp dữ liệu công khai</Typography>
+                      <Typography fontWeight={800}>Lớp dữ liệu công khai</Typography>
                       <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2" fontWeight={800}>Kho hàng</Typography>
                         <Typography variant="body2" color="text.secondary">{markers.length}</Typography>
@@ -186,7 +190,7 @@ export function TransparencyPage() {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <SectionPaper>
-              <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                 Luân chuyển hàng cứu trợ
               </Typography>
               {inventory.data?.transactionHistory.slice(0, 10).map((tx) => (
@@ -204,13 +208,13 @@ export function TransparencyPage() {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <SectionPaper>
-              <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
                 Kho minh chứng
               </Typography>
-              <QueryState isLoading={evidence.isLoading} error={evidence.error}>
+              <QueryState isLoading={evidence.isLoading} error={evidence.error} empty={!evidence.data?.invoices.length && !evidence.data?.deliveryProofs.length} emptyText="Chiến dịch chưa có minh chứng công khai.">
                 <Stack spacing={1.5}>
                   {evidence.data?.invoices.map((invoice) => (
-                    <Paper variant="outlined" key={invoice.id} sx={{ p: 1.5 }}>
+                    <Paper variant="outlined" key={invoice.id} sx={{ p: 1.75, borderRadius: 1.5, borderColor: "var(--color-border)" }}>
                       <Stack direction="row" justifyContent="space-between">
                         <Typography fontWeight={800}>{invoice.itemName}</Typography>
                         <StatusChip value={invoice.expenseCategory} />
@@ -220,11 +224,48 @@ export function TransparencyPage() {
                     </Paper>
                   ))}
                   {evidence.data?.deliveryProofs.map((proof) => (
-                    <Paper variant="outlined" key={proof.id} sx={{ p: 1.5 }}>
-                      <Typography fontWeight={800}>{proof.disbursementItem}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {proof.photos.length} ảnh, {proof.signatures.length} chữ ký
-                      </Typography>
+                    <Paper variant="outlined" key={proof.id} sx={{ p: 1.75, borderRadius: 1.5, borderColor: "var(--color-border)" }}>
+                      <Stack spacing={1.5}>
+                        <Box>
+                          <Typography fontWeight={800}>{proof.disbursementItem}</Typography>
+                          <Typography variant="body2" color="text.secondary">Cập nhật {formatDate(proof.uploadedAt)}</Typography>
+                        </Box>
+                        {proof.photos.length ? (
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.25 }}>
+                            {proof.photos.map((photo, index) => (
+                              <Box component="a" href={photo} target="_blank" rel="noreferrer" key={`${proof.id}-photo-${index}`} sx={{ display: "block", minWidth: 0 }}>
+                                <Box component="img" src={photo} alt={`Ảnh bàn giao cứu trợ ${index + 1} của ${proof.disbursementItem}`} sx={{ display: "block", width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: 1.5, border: "1px solid var(--color-border)", bgcolor: "var(--color-surface-muted)" }} />
+                              </Box>
+                            ))}
+                          </Box>
+                        ) : null}
+                        {proof.coordinates.length ? (
+                          <Stack spacing={0.75}>
+                            <Typography variant="subtitle2" fontWeight={800}>Tọa độ bàn giao</Typography>
+                            {proof.coordinates.map((coordinate, index) => (
+                              <Button key={`${proof.id}-coordinate-${index}`} component="a" href={`https://www.openstreetmap.org/?mlat=${coordinate.latitude}&mlon=${coordinate.longitude}#map=17/${coordinate.latitude}/${coordinate.longitude}`} target="_blank" rel="noreferrer" variant="outlined" size="small" sx={{ alignSelf: "flex-start" }}>
+                                {coordinate.latitude}, {coordinate.longitude}{coordinate.accuracy ? ` · sai số ${coordinate.accuracy} m` : ""}
+                              </Button>
+                            ))}
+                          </Stack>
+                        ) : null}
+                        {proof.signatures.length ? (
+                          <Stack spacing={1}>
+                            <Typography variant="subtitle2" fontWeight={800}>Chữ ký người nhận</Typography>
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.25 }}>
+                              {proof.signatures.map((signature, index) => (
+                                <Paper variant="outlined" key={`${proof.id}-signature-${index}`} sx={{ p: 1.25, borderRadius: 1.5, borderColor: "var(--color-border)" }}>
+                                  <Box component="a" href={signature.signatureUrl} target="_blank" rel="noreferrer" sx={{ display: "block" }}>
+                                    <Box component="img" src={signature.signatureUrl} alt={`Chữ ký của ${signature.signerName}`} sx={{ display: "block", width: "100%", height: 112, objectFit: "contain", bgcolor: "#fff", borderRadius: 1 }} />
+                                  </Box>
+                                  <Typography sx={{ mt: 1 }} fontWeight={800}>{signature.signerName}</Typography>
+                                  <Typography variant="caption" color="text.secondary">{signature.signerRole}</Typography>
+                                </Paper>
+                              ))}
+                            </Box>
+                          </Stack>
+                        ) : null}
+                      </Stack>
                     </Paper>
                   ))}
                 </Stack>

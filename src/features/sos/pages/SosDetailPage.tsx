@@ -125,17 +125,17 @@ export function SosDetailPage() {
                     <Grid container spacing={1.5} alignItems="center">
                       <Grid size={{ xs: 12, md: 4 }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={800}>Liên hệ</Typography>
-                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900 }}>{item.contactName}</Typography>
+                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800 }}>{item.contactName}</Typography>
                         <Typography variant="body2" color="text.secondary">{item.contactPhone}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 5 }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={800}>Vị trí</Typography>
-                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900 }}>{item.address ?? "Vị trí GPS"}</Typography>
+                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800, overflowWrap: "anywhere" }}>{item.address ?? "Vị trí GPS"}</Typography>
                         <Typography variant="body2" color="text.secondary">{item.latitude}, {item.longitude}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 3 }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={800}>Thời điểm tạo</Typography>
-                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900 }}>{formatDate(item.createdAt)}</Typography>
+                        <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800 }}>{formatDate(item.createdAt)}</Typography>
                       </Grid>
                     </Grid>
                   </Box>
@@ -144,7 +144,7 @@ export function SosDetailPage() {
               <Grid size={{ xs: 12, lg: 3.4 }}>
                 <Stack spacing={2.5} sx={{ height: "100%" }}>
                   <SectionPaper sx={{ flex: 1, minHeight: { lg: 285 }, overflow: "hidden" }}>
-                    <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Dòng thời gian trạng thái</Typography>
+                    <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>Dòng thời gian trạng thái</Typography>
                     <Stack
                       spacing={1.5}
                       sx={{
@@ -169,7 +169,7 @@ export function SosDetailPage() {
                     </Stack>
                   </SectionPaper>
                   <SectionPaper sx={{ flex: 1, minHeight: { lg: 240 } }}>
-                    <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Hình ảnh và tài liệu</Typography>
+                    <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>Hình ảnh và tài liệu</Typography>
                     {item.media.length ? (
                       <ImageList cols={1} gap={10} sx={{ m: 0 }}>
                         {item.media.map((media) => (
@@ -187,12 +187,12 @@ export function SosDetailPage() {
             </Grid>
 
             {canCoordinate ? (
-              <SectionPaper>
-                <Grid container spacing={2} alignItems="center">
+              <SectionPaper sx={{ borderLeft: "3px solid var(--color-green-600)" }}>
+                <Grid container spacing={2} alignItems="flex-start">
                   <Grid size={{ xs: 12, lg: 3 }}>
                     <Stack spacing={1}>
                       <Box>
-                        <Typography variant="h6" fontWeight={900}>Điều phối cứu hộ</Typography>
+                        <Typography variant="h6" fontWeight={800}>Điều phối cứu hộ</Typography>
                         <Typography variant="body2" color="text.secondary">
                           Xác minh và phân công lực lượng phản ứng.
                         </Typography>
@@ -253,9 +253,9 @@ export function SosDetailPage() {
                       <MenuItem value="">
                         {shelters.isLoading ? "Đang tải điểm trú tạm..." : "Để hệ thống tự chọn điểm phù hợp"}
                       </MenuItem>
-                      {availableShelters.map((shelter) => (
-                        <MenuItem key={shelter.id} value={shelter.id}>
-                          {shelter.name} - còn {Math.max(shelter.capacity - shelter.currentOccupancy, 0)} chỗ
+                      {availableShelters.map((suggestion) => (
+                        <MenuItem key={suggestion.shelter.id} value={suggestion.shelter.id}>
+                          {suggestion.shelter.name} - còn {getRemainingShelterCapacity(suggestion.remainingCapacity, suggestion.shelter.capacity, suggestion.shelter.currentOccupancy)} chỗ
                         </MenuItem>
                       ))}
                     </TextField>
@@ -301,7 +301,7 @@ export function SosDetailPage() {
             {canConfirmSos ? (
               <SectionPaper>
                 <Stack spacing={1.25}>
-                  <Typography variant="h6" fontWeight={900}>Xác nhận và đánh giá cứu hộ</Typography>
+                  <Typography variant="h6" fontWeight={800}>Xác nhận và đánh giá cứu hộ</Typography>
                   <Typography variant="body2" color="text.secondary">Quý vị có thể xác nhận kết quả cứu hộ và gửi phản hồi để hệ thống cải thiện chất lượng hỗ trợ.</Typography>
                   <TextField label="Phản hồi cứu hộ" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -317,7 +317,7 @@ export function SosDetailPage() {
             {canCancelSos ? (
               <SectionPaper>
                 <Stack spacing={1.25}>
-                  <Typography variant="h6" fontWeight={900}>Cập nhật yêu cầu SOS</Typography>
+                  <Typography variant="h6" fontWeight={800}>Cập nhật yêu cầu SOS</Typography>
                   <Typography variant="body2" color="text.secondary">Nếu tình hình đã an toàn hoặc yêu cầu không còn cần thiết, quý vị có thể hủy yêu cầu này.</Typography>
                   <TextField label="Lý do hủy" value={note} onChange={(event) => setNote(event.target.value)} multiline minRows={2} />
                   <Button color="error" variant="outlined" onClick={() => cancelSos.mutate()} disabled={cancelSos.isPending}>Hủy yêu cầu SOS</Button>
@@ -338,6 +338,19 @@ function normalizeStatusValue(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^A-Z0-9]+/g, "_");
+}
+
+function getRemainingShelterCapacity(remainingCapacity: number, capacity: number, currentOccupancy: number) {
+  const remaining = Number(remainingCapacity);
+  if (Number.isFinite(remaining)) return Math.max(remaining, 0);
+
+  const totalCapacity = Number(capacity);
+  const occupancy = Number(currentOccupancy);
+  if (Number.isFinite(totalCapacity) && Number.isFinite(occupancy)) {
+    return Math.max(totalCapacity - occupancy, 0);
+  }
+
+  return 0;
 }
 
 function isAvailableRescueTeamStatus(status?: string | null) {

@@ -50,7 +50,7 @@ export function PageHeader({ title, eyebrow, description, actions, showBack = tr
               bgcolor: "rgba(255,255,255,.58)",
               borderColor: "var(--color-border)",
               color: "var(--color-green-800)",
-              fontWeight: 900,
+              fontWeight: 700,
               boxShadow: "none",
               "&:hover": {
                 bgcolor: "#ffffff",
@@ -63,11 +63,11 @@ export function PageHeader({ title, eyebrow, description, actions, showBack = tr
         ) : null}
         <Box>
           {eyebrow ? (
-            <Typography variant="overline" sx={{ color: "var(--color-green-600)", fontWeight: 950, letterSpacing: 1.2 }}>
+            <Typography variant="body2" sx={{ color: "var(--color-green-700)", fontWeight: 700 }}>
               {eyebrow}
             </Typography>
           ) : null}
-          <Typography variant="h4" fontWeight={950} letterSpacing={0} sx={{ lineHeight: 1.04, color: "var(--color-green-800)" }}>
+          <Typography component="h1" variant="h4" fontWeight={800} letterSpacing={0} sx={{ lineHeight: 1.12, color: "var(--color-green-800)" }}>
             {title}
           </Typography>
           {description ? (

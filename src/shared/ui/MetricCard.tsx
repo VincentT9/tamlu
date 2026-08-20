@@ -9,10 +9,10 @@ interface MetricCardProps {
 }
 
 const tones = {
-  blue: "var(--color-green-600)",
-  orange: "var(--brand-green)",
+  blue: "var(--status-progress-text)",
+  orange: "var(--status-pending-text)",
   green: "var(--color-green-700)",
-  red: "#f87171",
+  red: "var(--status-danger-text)",
   neutral: "var(--color-text-muted)",
 };
 
@@ -22,40 +22,28 @@ export function MetricCard({ label, value, helper, tone = "blue" }: MetricCardPr
       variant="outlined"
       sx={{
         position: "relative",
-        overflow: "visible",
+        overflow: "hidden",
         p: 2.75,
-        borderRadius: 3,
+        borderRadius: "var(--radius-panel)",
         borderColor: "var(--color-border)",
         bgcolor: "var(--color-surface)",
         color: "var(--color-text)",
-        boxShadow: "var(--shadow-surface)",
-        backdropFilter: "blur(18px)",
+        boxShadow: "none",
         "&::before": {
           content: '""',
           position: "absolute",
           inset: "0 auto 0 0",
-          width: 5,
+          width: 4,
           bgcolor: tones[tone],
           opacity: 0.9,
-        },
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          right: -32,
-          top: -32,
-          width: 96,
-          height: 96,
-          borderRadius: "50%",
-          bgcolor: tones[tone],
-          opacity: 0.12,
         },
       }}
     >
       <Stack spacing={0.75} sx={{ position: "relative" }}>
-        <Typography variant="body2" sx={{ color: "var(--color-text-muted)", fontWeight: 850 }}>
+        <Typography variant="body2" sx={{ color: "var(--color-text-muted)", fontWeight: 700 }}>
           {label}
         </Typography>
-        <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.05, color: "var(--color-green-800)" }}>
+        <Typography variant="h5" fontWeight={800} className="tamlu-data" sx={{ lineHeight: 1.08, color: "var(--color-green-800)" }}>
           {value}
         </Typography>
         {helper ? (

@@ -1,13 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, Grid, Stack, TextField } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { authApi } from "@/features/auth/api";
 import { useAuthStore } from "@/features/auth/store";
 import { getErrorMessage } from "@/shared/api/client";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { FileUploadField } from "@/shared/ui/FileUploadField";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { useToast } from "@/shared/ui/toast";
@@ -25,6 +26,8 @@ export function ProfilePage() {
   const showToast = useToast((state) => state.showToast);
   const profile = useQuery({ queryKey: ["auth", "me"], queryFn: authApi.me });
   const form = useForm<ProfileForm>({ resolver: zodResolver(schema), defaultValues: { fullName: "", phone: "", avatarUrl: "" } });
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const avatarUrl = form.watch("avatarUrl");
 
   useEffect(() => {
     if (profile.data) {
@@ -56,8 +59,16 @@ export function ProfilePage() {
               <Stack component="form" spacing={2} sx={{ mt: mutation.error ? 2 : 0 }} onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
                 <TextField label="Họ và tên" {...form.register("fullName")} error={Boolean(form.formState.errors.fullName)} helperText={form.formState.errors.fullName?.message} />
                 <TextField label="Số điện thoại" {...form.register("phone")} error={Boolean(form.formState.errors.phone)} helperText={form.formState.errors.phone?.message} />
-                <TextField label="Đường dẫn ảnh đại diện" {...form.register("avatarUrl")} error={Boolean(form.formState.errors.avatarUrl)} helperText={form.formState.errors.avatarUrl?.message} />
-                <Button type="submit" variant="contained" disabled={mutation.isPending}>
+                <FileUploadField
+                  label="Ảnh đại diện"
+                  accept="image/*"
+                  preview="image"
+                  value={avatarUrl}
+                  onChange={(url) => form.setValue("avatarUrl", url, { shouldDirty: true, shouldValidate: true })}
+                  onUploadingChange={setIsAvatarUploading}
+                  helperText="Chọn ảnh từ thiết bị. Hệ thống sẽ tải ảnh lên và lưu đường dẫn tự động."
+                />
+                <Button type="submit" variant="contained" disabled={mutation.isPending || isAvatarUploading}>
                   Lưu hồ sơ
                 </Button>
               </Stack>

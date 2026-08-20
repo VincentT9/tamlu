@@ -37,7 +37,7 @@ export default {
         panel: "0 22px 70px rgba(6, 47, 79, 0.12)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Be Vietnam Pro", "Segoe UI", "sans-serif"],
       },
     },
   },

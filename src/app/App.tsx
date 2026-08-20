@@ -79,6 +79,7 @@ export function App() {
             <Route path="campaigns/:id" element={<CampaignDetailPage />} />
             <Route path="campaign/:id" element={<CampaignDetailPage />} />
             <Route path="campaigns/:id/transparency" element={<TransparencyPage />} />
+            <Route path="transparency/campaigns/:id" element={<TransparencyPage />} />
             <Route path="relief-map" element={<PublicReliefMapPage />} />
             <Route path="sos" element={<CreateSosPage />} />
             <Route path="sos/new" element={<CreateSosPage />} />
@@ -105,7 +106,7 @@ export function App() {
             <Route path="citizen/sos" element={<ProtectedRoute roles={citizenRoles}><CitizenSosPage /></ProtectedRoute>} />
             <Route path="citizen/sos/:id" element={<ProtectedRoute roles={[ROLES.admin, ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.rescueTeam]}><SosDetailPage /></ProtectedRoute>} />
             <Route path="citizen/volunteer-profile" element={<ProtectedRoute roles={citizenRoles}><VolunteerProfilePage /></ProtectedRoute>} />
-            <Route path="citizen/shelters" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.coordinator, ROLES.admin]}><SheltersPage /></ProtectedRoute>} />
+            <Route path="citizen/shelters" element={<ProtectedRoute roles={[ROLES.citizen, ROLES.volunteer, ROLES.coordinator, ROLES.admin]}><SheltersPage /></ProtectedRoute>} />
             <Route path="citizen/complaints" element={<ProtectedRoute roles={complaintRoles}><CitizenComplaintsPage /></ProtectedRoute>} />
 
             <Route path="donor/donations" element={<ProtectedRoute roles={donorRoles}><DonationHistoryPage /></ProtectedRoute>} />
@@ -118,6 +119,7 @@ export function App() {
             <Route path="ops/vehicles" element={<ProtectedRoute roles={coordinatorRoles}><VehiclesPage /></ProtectedRoute>} />
             <Route path="ops/inventory" element={<ProtectedRoute roles={coordinatorRoles}><InventoryPage /></ProtectedRoute>} />
             <Route path="ops/shipments" element={<ProtectedRoute roles={coordinatorRoles}><ShipmentsPage /></ProtectedRoute>} />
+            <Route path="admin/shipments" element={<ProtectedRoute roles={coordinatorRoles}><ShipmentsPage /></ProtectedRoute>} />
             <Route path="ops/area-assessments" element={<ProtectedRoute roles={coordinatorRoles}><AreaAssessmentsPage /></ProtectedRoute>} />
             <Route path="ops/campaigns" element={<ProtectedRoute roles={coordinatorRoles}><CampaignAdminPage /></ProtectedRoute>} />
             <Route path="ops/procurements" element={<ProtectedRoute roles={erpRoles}><ProcurementPage /></ProtectedRoute>} />
@@ -134,6 +136,7 @@ export function App() {
             <Route path="team/missions" element={<ProtectedRoute roles={teamRoles}><TeamMissionsPage /></ProtectedRoute>} />
             <Route path="team/missions/:id" element={<ProtectedRoute roles={teamRoles}><TeamMissionDetailPage /></ProtectedRoute>} />
             <Route path="team/shipments" element={<ProtectedRoute roles={teamRoles}><TeamShipmentsPage /></ProtectedRoute>} />
+            <Route path="rescue-team/missions" element={<ProtectedRoute roles={[...coordinatorRoles, ...teamRoles]}><TeamShipmentsPage /></ProtectedRoute>} />
             <Route path="team/area-assessments" element={<ProtectedRoute roles={teamRoles}><TeamAreaAssessmentsPage /></ProtectedRoute>} />
             <Route path="team/proofs" element={<ProtectedRoute roles={teamRoles}><TeamProofsPage /></ProtectedRoute>} />
             <Route path="team/my-team" element={<ProtectedRoute roles={teamRoles}><TeamProfilePage /></ProtectedRoute>} />

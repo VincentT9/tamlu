@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { volunteerApi } from "@/features/volunteers/api";
@@ -30,11 +30,17 @@ export function VolunteerProfilePage() {
       <QueryState isLoading={profile.isLoading} error={undefined}>
         <Grid container spacing={2.5}>
           <Grid size={{ xs: 12, lg: 4 }}>
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 0, height: "100%" }}>
+            <SectionPaper
+              sx={{
+                height: "100%",
+                borderTop: "3px solid var(--color-green-600)",
+                bgcolor: "var(--color-green-50)",
+              }}
+            >
               <Stack spacing={2}>
-                <Box component="img" src="/images/tam-lu-logo-transparent.png" alt="Logo Tâm Lũ" sx={{ width: 96, height: 96, objectFit: "contain" }} />
                 <Box>
-                  <Typography variant="h5" fontWeight={900}>Mức sẵn sàng tình nguyện</Typography>
+                  <Typography variant="overline" sx={{ color: "var(--color-green-700)", fontWeight: 800 }}>Khả năng tham gia</Typography>
+                  <Typography variant="h5" fontWeight={800}>Mức sẵn sàng tình nguyện</Typography>
                   <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
                     Hãy giữ thông tin kỹ năng và khu vực hỗ trợ luôn chính xác để được phân công nhiệm vụ an toàn, phù hợp.
                   </Typography>
@@ -48,13 +54,13 @@ export function VolunteerProfilePage() {
                   </Stack>
                 ) : <Alert severity="info">Bạn chưa có hồ sơ tình nguyện. Vui lòng tạo hồ sơ bên dưới.</Alert>}
               </Stack>
-            </Paper>
+            </SectionPaper>
           </Grid>
           <Grid size={{ xs: 12, lg: 8 }}>
             <SectionPaper>
               {save.error ? <Alert severity="error">{getErrorMessage(save.error)}</Alert> : null}
               <Stack spacing={2} sx={{ mt: save.error ? 2 : 0 }}>
-                <Typography variant="h6" fontWeight={900}>Kỹ năng và khả năng tham gia</Typography>
+                <Typography variant="h6" fontWeight={800}>Kỹ năng và khả năng tham gia</Typography>
                 <TextField label="Kỹ năng" value={form.skills} onChange={(event) => setForm({ ...form, skills: event.target.value })} />
                 <TextField label="Kinh nghiệm" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value })} multiline minRows={3} />
                 <TextField label="Khu vực có thể hỗ trợ" value={form.availableAreas} onChange={(event) => setForm({ ...form, availableAreas: event.target.value })} />

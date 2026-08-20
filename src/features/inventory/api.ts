@@ -24,15 +24,28 @@ export const inventoryApi = {
     getData<PaginatedResult<unknown>>(`/api/inventory-items/${id}/transactions`, params),
   shipments: (params?: QueryParams) => getData<PaginatedResult<Shipment>>("/api/shipments", params),
   createShipment: (body: {
+    campaignId: string;
     warehouseId: string;
+    rescueTeamId: string;
+    destinationAddress: string;
     targetWarehouseId?: string | null;
     aidAllocationPlanId?: string | null;
     vehicleId?: string | null;
     driverId?: string | null;
     emergencyCaseId?: string | null;
     items: Array<{ inventoryItemId: string; quantity: number }>;
+    notes?: string;
   }) => postData<Shipment>("/api/shipments", body),
-  updateShipmentStatus: (id: string, body: { status: string; trackingNote?: string }) =>
+  updateShipmentStatus: (id: string, body: {
+    status: string;
+    trackingNote?: string;
+    latitude?: number;
+    longitude?: number;
+    proofPhotoUrl?: string;
+    recipientSignatureUrl?: string;
+    recipientName?: string;
+    notes?: string;
+  }) =>
     putData<Shipment>(`/api/shipments/${id}/status`, body),
   categories: () => getData<Category[]>("/api/categories"),
 };

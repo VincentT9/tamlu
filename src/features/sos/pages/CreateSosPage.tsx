@@ -206,11 +206,11 @@ export function CreateSosPage() {
               <TextField fullWidth label="Địa chỉ" {...form.register("address")} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 0, p: 2, bgcolor: "var(--color-green-50)" }}>
+              <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: "var(--radius-panel)", p: { xs: 1.5, md: 2 }, bgcolor: "var(--color-green-50)" }}>
                 <Stack spacing={1.5}>
                   <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1}>
                     <Box>
-                      <Typography fontWeight={900}>Xem trước vị trí cứu hộ</Typography>
+                      <Typography fontWeight={800}>Xem trước vị trí cứu hộ</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Sử dụng GPS hiện tại, nhập tọa độ thủ công hoặc nhấp đúp vào bản đồ để chọn điểm cứu hộ.
                       </Typography>
@@ -235,13 +235,24 @@ export function CreateSosPage() {
               <TextField fullWidth label="Số người cần cứu hộ" type="number" {...form.register("numPeople")} error={Boolean(form.formState.errors.numPeople)} helperText={form.formState.errors.numPeople?.message} />
             </Grid>
             {(["hasElderly", "hasChildren", "hasInjured", "hasDisabled"] as const).map((name) => (
-              <Grid size={{ xs: 6, md: 2 }} key={name}>
-                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 0, boxShadow: "none", height: "100%" }}>
+              <Grid size={{ xs: 12, sm: 6, md: 2 }} key={name}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    minHeight: 56,
+                    height: "100%",
+                    px: 1.25,
+                    borderBlock: "1px solid var(--color-border)",
+                  }}
+                >
                   <Controller
                     control={form.control}
                     name={name}
                     render={({ field }) => (
                       <FormControlLabel
+                        sx={{ m: 0, width: "100%", justifyContent: "space-between", gap: 1, ".MuiFormControlLabel-label": { lineHeight: 1.35 } }}
+                        labelPlacement="start"
                         control={(
                           <Switch
                             checked={field.value}
@@ -256,7 +267,7 @@ export function CreateSosPage() {
                       />
                     )}
                   />
-                </Paper>
+                </Box>
               </Grid>
             ))}
             <Grid size={{ xs: 12 }}>
@@ -265,7 +276,7 @@ export function CreateSosPage() {
               </Typography>
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" fontWeight={850}>Thông tin người cần cứu hoặc người liên hệ tại hiện trường</Typography>
+              <Typography variant="subtitle2" fontWeight={800}>Thông tin người cần cứu hoặc người liên hệ tại hiện trường</Typography>
               <Typography variant="body2" color="text.secondary">
                 {isAuthenticated ? "Có thể để trống để dùng thông tin tài khoản, hoặc nhập người khác khi gửi yêu cầu hộ." : "Bắt buộc với yêu cầu SOS ẩn danh."}
               </Typography>
@@ -283,7 +294,7 @@ export function CreateSosPage() {
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Paper variant="outlined" sx={{ p: 2, borderRadius: 0, boxShadow: "none" }}>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: "var(--radius-panel)", boxShadow: "none", bgcolor: "var(--color-surface-subtle)" }}>
               <Stack spacing={1}>
                 <Typography fontWeight={800}>Hình ảnh hoặc video minh chứng</Typography>
                 <Button
@@ -325,8 +336,8 @@ export function CreateSosPage() {
               </Paper>
             </Grid>
           </Grid>
-          <Box>
-            <Button type="submit" variant="contained" color="error" size="large" startIcon={<SosIcon />} disabled={mutation.isPending}>
+          <Box sx={{ display: "flex", justifyContent: { xs: "stretch", sm: "flex-start" } }}>
+            <Button type="submit" variant="contained" color="error" size="large" startIcon={<SosIcon />} disabled={mutation.isPending} sx={{ width: { xs: "100%", sm: "auto" } }}>
               Gửi yêu cầu SOS
             </Button>
           </Box>

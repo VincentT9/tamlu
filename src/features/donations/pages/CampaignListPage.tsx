@@ -4,8 +4,8 @@ import { Box, Button, Card, CardActions, CardContent, Grid, LinearProgress, Stac
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
-import { getCampaignImageUrl, setCampaignImageFallback } from "@/shared/utils/campaignImage";
 import { formatDate, formatMoney, percent, truncate } from "@/shared/utils/format";
+import { CampaignMedia } from "@/shared/ui/CampaignMedia";
 import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
 
@@ -75,17 +75,17 @@ export function CampaignListPage() {
             bgcolor: "rgba(255,255,255,.58)",
             borderColor: pageTheme.line,
             color: pageTheme.text,
-            fontWeight: 900,
+            fontWeight: 800,
             "&:hover": { bgcolor: "#ffffff", borderColor: pageTheme.waterSoft },
           }}
         >
           Quay lại
         </Button>
         <Stack spacing={1.6} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 900 }}>
-          <Typography sx={{ display: "none", color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
+          <Typography sx={{ display: "none", color: pageTheme.waterSoft, fontSize: 13, fontWeight: 800, letterSpacing: 0, textTransform: "uppercase" }}>
             Cổng ủng hộ công khai
           </Typography>
-          <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
+          <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.08, fontWeight: 800 }}>
             Các chiến dịch cứu trợ lũ lụt đang hoạt động
           </Typography>
           <Typography sx={{ color: pageTheme.muted, fontSize: { xs: 16, md: 18 }, lineHeight: 1.65 }}>
@@ -104,13 +104,14 @@ export function CampaignListPage() {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "visible",
-                    borderRadius: 3,
+                    overflow: "hidden",
+                    borderRadius: "var(--radius-panel)",
                     borderColor: pageTheme.line,
                     bgcolor: pageTheme.panel,
                     color: pageTheme.text,
                     boxShadow: "none",
-                    backdropFilter: "blur(18px)",
+                    transition: "transform var(--transition-ui), box-shadow var(--transition-ui), border-color var(--transition-ui)",
+                    "&:hover": { transform: "translateY(-2px)", boxShadow: "var(--shadow-surface-hover)", borderColor: pageTheme.lineStrong },
                   }}
                 >
                   <Box
@@ -122,20 +123,10 @@ export function CampaignListPage() {
                       bgcolor: pageTheme.panel,
                     }}
                   >
-                    <Box
-                      component="img"
-                      src={getCampaignImageUrl(campaign.coverImageUrl)}
+                    <CampaignMedia
+                      src={campaign.coverImageUrl}
                       alt={campaign.name || "Chiến dịch cứu trợ lũ lụt"}
-                      loading="lazy"
-                      onError={setCampaignImageFallback}
-                      sx={{
-                        display: "block",
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        objectPosition: "center",
-                        filter: "saturate(.86) contrast(1.02)",
-                      }}
+                      height={{ xs: 220, md: 238 }}
                     />
                   </Box>
                   <CardContent sx={{ flex: 1, p: { xs: 2.5, md: 3 } }}>
@@ -146,13 +137,13 @@ export function CampaignListPage() {
                           Kết thúc {formatDate(campaign.endDate)}
                         </Typography>
                       </Stack>
-                      <Typography variant="h6" fontWeight={950} sx={{ color: pageTheme.text, lineHeight: 1.25 }}>
+                      <Typography variant="h6" fontWeight={800} sx={{ color: pageTheme.text, lineHeight: 1.3 }}>
                         {campaign.name}
                       </Typography>
                       <Typography sx={{ color: pageTheme.muted, lineHeight: 1.6 }}>{truncate(campaign.description, 130)}</Typography>
                       <Box>
                         <Stack direction="row" justifyContent="space-between">
-                          <Typography fontWeight={950}>{formatMoney(campaign.currentAmount)}</Typography>
+                          <Typography fontWeight={800}>{formatMoney(campaign.currentAmount)}</Typography>
                           <Typography sx={{ color: pageTheme.muted }}>{percent(progress)}</Typography>
                         </Stack>
                         <LinearProgress
@@ -182,7 +173,7 @@ export function CampaignListPage() {
                         borderRadius: 2,
                         px: 2,
                         color: pageTheme.waterSoft,
-                        fontWeight: 900,
+                        fontWeight: 800,
                         "&:hover": { bgcolor: pageTheme.panel, color: pageTheme.text },
                         "&:focus-visible": { outline: `3px solid ${pageTheme.waterSoft}`, outlineOffset: 3 },
                       }}
@@ -199,7 +190,7 @@ export function CampaignListPage() {
                         px: 2.5,
                         bgcolor: pageTheme.amber,
                         color: pageTheme.amberInk,
-                        fontWeight: 950,
+                        fontWeight: 800,
                         boxShadow: "none",
                         "&:hover": { bgcolor: pageTheme.amberHover, color: pageTheme.amberInk },
                         "&:focus-visible": { outline: `3px solid ${pageTheme.waterSoft}`, outlineOffset: 3 },

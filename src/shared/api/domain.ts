@@ -224,8 +224,13 @@ export interface InventoryItem {
 
 export interface Shipment {
   id: string;
+  campaignId?: string | null;
+  campaignName?: string | null;
   warehouseId: string;
   warehouseName?: string | null;
+  rescueTeamId?: string | null;
+  rescueTeamName?: string | null;
+  destinationAddress?: string | null;
   targetWarehouseId?: string | null;
   targetWarehouseName?: string | null;
   aidAllocationPlanId?: string | null;
@@ -235,6 +240,12 @@ export interface Shipment {
   driverName?: string | null;
   emergencyCaseId?: string | null;
   emergencyCaseTitle?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  proofPhotoUrl?: string | null;
+  recipientSignatureUrl?: string | null;
+  recipientName?: string | null;
+  notes?: string | null;
   createdAt: string;
   updatedAt?: string | null;
   items: { id: string; inventoryItemName?: string | null; quantity: number }[];

@@ -102,7 +102,7 @@ export function CitizenComplaintsPage() {
           <SectionPaper>
             {create.error ? <Alert severity="error">{getErrorMessage(create.error)}</Alert> : null}
             <Stack spacing={2} sx={{ mt: create.error ? 2 : 0 }}>
-              <Typography variant="h6" fontWeight={900}>Gửi phản ánh</Typography>
+              <Typography variant="h6" fontWeight={800}>Gửi phản ánh</Typography>
               <Alert severity="info">
                 Phản ánh được gửi tới quản trị viên. Nếu phản ánh liên quan đến một SOS, chiến dịch hoặc đội cứu trợ cụ thể, quý vị có thể nhập mã tham chiếu.
               </Alert>
@@ -175,19 +175,19 @@ export function CitizenComplaintsPage() {
                     const reporter = getComplaintReporter(record);
                     return (
                       <Fragment key={item.id}>
-                        <TableRow hover>
-                          <TableCell sx={{ verticalAlign: "top" }}>
+                        <TableRow hover sx={{ height: 64 }}>
+                          <TableCell sx={{ py: 1.5, verticalAlign: "middle" }}>
                             <Button
                               variant="text"
                               onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}
-                              sx={{ display: "block", maxWidth: "100%", minWidth: 0, p: 0, textAlign: "left", textTransform: "none", fontWeight: 900, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.45 }}
+                              sx={{ display: "block", maxWidth: "100%", minWidth: 0, p: 0, textAlign: "left", textTransform: "none", fontWeight: 800, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.45 }}
                             >
                               {item.title}
                             </Button>
                           </TableCell>
-                          <TableCell sx={{ width: 170, verticalAlign: "top" }}><StatusChip value={normalizeCitizenComplaintStatus(item.status)} /></TableCell>
-                          <TableCell sx={{ width: 175, verticalAlign: "top", whiteSpace: "nowrap" }}>{formatDate(item.createdAt)}</TableCell>
-                          <TableCell sx={{ width: 82, verticalAlign: "top" }}>
+                          <TableCell sx={{ width: 170, py: 1.5, verticalAlign: "middle" }}><StatusChip value={normalizeCitizenComplaintStatus(item.status)} /></TableCell>
+                          <TableCell sx={{ width: 175, py: 1.5, verticalAlign: "middle", whiteSpace: "nowrap" }}>{formatDate(item.createdAt)}</TableCell>
+                          <TableCell sx={{ width: 82, py: 1.5, verticalAlign: "middle", textAlign: "right" }}>
                             <Button size="small" onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}>{expanded ? "Thu gọn" : "Xem"}</Button>
                           </TableCell>
                         </TableRow>
@@ -197,12 +197,12 @@ export function CitizenComplaintsPage() {
                               <Grid container spacing={2.5}>
                                 <Grid size={{ xs: 12, md: 7 }}>
                                   <Stack spacing={1.25}>
-                                    <Typography variant="overline" color="text.secondary" fontWeight={900}>Nội dung phản ánh</Typography>
+                                    <Typography variant="overline" color="text.secondary" fontWeight={800}>Nội dung phản ánh</Typography>
                                     <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.7 }}>{item.description || "Chưa có nội dung chi tiết."}</Typography>
                                     <Typography variant="body2" color="text.secondary">Loại phản ánh: {complaintTypeLabels[item.complaintType] ?? item.complaintType}</Typography>
                                     {item.resolution ? (
                                       <Alert severity={normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "warning" : "success"}>
-                                        <Typography variant="body2" fontWeight={900}>{normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "Lý do từ chối" : "Phương án xử lý"}</Typography>
+                                        <Typography variant="body2" fontWeight={800}>{normalizeCitizenComplaintStatus(item.status) === "REJECTED" ? "Lý do từ chối" : "Phương án xử lý"}</Typography>
                                         <Typography variant="body2">{item.resolution}</Typography>
                                       </Alert>
                                     ) : <Alert severity="info">Đội vận hành đang tiếp nhận phản ánh. Phương án xử lý sẽ được cập nhật tại đây.</Alert>}
@@ -210,8 +210,8 @@ export function CitizenComplaintsPage() {
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 5 }}>
                                   <Stack spacing={1.25}>
-                                    <Typography variant="overline" color="text.secondary" fontWeight={900}>Thông tin người phản ánh</Typography>
-                                    <Typography fontWeight={900}>{reporter.name}</Typography>
+                                    <Typography variant="overline" color="text.secondary" fontWeight={800}>Thông tin người phản ánh</Typography>
+                                    <Typography fontWeight={800}>{reporter.name}</Typography>
                                     <Typography variant="body2" color="text.secondary">{reporter.contact}</Typography>
                                     <Typography variant="body2" color="text.secondary">Trạng thái xử lý: <StatusChip value={normalizeCitizenComplaintStatus(item.status)} /></Typography>
                                   </Stack>

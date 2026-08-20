@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
-import { Alert, Box, Button, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -16,6 +16,8 @@ import { TamLuMap } from "@/shared/maps/TamLuMap";
 import { formatDate } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { QueryState } from "@/shared/ui/QueryState";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
+import { FileUploadField } from "@/shared/ui/FileUploadField";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { useToast } from "@/shared/ui/toast";
@@ -40,11 +42,11 @@ export function TeamMissionsPage() {
     <>
       <PageHeader title="Nhiệm vụ được phân công" description="Danh sách nhiệm vụ hiện trường dành cho đội cứu hộ." />
       <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Điểm trú tạm</TableCell><TableCell /></TableRow></TableHead><TableBody>
+        <DataTableFrame label="Danh sách nhiệm vụ cứu hộ"><Table size="small"><TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Điểm trú tạm</TableCell><TableCell /></TableRow></TableHead><TableBody>
           {missions.data?.data.map((mission) => (
             <TableRow key={mission.id}><TableCell>{mission.code}</TableCell><TableCell><StatusChip value={mission.priority} /></TableCell><TableCell><StatusChip value={mission.status} /></TableCell><TableCell>{mission.destinationShelterName}</TableCell><TableCell align="right"><Stack direction="row" spacing={1} justifyContent="flex-end">{mission.status === MISSION_STATUS.assigned ? <Button size="small" variant="contained" onClick={() => accept.mutate(mission.id)} disabled={accept.isPending}>Nhận nhiệm vụ</Button> : null}<Button component={Link} to={`/team/missions/${mission.id}`}>Mở</Button></Stack></TableCell></TableRow>
           ))}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
     </>
   );
@@ -233,23 +235,23 @@ export function TeamMissionDetailPage() {
                     <>
                       <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, md: 4 }}>
-                          <Box sx={{ height: "100%", p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2.5, bgcolor: "rgba(255,255,255,.42)" }}>
+                          <Box sx={{ height: "100%", py: 0.5, pl: 2, pr: 1, borderLeft: "3px solid var(--color-green-600)" }}>
                             <Typography variant="caption" color="text.secondary" fontWeight={800}>Liên hệ</Typography>
-                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900, overflowWrap: "anywhere" }}>{sos.contactName}</Typography>
+                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800, overflowWrap: "anywhere" }}>{sos.contactName}</Typography>
                             <Typography variant="body2" color="text.secondary">{sos.contactPhone}</Typography>
                           </Box>
                         </Grid>
                         <Grid size={{ xs: 12, md: 5 }}>
-                          <Box sx={{ height: "100%", p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2.5, bgcolor: "rgba(255,255,255,.42)" }}>
+                          <Box sx={{ height: "100%", py: 0.5, pl: 2, pr: 1, borderLeft: "3px solid var(--color-green-600)" }}>
                             <Typography variant="caption" color="text.secondary" fontWeight={800}>Vị trí</Typography>
-                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900, overflowWrap: "anywhere" }}>{sos.address || "Chưa có địa chỉ mô tả"}</Typography>
+                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800, overflowWrap: "anywhere" }}>{sos.address || "Chưa có địa chỉ mô tả"}</Typography>
                             <Typography variant="body2" color="text.secondary">{sos.latitude}, {sos.longitude}</Typography>
                           </Box>
                         </Grid>
                         <Grid size={{ xs: 12, md: 3 }}>
-                          <Box sx={{ height: "100%", p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2.5, bgcolor: "rgba(255,255,255,.42)" }}>
+                          <Box sx={{ height: "100%", py: 0.5, pl: 2, pr: 1, borderLeft: "3px solid var(--color-green-600)" }}>
                             <Typography variant="caption" color="text.secondary" fontWeight={800}>Thời điểm tạo</Typography>
-                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 900 }}>{formatDate(sos.createdAt)}</Typography>
+                            <Typography sx={{ color: "var(--color-green-800)", fontWeight: 800 }}>{formatDate(sos.createdAt)}</Typography>
                           </Box>
                         </Grid>
                       </Grid>
@@ -259,7 +261,7 @@ export function TeamMissionDetailPage() {
                         </Typography>
                       ) : null}
                       <Box sx={{ pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
-                        <Typography variant="h6" fontWeight={900} sx={{ mb: 1.5 }}>Hình ảnh và tài liệu đính kèm</Typography>
+                        <Typography variant="h6" fontWeight={800} sx={{ mb: 1.5 }}>Hình ảnh và tài liệu đính kèm</Typography>
                         {sos.media.length ? (
                           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}>
                             {sos.media.map((media) => (
@@ -299,7 +301,7 @@ export function TeamMissionDetailPage() {
             <Grid size={{ xs: 12, lg: 4 }}>
               <SectionPaper>
                 <Stack spacing={2}>
-                  <Typography variant="h6" fontWeight={900}>Gửi cập nhật hiện trường</Typography>
+                  <Typography variant="h6" fontWeight={800}>Gửi cập nhật hiện trường</Typography>
                   {missionIsFinal ? (
                     <Alert severity="success">Nhiệm vụ đã kết thúc. Các trường cập nhật đã được khóa để giữ nguyên hồ sơ hiện trường.</Alert>
                   ) : null}
@@ -330,27 +332,90 @@ export function TeamMissionDetailPage() {
 export function TeamShipmentsPage() {
   const queryClient = useQueryClient();
   const showToast = useToast((state) => state.showToast);
-  const shipments = useQuery({ queryKey: ["team-shipments"], queryFn: () => inventoryApi.shipments({ page: 1, limit: 50 }), refetchInterval: 30000 });
+  const [deliveryForm, setDeliveryForm] = useState({
+    shipmentId: "",
+    recipientName: "",
+    latitude: "",
+    longitude: "",
+    proofPhotoUrl: "",
+    recipientSignatureUrl: "",
+    notes: "",
+  });
+  const [uploadingFields, setUploadingFields] = useState({ proof: false, signature: false });
+  const shipments = useQuery({
+    queryKey: ["team-shipments", SHIPMENT_STATUS.dispatched],
+    queryFn: () => inventoryApi.shipments({ status: SHIPMENT_STATUS.dispatched, page: 1, limit: 50 }),
+    refetchInterval: 30000,
+  });
   const update = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => inventoryApi.updateShipmentStatus(id, { status }),
+    mutationFn: () => inventoryApi.updateShipmentStatus(deliveryForm.shipmentId, {
+      status: SHIPMENT_STATUS.delivered,
+      latitude: Number(deliveryForm.latitude),
+      longitude: Number(deliveryForm.longitude),
+      proofPhotoUrl: deliveryForm.proofPhotoUrl,
+      recipientSignatureUrl: deliveryForm.recipientSignatureUrl,
+      recipientName: deliveryForm.recipientName.trim(),
+      notes: deliveryForm.notes.trim() || undefined,
+    }),
     onSuccess: () => {
-      showToast("Chuyến hàng đã được cập nhật.", "success");
+      showToast("Đã xác nhận hoàn thành cứu trợ và lưu bộ minh chứng.", "success");
+      setDeliveryForm({ shipmentId: "", recipientName: "", latitude: "", longitude: "", proofPhotoUrl: "", recipientSignatureUrl: "", notes: "" });
       queryClient.invalidateQueries({ queryKey: ["team-shipments"] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
+  const locateDelivery = async () => {
+    const coords = await getCurrentCoords();
+    setDeliveryForm((current) => ({ ...current, latitude: String(coords.latitude), longitude: String(coords.longitude) }));
+  };
+  const canSubmitDelivery = Boolean(
+    deliveryForm.shipmentId
+    && deliveryForm.recipientName.trim()
+    && Number.isFinite(Number(deliveryForm.latitude))
+    && Number.isFinite(Number(deliveryForm.longitude))
+    && deliveryForm.proofPhotoUrl
+    && deliveryForm.recipientSignatureUrl
+    && !uploadingFields.proof
+    && !uploadingFields.signature,
+  );
   return (
     <>
-      <PageHeader title="Chuyến hàng hiện trường" description="Cập nhật chuyến hàng được phân công từ khâu chuẩn bị đến bàn giao." />
+      <PageHeader title="Nhiệm vụ cứu trợ đang chờ bàn giao" description="Danh sách chuyến đã điều phối cho đội cứu hộ và cần hoàn tất tại hiện trường." />
       <QueryState isLoading={shipments.isLoading} error={shipments.error} empty={!shipments.data?.data.length} refetch={shipments.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+        <DataTableFrame label="Chuyến hàng đã điều phối"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Điểm tiếp nhận</TableCell><TableCell>Trạng thái</TableCell><TableCell align="right">Thao tác</TableCell></TableRow></TableHead><TableBody>
           {shipments.data?.data.map((shipment) => (
-            <TableRow key={shipment.id}><TableCell>{shipment.emergencyCaseTitle ?? shipment.id}</TableCell><TableCell><StatusChip value={shipment.status} /></TableCell><TableCell><Stack direction="row" spacing={1}>
-              {[SHIPMENT_STATUS.shipped, SHIPMENT_STATUS.inTransit, SHIPMENT_STATUS.delivered].map((status) => <Button key={status} size="small" onClick={() => update.mutate({ id: shipment.id, status })}>{STATUS_LABELS[status]}</Button>)}
-            </Stack></TableCell></TableRow>
+            <TableRow key={shipment.id} hover>
+              <TableCell><Typography fontWeight={800}>{shipment.emergencyCaseTitle ?? shipment.campaignName ?? `Chuyến ${shipment.id.slice(0, 8)}`}</Typography><Typography variant="caption" color="text.secondary">{shipment.warehouseName ?? "Kho xuất chưa xác định"}</Typography></TableCell>
+              <TableCell>{shipment.destinationAddress ?? shipment.targetWarehouseName ?? "Chưa cập nhật"}</TableCell>
+              <TableCell><StatusChip value={shipment.status} /></TableCell>
+              <TableCell align="right"><Button size="small" variant="contained" onClick={() => setDeliveryForm((current) => ({ ...current, shipmentId: shipment.id }))}>Xác nhận hoàn thành</Button></TableCell>
+            </TableRow>
           ))}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
+      <Dialog open={Boolean(deliveryForm.shipmentId)} onClose={() => !update.isPending && setDeliveryForm({ shipmentId: "", recipientName: "", latitude: "", longitude: "", proofPhotoUrl: "", recipientSignatureUrl: "", notes: "" })} fullWidth maxWidth="md">
+        <DialogTitle>Xác nhận hoàn thành cứu trợ</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2.25} sx={{ pt: 1 }}>
+            <Alert severity="info">Bộ minh chứng gồm ảnh thực địa, tọa độ GPS, chữ ký và tên người nhận. Các dữ liệu này sẽ được công khai trong hồ sơ minh bạch của chiến dịch.</Alert>
+            <TextField fullWidth required label="Tên người nhận" value={deliveryForm.recipientName} onChange={(event) => setDeliveryForm({ ...deliveryForm, recipientName: event.target.value })} />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth required type="number" label="Vĩ độ" value={deliveryForm.latitude} onChange={(event) => setDeliveryForm({ ...deliveryForm, latitude: event.target.value })} /></Grid>
+              <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth required type="number" label="Kinh độ" value={deliveryForm.longitude} onChange={(event) => setDeliveryForm({ ...deliveryForm, longitude: event.target.value })} /></Grid>
+            </Grid>
+            <Button startIcon={<GpsFixedIcon />} variant="outlined" onClick={locateDelivery}>Dùng GPS hiện tại</Button>
+            <Grid container spacing={2.5}>
+              <Grid size={{ xs: 12, md: 6 }}><FileUploadField label="Ảnh trao cứu trợ" required accept="image/*" preview="image" value={deliveryForm.proofPhotoUrl} onChange={(url) => setDeliveryForm((current) => ({ ...current, proofPhotoUrl: url }))} onUploadingChange={(uploading) => setUploadingFields((current) => ({ ...current, proof: uploading }))} /></Grid>
+              <Grid size={{ xs: 12, md: 6 }}><FileUploadField label="Chữ ký người nhận" required accept="image/*" preview="image" value={deliveryForm.recipientSignatureUrl} onChange={(url) => setDeliveryForm((current) => ({ ...current, recipientSignatureUrl: url }))} onUploadingChange={(uploading) => setUploadingFields((current) => ({ ...current, signature: uploading }))} /></Grid>
+            </Grid>
+            <TextField fullWidth label="Ghi chú bàn giao" multiline minRows={3} value={deliveryForm.notes} onChange={(event) => setDeliveryForm({ ...deliveryForm, notes: event.target.value })} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={update.isPending} onClick={() => setDeliveryForm({ shipmentId: "", recipientName: "", latitude: "", longitude: "", proofPhotoUrl: "", recipientSignatureUrl: "", notes: "" })}>Hủy</Button>
+          <Button variant="contained" disabled={!canSubmitDelivery || update.isPending} onClick={() => update.mutate()}>Lưu và hoàn thành</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
@@ -425,7 +490,7 @@ export function TeamAreaAssessmentsPage() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Đánh giá mới</Typography>
+              <Typography variant="h6" fontWeight={800}>Đánh giá mới</Typography>
               <TextField select label="Chiến dịch" value={form.campaignId} onChange={(event) => setForm({ ...form, campaignId: event.target.value })}>
                 <MenuItem value="" disabled>{campaigns.isLoading ? "Đang tải chiến dịch..." : "Chọn chiến dịch cứu trợ"}</MenuItem>
                 {(campaigns.data?.data ?? []).map((campaign) => <MenuItem key={campaign.id} value={campaign.id}>{campaign.name}</MenuItem>)}
@@ -433,7 +498,7 @@ export function TeamAreaAssessmentsPage() {
               {Object.keys(form).filter((key) => key !== "campaignId").map((key) => (
                 <TextField key={key} label={fieldLabels[key as keyof typeof form]} value={String(form[key as keyof typeof form])} onChange={(event) => setForm({ ...form, [key]: key === "householdsAffected" ? Number(event.target.value) : event.target.value })} />
               ))}
-              <Typography variant="subtitle2" fontWeight={900}>Nhu cầu khẩn cấp</Typography>
+              <Typography variant="subtitle2" fontWeight={800}>Nhu cầu khẩn cấp</Typography>
               {!needs.length ? (
                 <Alert severity="info">Không bắt buộc nhập nhu cầu khẩn cấp. Quý vị có thể gửi khảo sát trước và bổ sung nhu cầu sau nếu cần.</Alert>
               ) : null}
@@ -478,11 +543,11 @@ export function TeamAreaAssessmentsPage() {
           <QueryState isLoading={rows.isLoading} error={rows.error} empty={!rows.data?.data.length} refetch={rows.refetch}>
             <Stack spacing={1.5}>
               {rows.data?.data.map((row) => (
-                <Paper key={row.id} variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                <Paper key={row.id} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                   <Stack spacing={1.5}>
                     <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1}>
                       <Box>
-                        <Typography fontWeight={950} sx={{ color: "var(--color-green-800)" }}>
+                        <Typography fontWeight={800} sx={{ color: "var(--color-green-800)" }}>
                           {row.areaName || "Chưa đặt tên khu vực"}
                         </Typography>
                         <Typography variant="body2" sx={{ color: "var(--color-text-muted)", lineHeight: 1.55 }}>
@@ -499,30 +564,30 @@ export function TeamAreaAssessmentsPage() {
                     <Grid container spacing={1.25}>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
-                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Hộ bị ảnh hưởng</Typography>
-                          <Typography fontWeight={950}>{row.householdsAffected}</Typography>
+                          <Typography variant="caption" fontWeight={700} sx={{ color: "var(--color-text-muted)" }}>Hộ bị ảnh hưởng</Typography>
+                          <Typography fontWeight={800}>{row.householdsAffected}</Typography>
                         </Box>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
-                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Ngày gửi</Typography>
-                          <Typography fontWeight={950}>{formatDate(row.createdAt)}</Typography>
+                          <Typography variant="caption" fontWeight={700} sx={{ color: "var(--color-text-muted)" }}>Ngày gửi</Typography>
+                          <Typography fontWeight={800}>{formatDate(row.createdAt)}</Typography>
                         </Box>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4 }}>
                         <Box sx={{ border: "1px solid var(--color-border)", bgcolor: "var(--color-bg-page)", p: 1.25 }}>
-                          <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Mã khảo sát</Typography>
-                          <Typography fontWeight={950}>{row.id.slice(0, 8).toUpperCase()}</Typography>
+                          <Typography variant="caption" fontWeight={700} sx={{ color: "var(--color-text-muted)" }}>Mã khảo sát</Typography>
+                          <Typography fontWeight={800}>{row.id.slice(0, 8).toUpperCase()}</Typography>
                         </Box>
                       </Grid>
                     </Grid>
 
                     <Box sx={{ borderTop: "1px solid var(--color-border)", pt: 1.25 }}>
-                      <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Nhu cầu khẩn cấp</Typography>
+                      <Typography variant="caption" fontWeight={700} sx={{ color: "var(--color-text-muted)" }}>Nhu cầu khẩn cấp</Typography>
                       <Stack spacing={0.75} sx={{ mt: 0.75 }}>
                         {row.needs.length ? row.needs.map((need) => (
                           <Box key={need.id} sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "baseline" }}>
-                            <Typography fontWeight={900}>{need.itemType}</Typography>
+                            <Typography fontWeight={800}>{need.itemType}</Typography>
                             <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
                               {need.quantity} {need.unit}
                             </Typography>
@@ -542,7 +607,7 @@ export function TeamAreaAssessmentsPage() {
 
                     {row.notes ? (
                       <Box sx={{ borderTop: "1px solid var(--color-border)", pt: 1.25 }}>
-                        <Typography variant="caption" fontWeight={900} sx={{ color: "var(--color-text-muted)" }}>Ghi chú hiện trường</Typography>
+                        <Typography variant="caption" fontWeight={700} sx={{ color: "var(--color-text-muted)" }}>Ghi chú hiện trường</Typography>
                         <Typography variant="body2" sx={{ mt: 0.5, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
                           {row.notes}
                         </Typography>
@@ -568,22 +633,18 @@ export function TeamProofsPage() {
   const [signatureFiles, setSignatureFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
     missionId: "",
-    fileUrls: "",
     fileType: "IMAGE",
     caption: "Minh chứng trao hỗ trợ tại hiện trường",
     latitude: 16.4637,
     longitude: 107.5909,
     signerName: "",
     signerRole: "Người nhận hỗ trợ",
-    signatureUrl: "",
   });
   const missions = useQuery({ queryKey: ["team-missions", "proofs"], queryFn: () => missionApi.teamList({ page: 1, limit: 50 }), refetchInterval: 30000 });
   const createProof = useMutation({
     mutationFn: async () => {
       const noteParts = [form.caption];
-      if (form.fileUrls.trim()) noteParts.push(`Media: ${form.fileUrls.trim()}`);
       if (form.signerName.trim()) noteParts.push(`Người ký nhận: ${form.signerName.trim()} (${form.signerRole})`);
-      if (form.signatureUrl.trim()) noteParts.push(`Chữ ký/biên nhận: ${form.signatureUrl.trim()}`);
       const update = await missionApi.update(form.missionId, {
         status: MISSION_STATUS.completed,
         note: noteParts.join("\n"),
@@ -601,14 +662,12 @@ export function TeamProofsPage() {
       showToast("Minh chứng hiện trường đã được nộp vào nhật ký nhiệm vụ.", "success");
       setForm({
         missionId: "",
-        fileUrls: "",
         fileType: "IMAGE",
         caption: "Minh chứng trao hỗ trợ tại hiện trường",
         latitude: 16.4637,
         longitude: 107.5909,
         signerName: "",
         signerRole: "Người nhận hỗ trợ",
-        signatureUrl: "",
       });
       setShowProofForm(false);
       setEvidenceFiles([]);
@@ -650,7 +709,7 @@ export function TeamProofsPage() {
         <Grid size={{ xs: 12, lg: 5 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Nộp minh chứng thực địa</Typography>
+              <Typography variant="h6" fontWeight={800}>Nộp minh chứng thực địa</Typography>
               <Alert severity="info">
                 Minh chứng được ghi vào nhật ký nhiệm vụ của đội cứu hộ, không phụ thuộc vào danh sách giải ngân nên tránh lỗi không có quyền truy cập.
               </Alert>
@@ -660,7 +719,6 @@ export function TeamProofsPage() {
                   <MenuItem key={mission.id} value={mission.id}>{mission.code} - {STATUS_LABELS[mission.status] ?? mission.status}</MenuItem>
                 ))}
               </TextField>
-              <TextField label="Link ảnh/video minh chứng" multiline minRows={3} value={form.fileUrls} onChange={(event) => setForm({ ...form, fileUrls: event.target.value })} helperText="Có thể nhập nhiều link, mỗi link một dòng hoặc phân tách bằng dấu phẩy." />
               <Button component="label" variant="outlined">
                 {evidenceFiles.length ? `Đã chọn ${evidenceFiles.length} tệp minh chứng` : "Chọn ảnh, video hoặc tài liệu minh chứng"}
                 <input hidden type="file" multiple accept="image/*,video/*,.pdf" onChange={(event) => setEvidenceFiles(Array.from(event.target.files ?? []))} />
@@ -694,12 +752,11 @@ export function TeamProofsPage() {
                   <TextField fullWidth label="Vai trò người ký" value={form.signerRole} onChange={(event) => setForm({ ...form, signerRole: event.target.value })} />
                 </Grid>
               </Grid>
-              <TextField label="Link chữ ký/biên nhận" value={form.signatureUrl} onChange={(event) => setForm({ ...form, signatureUrl: event.target.value })} placeholder="https://..." />
               <Button component="label" variant="outlined">
                 {signatureFiles.length ? "Đã chọn tệp chữ ký" : "Chọn ảnh chữ ký hoặc biên nhận"}
                 <input hidden type="file" accept="image/*,.pdf" onChange={(event) => setSignatureFiles(Array.from(event.target.files ?? []))} />
               </Button>
-              <Button variant="contained" startIcon={<DoneAllIcon />} disabled={!form.missionId || (!form.fileUrls && !form.signatureUrl && !form.caption && !evidenceFiles.length && !signatureFiles.length) || createProof.isPending} onClick={() => createProof.mutate()}>
+              <Button variant="contained" startIcon={<DoneAllIcon />} disabled={!form.missionId || (!form.caption && !evidenceFiles.length && !signatureFiles.length) || createProof.isPending} onClick={() => createProof.mutate()}>
                 Nộp minh chứng
               </Button>
             </Stack>
@@ -715,13 +772,13 @@ export function TeamProofsPage() {
                   {missions.data?.data.map((mission) => (
                     <Fragment key={mission.id}>
                     <TableRow>
-                      <TableCell><Button variant="text" onClick={() => setExpandedMissionId((current) => current === mission.id ? "" : mission.id)} sx={{ p: 0, minWidth: 0, fontWeight: 900 }}>{mission.code}</Button></TableCell>
+                      <TableCell><Button variant="text" onClick={() => setExpandedMissionId((current) => current === mission.id ? "" : mission.id)} sx={{ p: 0, minWidth: 0, fontWeight: 800 }}>{mission.code}</Button></TableCell>
                       <TableCell><StatusChip value={mission.priority} /></TableCell>
                       <TableCell><StatusChip value={mission.status} /></TableCell>
                       <TableCell>{mission.updates.at(-1)?.createdAt ? formatDate(mission.updates.at(-1)?.createdAt) : "Chưa có cập nhật"}</TableCell>
                     </TableRow>
                     {expandedMissionId === mission.id ? <TableRow><TableCell colSpan={4} sx={{ bgcolor: "var(--color-surface-muted)" }}><Stack spacing={1.5}>
-                      <Typography fontWeight={900}>Minh chứng và cập nhật hiện trường</Typography>
+                      <Typography fontWeight={800}>Minh chứng và cập nhật hiện trường</Typography>
                       {(mission.updates ?? []).length ? (mission.updates ?? []).slice().reverse().map((update) => <Box key={update.id}><Typography variant="body2" color="text.secondary">{update.createdAt ? formatDate(update.createdAt) : "Cập nhật hiện trường"}</Typography><Typography sx={{ whiteSpace: "pre-wrap" }}>{update.note ?? "Không có ghi chú"}</Typography><Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 1 }}>{(update.media ?? []).map((media) => isVideoEvidence(media.fileType, media.fileUrl) ? <video key={media.id} controls src={media.fileUrl} style={{ width: 220, maxWidth: "100%" }} /> : <Box key={media.id} component="img" src={media.fileUrl} alt="Minh chứng hiện trường" sx={{ width: 160, height: 112, objectFit: "cover", border: "1px solid var(--color-border)" }} />)}</Stack></Box>) : <Alert severity="info">Chưa có minh chứng được cập nhật cho nhiệm vụ này.</Alert>}
                     </Stack></TableCell></TableRow> : null}
                     </Fragment>

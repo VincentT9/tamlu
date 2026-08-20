@@ -89,7 +89,7 @@ export function RegisterPage() {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", lg: ".9fr 1.1fr" },
           overflow: "hidden",
-          borderRadius: 3,
+          borderRadius: 2,
           borderColor: "var(--color-border)",
           bgcolor: "var(--color-surface)",
           color: "var(--color-text)",
@@ -112,8 +112,8 @@ export function RegisterPage() {
           }}
         >
           <Stack spacing={2} sx={{ position: "relative", zIndex: 1, maxWidth: 460 }}>
-            <Chip label="Quyền truy cập đã xác minh" sx={{ alignSelf: "flex-start", bgcolor: "var(--color-green-100)", color: "var(--color-green-800)", fontWeight: 900, borderRadius: 999 }} />
-            <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
+            <Chip label="Quyền truy cập đã xác minh" sx={{ alignSelf: "flex-start", bgcolor: "var(--color-green-100)", color: "var(--color-green-800)", fontWeight: 800, borderRadius: 999 }} />
+            <Typography sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.08, fontWeight: 800, letterSpacing: 0 }}>
               Tham gia mạng lưới cứu trợ với vai trò phù hợp để hành động.
             </Typography>
             <Typography sx={{ color: "var(--color-text-muted)", lineHeight: 1.65 }}>
@@ -128,7 +128,7 @@ export function RegisterPage() {
         </Box>
         <Stack spacing={2.5} sx={{ p: { xs: 3, sm: 4, md: 5 }, justifyContent: "center" }}>
           <Box>
-            <Typography variant="h4" fontWeight={950}>
+            <Typography variant="h4" fontWeight={800}>
               Tạo tài khoản Tâm Lũ
             </Typography>
             <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>

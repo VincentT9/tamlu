@@ -22,26 +22,26 @@ export function AppProviders({ children }: { children: ReactNode }) {
       createTheme({
         palette: {
           mode: "light",
-          primary: { main: "#0e5c6b", dark: "#0a4650", light: "#e3eef3", contrastText: "#ffffff" },
-          secondary: { main: "#e08a2e", dark: "#b96b18", light: "#fbebd9", contrastText: "#16232a" },
-          success: { main: "#2e7d4f", dark: "#235f3c", light: "#e4f1e7", contrastText: "#ffffff" },
-          warning: { main: "#b36a17", dark: "#8f500d", light: "#fbebd9", contrastText: "#ffffff" },
+          primary: { main: "#3d6b1f", dark: "#2f5210", light: "#e8f0d5", contrastText: "#ffffff" },
+          secondary: { main: "#539f05", dark: "#3d7604", light: "#eef7d8", contrastText: "#ffffff" },
+          success: { main: "#34723a", dark: "#28582d", light: "#e4f1e2", contrastText: "#ffffff" },
+          warning: { main: "#9b7317", dark: "#725714", light: "#f8f0cf", contrastText: "#ffffff" },
           error: { main: "#b23b2e", dark: "#8e2c23", light: "#fbe7e5", contrastText: "#ffffff" },
-          background: { default: "#f7f9f9", paper: "#ffffff" },
-          text: { primary: "#16232a", secondary: "#52636b" },
-          divider: "#dce3e3",
+          background: { default: "#f7f9f0", paper: "#ffffff" },
+          text: { primary: "#203311", secondary: "#5b6751" },
+          divider: "#d7dfca",
         },
         typography: {
-          fontFamily: "Inter, system-ui, sans-serif",
-          h1: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
-          h2: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
-          h3: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
-          h4: { letterSpacing: 0, fontWeight: 850, color: "#16232a" },
-          h5: { letterSpacing: 0, fontWeight: 800, color: "#16232a" },
-          h6: { letterSpacing: 0, fontWeight: 800, color: "#16232a" },
-          button: { textTransform: "none", fontWeight: 800 },
+          fontFamily: '\"Be Vietnam Pro\", \"Segoe UI\", sans-serif',
+          h1: { letterSpacing: 0, fontWeight: 800, lineHeight: 1.02, color: "#203311" },
+          h2: { letterSpacing: 0, fontWeight: 800, lineHeight: 1.06, color: "#203311" },
+          h3: { letterSpacing: 0, fontWeight: 800, lineHeight: 1.1, color: "#203311" },
+          h4: { letterSpacing: 0, fontWeight: 800, lineHeight: 1.12, color: "#203311" },
+          h5: { letterSpacing: 0, fontWeight: 700, lineHeight: 1.18, color: "#203311" },
+          h6: { letterSpacing: 0, fontWeight: 700, lineHeight: 1.24, color: "#203311" },
+          button: { textTransform: "none", fontWeight: 700 },
         },
-        shape: { borderRadius: 12 },
+        shape: { borderRadius: 10 },
         components: {
           MuiCssBaseline: {
             styleOverrides: {
@@ -68,7 +68,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 "&:hover": { boxShadow: "none" },
               },
               containedSecondary: {
-                color: "var(--color-text)",
+                color: "#ffffff",
                 boxShadow: "none",
                 "&:hover": { boxShadow: "none" },
               },
@@ -81,7 +81,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             },
           },
           MuiCard: {
-            styleOverrides: { root: { borderRadius: 12, borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", boxShadow: "var(--shadow-surface)" } },
+            styleOverrides: { root: { borderRadius: 18, borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", boxShadow: "none" } },
           },
           MuiPaper: {
             styleOverrides: {
@@ -106,13 +106,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 color: "var(--color-text)",
                 "& fieldset": { borderColor: "var(--color-border)" },
                 "&:hover fieldset": { borderColor: "var(--color-border-strong)" },
-                "&.Mui-focused fieldset": { borderColor: "var(--color-green-600)", boxShadow: "0 0 0 3px rgba(14,92,107,.12)" },
+                "&.Mui-focused fieldset": { borderColor: "var(--color-green-600)", boxShadow: "0 0 0 3px rgba(83,159,5,.14)" },
               },
               input: { color: "var(--color-text)" },
             },
           },
           MuiTableContainer: {
-            styleOverrides: { root: { borderRadius: 12 } },
+            styleOverrides: { root: { borderRadius: 18 } },
           },
           MuiTableCell: {
             styleOverrides: {
@@ -123,7 +123,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 backgroundColor: "var(--color-green-50)",
                 color: "var(--color-green-800)",
                 fontSize: 12,
-                fontWeight: 900,
+                fontWeight: 800,
                 textTransform: "uppercase",
                 whiteSpace: "nowrap",
               },
@@ -145,7 +145,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           },
           MuiChip: {
             styleOverrides: {
-              root: { borderRadius: 999, fontWeight: 800, letterSpacing: 0 },
+              root: { borderRadius: 8, fontWeight: 700, letterSpacing: 0 },
             },
           },
           MuiLinearProgress: {
@@ -172,7 +172,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               root: {
                 minHeight: 44,
                 textTransform: "none",
-                fontWeight: 800,
+                fontWeight: 700,
               },
             },
           },
@@ -192,7 +192,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           },
           MuiAlert: {
             styleOverrides: {
-              root: { borderRadius: 10, alignItems: "center", border: "1px solid var(--color-border)" },
+              root: { borderRadius: 12, alignItems: "center", border: "1px solid var(--color-border)" },
               standardInfo: { backgroundColor: "var(--color-green-50)", color: "var(--color-text)", borderColor: "var(--color-border)" },
               standardSuccess: { backgroundColor: "var(--color-green-50)", color: "var(--color-text)", borderColor: "var(--color-border)" },
               standardWarning: { backgroundColor: "var(--color-cream-100)", color: "var(--color-text)", borderColor: "var(--color-border-strong)" },

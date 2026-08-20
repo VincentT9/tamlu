@@ -1,0 +1,378 @@
+[
+  {
+    "role": "admin",
+    "mode": "desktop",
+    "file": "artifacts/step4/admin-desktop.png",
+    "diag": {
+      "url": "/ops/complaints",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Đang xác minh",
+          "bg": "rgb(229, 238, 240)",
+          "color": "rgb(49, 95, 104)",
+          "border": "rgb(191, 211, 215)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "admin",
+    "mode": "mobile",
+    "file": "artifacts/step4/admin-mobile.png",
+    "diag": {
+      "url": "/ops/complaints",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Đang xác minh",
+          "bg": "rgb(229, 238, 240)",
+          "color": "rgb(49, 95, 104)",
+          "border": "rgb(191, 211, 215)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "coordinator",
+    "mode": "desktop",
+    "file": "artifacts/step4/coordinator-desktop.png",
+    "diag": {
+      "url": "/ops/sos",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đã xác minh",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "coordinator",
+    "mode": "mobile",
+    "file": "artifacts/step4/coordinator-mobile.png",
+    "diag": {
+      "url": "/ops/sos",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đã xác minh",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        },
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "financial",
+    "mode": "desktop",
+    "file": "artifacts/step4/financial-desktop.png",
+    "diag": {
+      "url": "/ops/procurements",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": []
+    },
+    "errors": []
+  },
+  {
+    "role": "financial",
+    "mode": "mobile",
+    "file": "artifacts/step4/financial-mobile.png",
+    "diag": {
+      "url": "/ops/procurements",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": []
+    },
+    "errors": []
+  },
+  {
+    "role": "donor",
+    "mode": "desktop",
+    "file": "artifacts/step4/donor-desktop.png",
+    "diag": {
+      "url": "/donor/campaigns",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "Các chiến dịch cứu trợ lũ lụt đang hoạt động",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Đang hoạt động",
+          "bg": "rgb(228, 241, 226)",
+          "color": "rgb(47, 100, 47)",
+          "border": "rgb(189, 217, 189)"
+        },
+        {
+          "label": "Đang hoạt động",
+          "bg": "rgb(228, 241, 226)",
+          "color": "rgb(47, 100, 47)",
+          "border": "rgb(189, 217, 189)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "donor",
+    "mode": "mobile",
+    "file": "artifacts/step4/donor-mobile.png",
+    "diag": {
+      "url": "/donor/campaigns",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "Các chiến dịch cứu trợ lũ lụt đang hoạt động",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": [
+        {
+          "label": "Đang hoạt động",
+          "bg": "rgb(228, 241, 226)",
+          "color": "rgb(47, 100, 47)",
+          "border": "rgb(189, 217, 189)"
+        },
+        {
+          "label": "Đang hoạt động",
+          "bg": "rgb(228, 241, 226)",
+          "color": "rgb(47, 100, 47)",
+          "border": "rgb(189, 217, 189)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "role": "rescue",
+    "mode": "desktop",
+    "file": "artifacts/step4/rescue-desktop.png",
+    "diag": {
+      "url": "/team/missions",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": []
+    },
+    "errors": []
+  },
+  {
+    "role": "rescue",
+    "mode": "mobile",
+    "file": "artifacts/step4/rescue-mobile.png",
+    "diag": {
+      "url": "/team/missions",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "chips": []
+    },
+    "errors": []
+  },
+  {
+    "role": "citizen",
+    "mode": "desktop",
+    "file": "artifacts/step4/citizen-desktop.png",
+    "postLoginUrl": "/dashboard",
+    "diag": {
+      "url": "/citizen/sos",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollWidth": 1440,
+      "overflowX": 0,
+      "clipped": [],
+      "horizontalScrollers": [],
+      "chips": [
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        }
+      ],
+      "bodyTextSample": "Tâm Lũ\nBẢNG ĐIỀU PHỐI\nTrang chủ\nTổng quan\nSOS của tôi\nLịch sử quyên góp\nHồ sơ\nPhản ánh\nĐiểm trú tạm\nĐơn vị hỗ trợ ngoài\nC\n\nCao Nhật Minh\n\nCITIZEN\n\nĐăng xuất\nQuay lại\nYêu cầu SOS của tôi\n\nTheo dõi trạng thái cứu hộ từ khi chờ xác minh đến khi xác nhận hoàn tất.\n\nTạo SOS\nĐang chờ\nTrung bình\n\nQA-E2E SOS registered 1787041902575\n\nHuế, Việt Nam\n\n1 người cần cứu hộ - Tạo lúc 18/08/2026 15:31\n\n[Mức độ khẩn cấp: Cao] Kiểm thử E2E yêu cầu cứu hộ không kèm ảnh.\n\nXem chi tiết"
+    },
+    "errors": [],
+    "failedResponses": []
+  },
+  {
+    "role": "citizen",
+    "mode": "mobile",
+    "file": "artifacts/step4/citizen-mobile.png",
+    "postLoginUrl": "/dashboard",
+    "diag": {
+      "url": "/citizen/sos",
+      "title": "Tâm Lũ | Kết nối cứu trợ lũ lụt minh bạch",
+      "h1": "",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scrollWidth": 390,
+      "overflowX": 0,
+      "clipped": [],
+      "horizontalScrollers": [],
+      "chips": [
+        {
+          "label": "Đang chờ",
+          "bg": "rgb(248, 240, 207)",
+          "color": "rgb(114, 87, 20)",
+          "border": "rgb(229, 213, 142)"
+        },
+        {
+          "label": "Trung bình",
+          "bg": "rgb(231, 241, 224)",
+          "color": "rgb(53, 98, 32)",
+          "border": "rgb(195, 217, 179)"
+        }
+      ],
+      "bodyTextSample": "Tâm Lũ\nDanh mục\nQuay lại\nYêu cầu SOS của tôi\n\nTheo dõi trạng thái cứu hộ từ khi chờ xác minh đến khi xác nhận hoàn tất.\n\nTạo SOS\nĐang chờ\nTrung bình\n\nQA-E2E SOS registered 1787041902575\n\nHuế, Việt Nam\n\n1 người cần cứu hộ - Tạo lúc 18/08/2026 15:31\n\n[Mức độ khẩn cấp: Cao] Kiểm thử E2E yêu cầu cứu hộ không kèm ảnh.\n\nXem chi tiết"
+    },
+    "errors": [],
+    "failedResponses": []
+  }
+]

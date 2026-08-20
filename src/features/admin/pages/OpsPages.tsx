@@ -18,12 +18,13 @@ import { organizationApi } from "@/features/organizations/api";
 import { sosApi } from "@/features/sos/api";
 import { volunteerApi } from "@/features/volunteers/api";
 import type { AreaAssessment, Complaint, EmergencyCase, Procurement, User, Warehouse } from "@/shared/api/domain";
-import { getErrorMessage, postFormData } from "@/shared/api/client";
+import { getErrorMessage } from "@/shared/api/client";
 import { ROLE_IDS, ROLE_LABELS, ROLES } from "@/shared/constants/roles";
 import { CAMPAIGN_STATUS, MISSION_STATUS, PRIORITY, SHIPMENT_STATUS, SOS_STATUS, STATUS_LABELS } from "@/shared/constants/statuses";
 import { formatDate, formatMoney } from "@/shared/utils/format";
 import { MetricCard } from "@/shared/ui/MetricCard";
 import { DataTableFrame } from "@/shared/ui/DataTableFrame";
+import { FileUploadField } from "@/shared/ui/FileUploadField";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { QueryState } from "@/shared/ui/QueryState";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
@@ -104,7 +105,7 @@ export function OpsDashboardPage() {
       <>
         <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
           <Box>
-            <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0 }}>
+            <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 800, letterSpacing: 0 }}>
               Bảng tài chính cứu trợ
             </Typography>
             <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
@@ -138,7 +139,7 @@ export function OpsDashboardPage() {
     <>
       <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} justifyContent="space-between" spacing={2.5} sx={{ mb: 3 }}>
         <Box>
-          <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0 }}>
+          <Typography sx={{ fontSize: { xs: 34, md: 40 }, lineHeight: 1.08, fontWeight: 800, letterSpacing: 0 }}>
             {isAdmin ? "Bảng quản trị toàn hệ thống" : "Bảng điều phối cứu trợ"}
           </Typography>
           <Typography sx={{ mt: 1, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
@@ -155,12 +156,12 @@ export function OpsDashboardPage() {
             <NotificationsNoneIcon />
           </IconButton>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 1 }}>
-            <Avatar sx={{ width: 38, height: 38, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 950 }}>
+            <Avatar variant="rounded" sx={{ width: 38, height: 38, borderRadius: 2, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 800 }}>
               {(user?.fullName ?? "T").slice(0, 1)}
             </Avatar>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 950 }}>{user?.fullName ?? "Điều phối viên Tâm Lũ"}</Typography>
-              <Typography sx={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 750 }}>Quản lý cứu trợ</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 800 }}>{user?.fullName ?? "Điều phối viên Tâm Lũ"}</Typography>
+              <Typography sx={{ fontSize: 11, color: "var(--color-text-muted)", fontWeight: 700 }}>Quản lý cứu trợ</Typography>
             </Box>
           </Stack>
         </Stack>
@@ -171,7 +172,7 @@ export function OpsDashboardPage() {
             <Stack spacing={2.4}>
               <Stack direction="row" alignItems="flex-end" spacing={1.25}>
                 <Typography sx={{ fontSize: { xs: 54, md: 58 }, lineHeight: .9, fontWeight: 400 }}>{pending}</Typography>
-                <Chip label="+ khẩn cấp" sx={{ mb: .7, bgcolor: "var(--status-progress-bg)", color: "var(--status-progress-text)", border: "1px solid #efd3b2", fontWeight: 900 }} />
+                <Chip label="+ khẩn cấp" sx={{ mb: .7, bgcolor: "var(--status-progress-bg)", color: "var(--status-progress-text)", border: "1px solid var(--status-progress-border)", fontWeight: 800 }} />
               </Stack>
               <Button component={Link} to={pendingRoute} variant="contained" color="secondary" endIcon={<AddIcon />} sx={{ borderRadius: 1.25, justifyContent: "space-between" }}>
                 {pendingAction}
@@ -200,9 +201,9 @@ export function OpsDashboardPage() {
               </Stack>
               <Box sx={{ pt: 3 }}>
                 <Stack direction="row" spacing={.75} alignItems="center">
-                  <Box sx={{ width: `${Math.min(78, Math.max(14, missions * 4))}%`, height: 10, borderRadius: 0, bgcolor: "var(--color-green-700)" }} />
-                  <Box sx={{ flex: 1, height: 10, borderRadius: 0, bgcolor: "var(--color-green-200)" }} />
-                  <Box sx={{ width: 92, height: 10, borderRadius: 0, bgcolor: "var(--color-green-100)" }} />
+                  <Box sx={{ width: `${Math.min(78, Math.max(14, missions * 4))}%`, height: 10, borderRadius: 999, bgcolor: "var(--color-green-700)" }} />
+                  <Box sx={{ flex: 1, height: 10, borderRadius: 999, bgcolor: "var(--color-green-200)" }} />
+                  <Box sx={{ width: 92, height: 10, borderRadius: 999, bgcolor: "var(--color-green-100)" }} />
                 </Stack>
                 <Stack direction="row" justifyContent="space-between" sx={{ mt: 1.1 }}>
                   <Typography sx={miniLabelSx}>SOS</Typography>
@@ -239,7 +240,7 @@ export function OpsDashboardPage() {
                 </RadialBarChart>
               </ResponsiveContainer>
               <Box sx={{ position: "absolute", inset: "46% 0 auto", textAlign: "center" }}>
-                <Typography sx={{ fontSize: 48, lineHeight: 1, fontWeight: 450 }}>{readiness}<Box component="span" sx={{ fontSize: 16 }}>%</Box></Typography>
+                <Typography sx={{ fontSize: 48, lineHeight: 1, fontWeight: 500 }}>{readiness}<Box component="span" sx={{ fontSize: 16 }}>%</Box></Typography>
                 <Typography sx={miniLabelSx}>mức sẵn sàng</Typography>
               </Box>
             </Box>
@@ -276,12 +277,12 @@ export function OpsDashboardPage() {
                   { name: "Rủi ro kho hàng", meta: `${stock} mặt hàng thiếu`, color: "#f87171", route: "/ops/inventory" },
                 ].map((item) => (
                   <Stack key={item.name} direction="row" spacing={1.25} alignItems="center">
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: item.color, color: item.color === "var(--color-green-700)" ? "#ffffff" : "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>{item.name.slice(0, 1)}</Avatar>
+                    <Avatar variant="rounded" sx={{ width: 34, height: 34, borderRadius: 1.75, bgcolor: item.color, color: item.color === "var(--color-green-700)" ? "#ffffff" : "var(--color-green-800)", fontSize: 13, fontWeight: 800 }}>{item.name.slice(0, 1)}</Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontSize: 13, fontWeight: 900 }}>{item.name}</Typography>
+                      <Typography sx={{ fontSize: 13, fontWeight: 800 }}>{item.name}</Typography>
                       <Typography sx={miniLabelSx}>{item.meta}</Typography>
                     </Box>
-                    <Button size="small" component={Link} to={item.route} sx={{ minHeight: 32, borderRadius: 0 }}>
+                    <Button size="small" component={Link} to={item.route} sx={{ minHeight: 32, borderRadius: 1.5 }}>
                       Xem
                     </Button>
                   </Stack>
@@ -298,15 +299,15 @@ export function OpsDashboardPage() {
                     <DualMetric value={taskCompletion} label="phản hồi hoàn tất" />
                     <DualMetric value={deliveryTrust} label="độ tin cậy bàn giao" />
                   </Stack>
-                  <Box sx={{ borderRadius: 0, bgcolor: "var(--color-surface-muted)", px: 2, py: 1.25, border: "1px solid var(--color-border)" }}>
+                  <Box sx={{ borderRadius: 1.5, bgcolor: "var(--color-surface-muted)", px: 2, py: 1.25, border: "1px solid var(--color-border)" }}>
                     <Typography sx={{ color: "var(--color-text-muted)", fontSize: 13, fontWeight: 800 }}>
                       Cân bằng cứu trợ ổn định khi rủi ro kho hàng duy trì ở mức thấp.
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 1.25, border: "1px solid var(--color-border)" }}>
-                    <Avatar sx={{ width: 42, height: 42, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 950 }}>W</Avatar>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ borderRadius: 1.5, bgcolor: "var(--color-surface-muted)", p: 1.25, border: "1px solid var(--color-border)" }}>
+                    <Avatar variant="rounded" sx={{ width: 42, height: 42, borderRadius: 2, bgcolor: "var(--color-green-700)", color: "#ffffff", fontWeight: 800 }}>W</Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontWeight: 900 }}>Theo dõi kho hàng</Typography>
+                      <Typography sx={{ fontWeight: 800 }}>Theo dõi kho hàng</Typography>
                       <Typography sx={miniLabelSx}>Hiện tại, kiểm kê tồn kho</Typography>
                     </Box>
                     <IconButton size="small" sx={smallRoundButtonSx}>×</IconButton>
@@ -332,11 +333,11 @@ const panelSx = {
   border: "1px solid var(--color-border)",
   bgcolor: "var(--color-surface)",
   color: "var(--color-text)",
-  boxShadow: "var(--shadow-surface)",
+  boxShadow: "none",
   overflow: "visible",
 };
 
-const miniLabelSx = { color: "var(--color-text-muted)", fontSize: 11, fontWeight: 750 };
+const miniLabelSx = { color: "var(--color-text-muted)", fontSize: 11, fontWeight: 700 };
 const opsIconButtonSx = { width: 42, height: 42, color: "var(--color-green-700)", border: "1px solid var(--color-border)", bgcolor: "#ffffff", borderRadius: 1.25, "&:hover": { bgcolor: "var(--color-green-50)" } };
 const smallRoundButtonSx = { width: 34, height: 34, color: "var(--color-green-700)", bgcolor: "#ffffff", borderRadius: 1.25, "&:hover": { bgcolor: "var(--color-green-50)" } };
 
@@ -345,7 +346,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
     <Paper variant="outlined" sx={{ ...panelSx, ...sx }}>
       <Stack spacing={2}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-          <Typography sx={{ fontSize: 15, fontWeight: 900 }}>{title}</Typography>
+          <Typography sx={{ fontSize: 15, fontWeight: 800 }}>{title}</Typography>
           {action ? <Chip label={action} size="small" sx={{ bgcolor: "var(--color-green-50)", color: "var(--color-green-800)", fontWeight: 800, border: "1px solid var(--color-border)" }} /> : null}
         </Stack>
         {children}
@@ -356,7 +357,7 @@ function DashboardPanel({ title, action, children, sx }: { title: string; action
 
 function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object }) {
   return (
-    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 1, bgcolor: "#ffffff", color: "var(--color-green-800)", fontSize: 11, fontWeight: 950, boxShadow: "none", border: "1px solid var(--color-border)", ...sx }}>
+    <Box sx={{ position: "absolute", zIndex: 2, px: 1, py: .45, borderRadius: 1, bgcolor: "#ffffff", color: "var(--color-green-800)", fontSize: 11, fontWeight: 800, boxShadow: "none", border: "1px solid var(--color-border)", ...sx }}>
       {children}
     </Box>
   );
@@ -364,7 +365,7 @@ function ValueBubble({ children, sx }: { children: React.ReactNode; sx?: object 
 
 function PercentTag({ children, tone = "amber" }: { children: React.ReactNode; tone?: "amber" | "cyan" }) {
   return (
-    <Box sx={{ px: 1, py: .45, borderRadius: 1, bgcolor: tone === "amber" ? "#ffffff" : "var(--color-green-700)", color: tone === "amber" ? "var(--color-green-800)" : "#ffffff", fontSize: 12, fontWeight: 950, border: "1px solid var(--color-border)" }}>
+    <Box sx={{ px: 1, py: .45, borderRadius: 1, bgcolor: tone === "amber" ? "#ffffff" : "var(--color-green-700)", color: tone === "amber" ? "var(--color-green-800)" : "#ffffff", fontSize: 12, fontWeight: 800, border: "1px solid var(--color-border)" }}>
       {children}
     </Box>
   );
@@ -412,7 +413,7 @@ function shipmentStepButtonSx(state: "past" | "current" | "next") {
       ...shared,
       position: "relative",
       color: "var(--color-green-800)",
-      fontWeight: 950,
+      fontWeight: 900,
       "&.Mui-disabled": {
         bgcolor: "transparent",
         color: "var(--color-green-800)",
@@ -525,10 +526,10 @@ function getUserRoleLabel(user: User) {
 function DualMetric({ value, label }: { value: number; label: string }) {
   return (
     <Box>
-      <Typography sx={{ fontSize: 38, lineHeight: 1, fontWeight: 450 }}>
-        {value}<Box component="span" sx={{ color: "var(--color-green-700)", fontSize: 30, fontWeight: 900 }}> %</Box>
+      <Typography sx={{ fontSize: 38, lineHeight: 1, fontWeight: 500 }}>
+        {value}<Box component="span" sx={{ color: "var(--color-green-700)", fontSize: 30, fontWeight: 800 }}> %</Box>
       </Typography>
-      <Typography sx={{ mt: .5, color: "var(--color-text-muted)", fontSize: 12, fontWeight: 750 }}>{label}</Typography>
+      <Typography sx={{ mt: .5, color: "var(--color-text-muted)", fontSize: 12, fontWeight: 700 }}>{label}</Typography>
     </Box>
   );
 }
@@ -543,10 +544,10 @@ function TimelineCard({ pending, missions, stock }: { pending: number; missions:
   ];
 
   return (
-    <Box sx={{ height: "100%", minHeight: 228, maxWidth: "100%", borderRadius: 0, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
+    <Box sx={{ height: "100%", minHeight: 228, maxWidth: "100%", borderRadius: 1.5, bgcolor: "var(--color-surface-muted)", p: 2, position: "relative", overflow: "hidden", border: "1px solid var(--color-border)", boxSizing: "border-box" }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Box>
-          <Typography sx={{ color: "var(--color-green-800)", fontSize: 13, fontWeight: 950 }}>Tiến độ cứu trợ</Typography>
+          <Typography sx={{ color: "var(--color-green-800)", fontSize: 13, fontWeight: 800 }}>Tiến độ cứu trợ</Typography>
           <Typography sx={miniLabelSx}>Các điểm nghẽn cần điều phối trong tuần</Typography>
         </Box>
         <PercentTag tone="cyan">{readiness}%</PercentTag>
@@ -554,13 +555,13 @@ function TimelineCard({ pending, missions, stock }: { pending: number; missions:
 
       <Box sx={{ mt: 1.5, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" }, gap: 1 }}>
         {statusCards.map((item) => (
-          <Stack key={item.label} spacing={1} sx={{ border: "1px solid var(--color-border)", bgcolor: "#ffffff", px: 1.25, py: 1.1, minWidth: 0 }}>
+          <Stack key={item.label} spacing={1} sx={{ border: "1px solid var(--color-border)", borderRadius: 1.5, bgcolor: "#ffffff", px: 1.25, py: 1.1, minWidth: 0 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-              <Typography sx={{ color: "var(--color-green-800)", fontSize: 12, lineHeight: 1.2, fontWeight: 900 }}>{item.label}</Typography>
-              <Typography sx={{ color: "var(--color-green-800)", fontSize: 22, lineHeight: 1, fontWeight: 950 }}>{item.value}</Typography>
+              <Typography sx={{ color: "var(--color-green-800)", fontSize: 12, lineHeight: 1.2, fontWeight: 800 }}>{item.label}</Typography>
+              <Typography sx={{ color: "var(--color-green-800)", fontSize: 22, lineHeight: 1, fontWeight: 800 }}>{item.value}</Typography>
             </Stack>
-            <Box sx={{ height: 8, bgcolor: "var(--color-green-100)", overflow: "hidden" }}>
-              <Box sx={{ height: "100%", width: `${Math.min(100, Math.max(8, (item.value / totalWork) * 100))}%`, bgcolor: item.color }} />
+            <Box sx={{ height: 8, borderRadius: 999, bgcolor: "var(--color-green-100)", overflow: "hidden" }}>
+              <Box sx={{ height: "100%", width: `${Math.min(100, Math.max(8, (item.value / totalWork) * 100))}%`, borderRadius: 999, bgcolor: item.color }} />
             </Box>
             <Typography sx={miniLabelSx}>{item.helper}</Typography>
           </Stack>
@@ -617,11 +618,11 @@ export function OpsSosPage() {
         ) : null}
       </Stack>
       <QueryState isLoading={cases.isLoading} error={cases.error} empty={!cases.data?.data.length} refetch={cases.refetch}>
-        <Paper variant="outlined" sx={{ overflowX: "auto" }}><Table size="small" sx={{ minWidth: 980 }}><TableHead><TableRow><TableCell>Mã yêu cầu</TableCell><TableCell>Yêu cầu</TableCell><TableCell>Số người</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+        <DataTableFrame label="Danh sách yêu cầu SOS"><Table size="small" sx={{ minWidth: 980 }}><TableHead><TableRow><TableCell>Mã yêu cầu</TableCell><TableCell>Yêu cầu</TableCell><TableCell>Số người</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {filteredCases.length ? filteredCases.map((item) => (
             <TableRow key={item.id}>
               <TableCell>
-                <Typography fontWeight={900} sx={{ color: "var(--color-green-800)", whiteSpace: "nowrap" }}>
+                <Typography fontWeight={800} sx={{ color: "var(--color-green-800)", whiteSpace: "nowrap" }}>
                   {getSosRequestCode(item)}
                 </Typography>
               </TableCell>
@@ -667,7 +668,7 @@ export function OpsSosPage() {
               </TableCell>
             </TableRow>
           )}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
     </>
   );
@@ -740,7 +741,7 @@ export function OpsMissionsPage() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Phân công nhiệm vụ</Typography>
+              <Typography variant="h6" fontWeight={800}>Phân công nhiệm vụ</Typography>
               <TextField
                 select
                 label="Mã yêu cầu khẩn cấp"
@@ -761,7 +762,7 @@ export function OpsMissionsPage() {
                 {(verifiedCases.data?.data ?? []).map((item) => (
                   <MenuItem key={item.id} value={item.id}>
                     <Stack spacing={0.25} sx={{ py: 0.5, minWidth: 0 }}>
-                      <Typography fontWeight={900} noWrap>{item.title}</Typography>
+                      <Typography fontWeight={800} noWrap>{item.title}</Typography>
                       <Typography variant="caption" color="text.secondary" noWrap>
                         {item.contactName} - {item.contactPhone} - {item.numPeople} người
                       </Typography>
@@ -807,7 +808,7 @@ export function OpsMissionsPage() {
         ) : null}
         <Grid size={{ xs: 12, lg: showMissionForm ? 8 : 12 }}>
           <QueryState isLoading={missions.isLoading} error={missions.error} empty={!missions.data?.data.length} refetch={missions.refetch}>
-            <Paper variant="outlined">
+            <DataTableFrame label="Lịch sử phân công nhiệm vụ">
               <Table size="small">
                 <TableHead><TableRow><TableCell>Nhiệm vụ</TableCell><TableCell>Đội</TableCell><TableCell>Ưu tiên</TableCell><TableCell>Trạng thái</TableCell><TableCell>Cập nhật</TableCell></TableRow></TableHead>
                 <TableBody>
@@ -822,7 +823,7 @@ export function OpsMissionsPage() {
                   ))}
                 </TableBody>
               </Table>
-            </Paper>
+            </DataTableFrame>
             {latestMissions.length > 4 ? (
               <Box sx={{ mt: 1.5, textAlign: "right" }}>
                 <Button size="small" onClick={() => setShowAllMissions((value) => !value)}>
@@ -892,16 +893,16 @@ export function InventoryPage() {
         <QueryState isLoading={items.isLoading} error={items.error} empty={!items.data?.data.length} refetch={items.refetch}>
           <Grid container spacing={2.5}>
             <Grid size={{ xs: 12, lg: 8 }}>
-              <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Mặt hàng</TableCell><TableCell>Số lượng</TableCell><TableCell>Đã giữ chỗ</TableCell><TableCell>Tối thiểu</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
+              <DataTableFrame label="Danh sách mặt hàng tồn kho"><Table size="small"><TableHead><TableRow><TableCell>Mặt hàng</TableCell><TableCell>Số lượng</TableCell><TableCell>Đã giữ chỗ</TableCell><TableCell>Tối thiểu</TableCell><TableCell>Trạng thái</TableCell></TableRow></TableHead><TableBody>
                 {items.data?.data.map((item) => (
                   <TableRow key={item.id} hover selected={selectedItem?.id === item.id} onClick={() => setSelectedItemId(item.id)} sx={{ cursor: "pointer" }}><TableCell>{item.itemName}</TableCell><TableCell>{item.quantity} {item.unit}</TableCell><TableCell>{item.reservedQuantity}</TableCell><TableCell>{item.minQuantity}</TableCell><TableCell><StatusChip value={item.status} /></TableCell></TableRow>
                 ))}
-              </TableBody></Table></Paper>
+              </TableBody></Table></DataTableFrame>
             </Grid>
             <Grid size={{ xs: 12, lg: 4 }}>
               <SectionPaper>
                 <Stack spacing={1.5}>
-                  <Typography variant="h6" fontWeight={900}>{selectedItem?.itemName ?? "Chi tiết mặt hàng"}</Typography>
+                  <Typography variant="h6" fontWeight={800}>{selectedItem?.itemName ?? "Chi tiết mặt hàng"}</Typography>
                   {selectedItem ? (
                     <>
                       <StatusChip value={selectedItem.status} />
@@ -917,13 +918,13 @@ export function InventoryPage() {
                         <Grid size={6}>
                           <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5 }}>
                             <Typography variant="caption" color="text.secondary">Có sẵn</Typography>
-                            <Typography fontWeight={900}>{selectedItem.quantity} {selectedItem.unit}</Typography>
+                             <Typography fontWeight={800}>{selectedItem.quantity} {selectedItem.unit}</Typography>
                           </Box>
                         </Grid>
                         <Grid size={6}>
                           <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5 }}>
                             <Typography variant="caption" color="text.secondary">Đã giữ</Typography>
-                            <Typography fontWeight={900}>{selectedItem.reservedQuantity}</Typography>
+                             <Typography fontWeight={800}>{selectedItem.reservedQuantity}</Typography>
                           </Box>
                         </Grid>
                       </Grid>
@@ -1011,7 +1012,7 @@ export function WarehousesPage() {
         {showWarehouseForm ? (
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>{editingWarehouseId ? "Cập nhật kho hàng" : "Tạo kho hàng"}</Typography>
+              <Typography variant="h6" fontWeight={800}>{editingWarehouseId ? "Cập nhật kho hàng" : "Tạo kho hàng"}</Typography>
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Tên kho" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Grid>
                 <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Địa chỉ" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} /></Grid>
@@ -1028,13 +1029,13 @@ export function WarehousesPage() {
           </SectionPaper>
         ) : null}
         <QueryState isLoading={warehouses.isLoading} error={warehouses.error} empty={!warehouses.data?.length} refetch={warehouses.refetch}>
-          <Paper variant="outlined">
+          <DataTableFrame label="Danh sách kho hàng">
             <Table size="small">
               <TableHead><TableRow><TableCell>Kho hàng</TableCell><TableCell>Địa chỉ</TableCell><TableCell>Người phụ trách</TableCell><TableCell>Trạng thái</TableCell><TableCell align="right">Thao tác</TableCell></TableRow></TableHead>
               <TableBody>
                 {(warehouses.data ?? []).map((warehouse) => (
                   <TableRow key={warehouse.id} hover>
-                    <TableCell><Typography fontWeight={900}>{warehouse.name}</Typography><Typography variant="caption" color="text.secondary">{warehouse.latitude}, {warehouse.longitude}</Typography></TableCell>
+                    <TableCell><Typography fontWeight={800}>{warehouse.name}</Typography><Typography variant="caption" color="text.secondary">{warehouse.latitude}, {warehouse.longitude}</Typography></TableCell>
                     <TableCell>{warehouse.address}</TableCell>
                     <TableCell>{warehouse.managerName ?? "Chưa phân công"}{warehouse.phone ? <Typography variant="body2" color="text.secondary">{warehouse.phone}</Typography> : null}</TableCell>
                     <TableCell><StatusChip value={warehouse.status} /></TableCell>
@@ -1048,7 +1049,7 @@ export function WarehousesPage() {
                 ))}
               </TableBody>
             </Table>
-          </Paper>
+          </DataTableFrame>
         </QueryState>
       </Stack>
     </>
@@ -1107,7 +1108,7 @@ export function VehiclesPage() {
         {showVehicleForm ? (
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>{editingVehicleId ? "Cập nhật phương tiện" : "Thêm phương tiện"}</Typography>
+              <Typography variant="h6" fontWeight={800}>{editingVehicleId ? "Cập nhật phương tiện" : "Thêm phương tiện"}</Typography>
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Tên phương tiện" value={form.vehicleName} onChange={(event) => setForm({ ...form, vehicleName: event.target.value })} /></Grid>
                 <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Loại phương tiện" value={form.vehicleType} onChange={(event) => setForm({ ...form, vehicleType: event.target.value })} /></Grid>
@@ -1124,11 +1125,11 @@ export function VehiclesPage() {
           </SectionPaper>
         ) : null}
         <QueryState isLoading={vehicles.isLoading} error={vehicles.error} empty={!vehicles.data?.data.length} refetch={vehicles.refetch}>
-          <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+          <DataTableFrame label="Danh sách phương tiện">
             <Table size="small" sx={{ minWidth: 760 }}><TableHead><TableRow><TableCell>Phương tiện</TableCell><TableCell>Loại</TableCell><TableCell>Tài xế</TableCell><TableCell>Trạng thái</TableCell><TableCell align="right">Thao tác</TableCell></TableRow></TableHead><TableBody>
-              {(vehicles.data?.data ?? []).map((vehicle) => <TableRow key={vehicle.id} hover><TableCell><Typography fontWeight={900}>{vehicle.vehicleName}</Typography><Typography variant="caption" color="text.secondary">{vehicle.licensePlate ?? "Chưa có biển số"}</Typography></TableCell><TableCell>{vehicle.vehicleType}</TableCell><TableCell>{vehicle.driverName ?? "Chưa phân công"}{vehicle.driverPhone ? <Typography variant="body2" color="text.secondary">{vehicle.driverPhone}</Typography> : null}</TableCell><TableCell><StatusChip value={vehicle.status} /></TableCell><TableCell align="right"><Stack direction="row" justifyContent="flex-end" spacing={1}><Button size="small" onClick={() => openEdit(vehicle)}>Chỉnh sửa</Button><Button size="small" color="error" disabled={removeVehicle.isPending} onClick={() => removeVehicle.mutate(vehicle.id)}>Xóa</Button></Stack></TableCell></TableRow>)}
+              {(vehicles.data?.data ?? []).map((vehicle) => <TableRow key={vehicle.id} hover><TableCell><Typography fontWeight={800}>{vehicle.vehicleName}</Typography><Typography variant="caption" color="text.secondary">{vehicle.licensePlate ?? "Chưa có biển số"}</Typography></TableCell><TableCell>{vehicle.vehicleType}</TableCell><TableCell>{vehicle.driverName ?? "Chưa phân công"}{vehicle.driverPhone ? <Typography variant="body2" color="text.secondary">{vehicle.driverPhone}</Typography> : null}</TableCell><TableCell><StatusChip value={vehicle.status} /></TableCell><TableCell align="right"><Stack direction="row" justifyContent="flex-end" spacing={1}><Button size="small" onClick={() => openEdit(vehicle)}>Chỉnh sửa</Button><Button size="small" color="error" disabled={removeVehicle.isPending} onClick={() => removeVehicle.mutate(vehicle.id)}>Xóa</Button></Stack></TableCell></TableRow>)}
             </TableBody></Table>
-          </Paper>
+          </DataTableFrame>
         </QueryState>
       </Stack>
     </>
@@ -1141,13 +1142,19 @@ export function ShipmentsPage() {
   const [status, setStatus] = useState("");
   const [showShipmentForm, setShowShipmentForm] = useState(false);
   const [shipmentForm, setShipmentForm] = useState({
+    campaignId: "",
     warehouseId: "",
+    rescueTeamId: "",
+    destinationAddress: "",
     targetWarehouseId: "",
     aidAllocationPlanId: "",
     vehicleId: "",
+    notes: "",
     items: [{ inventoryItemId: "", quantity: 1 }],
   });
   const shipments = useQuery({ queryKey: ["shipments", status], queryFn: () => inventoryApi.shipments({ status, page: 1, limit: 50 }), refetchInterval: 30000 });
+  const campaigns = useQuery({ queryKey: ["campaigns", "shipment-form"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }) });
+  const rescueTeams = useQuery({ queryKey: ["rescue-teams", "shipment-form", "AVAILABLE"], queryFn: () => missionApi.rescueTeams({ status: "AVAILABLE", page: 1, limit: 50 }) });
   const warehouses = useQuery({ queryKey: ["warehouses", "shipment-form"], queryFn: inventoryApi.warehouses });
   const sourceWarehouseId = shipmentForm.warehouseId || warehouses.data?.[0]?.id || "";
   const warehouseItems = useQuery({
@@ -1162,15 +1169,19 @@ export function ShipmentsPage() {
   const hasValidShipmentItems = shipmentForm.items.every((item) => item.inventoryItemId && Number(item.quantity) > 0);
   const createShipment = useMutation({
     mutationFn: () => inventoryApi.createShipment({
+      campaignId: shipmentForm.campaignId,
       warehouseId: sourceWarehouseId,
+      rescueTeamId: shipmentForm.rescueTeamId,
+      destinationAddress: shipmentForm.destinationAddress.trim(),
       targetWarehouseId: shipmentForm.targetWarehouseId || null,
       aidAllocationPlanId: shipmentForm.aidAllocationPlanId || null,
       vehicleId: shipmentForm.vehicleId || null,
       items: shipmentForm.items.map((item) => ({ inventoryItemId: item.inventoryItemId, quantity: Number(item.quantity) })),
+      notes: shipmentForm.notes.trim() || undefined,
     }),
     onSuccess: () => {
-      showToast("Chuyến hàng đã được lập từ kho nguồn đến kho tiền phương.", "success");
-      setShipmentForm({ warehouseId: "", targetWarehouseId: "", aidAllocationPlanId: "", vehicleId: "", items: [{ inventoryItemId: "", quantity: 1 }] });
+      showToast("Phiếu cứu trợ đã được lập và chuyển cho đội cứu hộ.", "success");
+      setShipmentForm({ campaignId: "", warehouseId: "", rescueTeamId: "", destinationAddress: "", targetWarehouseId: "", aidAllocationPlanId: "", vehicleId: "", notes: "", items: [{ inventoryItemId: "", quantity: 1 }] });
       setShowShipmentForm(false);
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
       queryClient.invalidateQueries({ queryKey: ["warehouse-items"] });
@@ -1201,11 +1212,28 @@ export function ShipmentsPage() {
           <SectionPaper>
             <Stack spacing={2}>
               <Box>
-                <Typography variant="h6" fontWeight={900}>Lập chuyến về Kho Tiền Phương</Typography>
+                <Typography variant="h6" fontWeight={800}>Lập phiếu cứu trợ và phân bổ vật tư</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Điều phối viên chọn hàng từ Kho Tổng, chuyển về kho tiền phương gần vùng lũ hoặc theo kế hoạch phân bổ đã duyệt.
+                  Chọn chiến dịch, đội cứu hộ, điểm giao và vật tư xuất từ kho để lập chuyến cứu trợ thực địa.
                 </Typography>
               </Box>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField fullWidth select label="Chiến dịch" value={shipmentForm.campaignId} onChange={(event) => setShipmentForm({ ...shipmentForm, campaignId: event.target.value })}>
+                    <MenuItem value="" disabled>{campaigns.isLoading ? "Đang tải chiến dịch..." : "Chọn chiến dịch"}</MenuItem>
+                    {(campaigns.data?.data ?? []).map((campaign) => <MenuItem key={campaign.id} value={campaign.id}>{campaign.name}</MenuItem>)}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField fullWidth select label="Đội cứu hộ" value={shipmentForm.rescueTeamId} onChange={(event) => setShipmentForm({ ...shipmentForm, rescueTeamId: event.target.value })}>
+                    <MenuItem value="" disabled>{rescueTeams.isLoading ? "Đang tải đội cứu hộ..." : "Chọn đội cứu hộ sẵn sàng"}</MenuItem>
+                    {(rescueTeams.data?.data ?? []).map((team) => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField fullWidth label="Địa chỉ tiếp nhận" value={shipmentForm.destinationAddress} onChange={(event) => setShipmentForm({ ...shipmentForm, destinationAddress: event.target.value })} />
+                </Grid>
+              </Grid>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <TextField fullWidth select label="Kho nguồn" value={sourceWarehouseId} onChange={(event) => setShipmentForm({ ...shipmentForm, warehouseId: event.target.value, items: [{ inventoryItemId: "", quantity: 1 }] })}>
@@ -1281,16 +1309,17 @@ export function ShipmentsPage() {
                 <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setShipmentForm({ ...shipmentForm, items: [...shipmentForm.items, { inventoryItemId: "", quantity: 1 }] })}>
                   Thêm mặt hàng
                 </Button>
-                <Button variant="contained" disabled={!sourceWarehouseId || !hasValidShipmentItems || createShipment.isPending} onClick={() => createShipment.mutate()}>
+                <Button variant="contained" disabled={!shipmentForm.campaignId || !shipmentForm.rescueTeamId || !shipmentForm.destinationAddress.trim() || !sourceWarehouseId || !hasValidShipmentItems || createShipment.isPending} onClick={() => createShipment.mutate()}>
                   Tạo chuyến hàng
                 </Button>
               </Stack>
+              <TextField fullWidth label="Ghi chú chuyến cứu trợ" multiline minRows={2} value={shipmentForm.notes} onChange={(event) => setShipmentForm({ ...shipmentForm, notes: event.target.value })} />
             </Stack>
           </SectionPaper>
         ) : null}
       </Stack>
       <QueryState isLoading={shipments.isLoading} error={shipments.error} empty={!shipments.data?.data.length} refetch={shipments.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Xuất phát</TableCell><TableCell>Tài xế</TableCell><TableCell>Trạng thái</TableCell><TableCell sx={{ minWidth: 520 }}>Thao tác</TableCell></TableRow></TableHead><TableBody>
+        <DataTableFrame label="Danh sách chuyến hàng"><Table size="small"><TableHead><TableRow><TableCell>Chuyến hàng</TableCell><TableCell>Xuất phát</TableCell><TableCell>Tài xế</TableCell><TableCell>Trạng thái</TableCell><TableCell sx={{ minWidth: 520 }}>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {shipments.data?.data.map((shipment) => (
             <TableRow key={shipment.id}><TableCell>{shipment.emergencyCaseTitle ?? shipment.id}</TableCell><TableCell>{shipment.warehouseName}</TableCell><TableCell>{shipment.driverName}</TableCell><TableCell><StatusChip value={shipment.status} /></TableCell><TableCell sx={{ minWidth: 520, whiteSpace: "nowrap" }}>
               <Stack direction="row" spacing={1.5} flexWrap="nowrap" useFlexGap sx={{ alignItems: "center", overflowX: "auto", pb: .25 }}>
@@ -1311,7 +1340,7 @@ export function ShipmentsPage() {
               </Stack>
             </TableCell></TableRow>
           ))}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
     </>
   );
@@ -1340,7 +1369,7 @@ export function AreaAssessmentsPage() {
         {["PENDING", "VERIFIED", "REJECTED"].map((item) => <MenuItem key={item} value={item}><StatusChip value={item} /></MenuItem>)}
       </TextField>
       <QueryState isLoading={assessments.isLoading} error={assessments.error} empty={!assessments.data?.data.length} refetch={assessments.refetch}>
-        <Paper variant="outlined">
+        <DataTableFrame label="Danh sách khảo sát nhu cầu">
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -1356,7 +1385,7 @@ export function AreaAssessmentsPage() {
               {assessments.data?.data.map((assessment) => (
                 <TableRow key={assessment.id}>
                   <TableCell>
-                    <Typography fontWeight={900}>{assessment.areaName}</Typography>
+                    <Typography fontWeight={800}>{assessment.areaName}</Typography>
                     <Typography variant="body2" color="text.secondary">{assessment.ward}, {assessment.district}, {assessment.province}</Typography>
                   </TableCell>
                   <TableCell>{assessment.householdsAffected}</TableCell>
@@ -1380,10 +1409,10 @@ export function AreaAssessmentsPage() {
               ))}
             </TableBody>
           </Table>
-        </Paper>
+        </DataTableFrame>
       </QueryState>
       <Dialog open={Boolean(selectedAssessment)} onClose={() => setSelectedAssessment(null)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Chi tiết khảo sát nhu cầu</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800, color: "var(--color-green-800)" }}>Chi tiết khảo sát nhu cầu</DialogTitle>
         <DialogContent>
           {selectedAssessment ? (
             <Stack spacing={2}>
@@ -1400,11 +1429,11 @@ export function AreaAssessmentsPage() {
               </Grid>
               <SectionPaper>
                 <Stack spacing={0.75}>
-                  <Typography fontWeight={900}>Địa bàn</Typography>
+                   <Typography fontWeight={800}>Địa bàn</Typography>
                   <Typography color="text.secondary">
                     {selectedAssessment.ward}, {selectedAssessment.district}, {selectedAssessment.province}
                   </Typography>
-                  <Typography fontWeight={900}>Mức ngập / ưu tiên</Typography>
+                   <Typography fontWeight={800}>Mức ngập / ưu tiên</Typography>
                   <Stack direction="row" spacing={1}>
                     <StatusChip value={selectedAssessment.floodSeverity} />
                     <StatusChip value={selectedAssessment.priorityLevel} />
@@ -1455,6 +1484,7 @@ export function CampaignAdminPage() {
   const roles = useAuthStore((state) => state.roles);
   const isAdmin = roles.includes(ROLES.admin);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [isCampaignCoverUploading, setIsCampaignCoverUploading] = useState(false);
   const [campaignForm, setCampaignForm] = useState({
     name: "",
     description: "",
@@ -1467,31 +1497,14 @@ export function CampaignAdminPage() {
   const campaigns = useQuery({ queryKey: ["campaigns-admin"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }) });
   const minimumCampaignStartDate = toDateInputValue(new Date());
   const hasValidCampaignDates = campaignForm.startDate >= minimumCampaignStartDate && campaignForm.endDate >= campaignForm.startDate;
-  const uploadCampaignCover = useMutation({
-    mutationFn: (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      return postFormData<{ url?: string }>("/api/upload", formData);
-    },
-    onSuccess: (uploaded) => {
-      if (!uploaded.url) {
-        showToast("Tải ảnh thành công nhưng máy chủ không trả về đường dẫn ảnh.", "error");
-        return;
-      }
-      setCampaignForm((current) => ({ ...current, coverImageUrl: uploaded.url ?? "" }));
-      showToast("Đã tải ảnh bìa chiến dịch.", "success");
-    },
-    onError: (error) => showToast(getErrorMessage(error), "error"),
-  });
   const createCampaign = useMutation({
     mutationFn: async () => {
       if (!hasValidCampaignDates) {
         throw new Error("Ngày bắt đầu không được trong quá khứ và ngày kết thúc phải sau ngày bắt đầu.");
       }
-      const coverImageUrl = campaignForm.coverImageUrl.trim();
       const created = await donationApi.createCampaign({
         ...campaignForm,
-        coverImageUrl: isInlineImageDataUrl(coverImageUrl) ? "" : coverImageUrl,
+        coverImageUrl: campaignForm.coverImageUrl.trim(),
         targetAmount: Number(campaignForm.targetAmount),
         startDate: toCampaignStartIso(campaignForm.startDate),
         endDate: toCampaignEndIso(campaignForm.endDate),
@@ -1546,7 +1559,7 @@ export function CampaignAdminPage() {
       <SectionPaper>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="h6" fontWeight={900}>Tạo chiến dịch gây quỹ</Typography>
+            <Typography variant="h6" fontWeight={800}>Tạo chiến dịch gây quỹ</Typography>
             <Typography variant="body2" color="text.secondary">
               {isAdmin ? "Admin tạo chiến dịch sẽ kích hoạt ngay." : "Chiến dịch do điều phối viên tạo sẽ chuyển sang trạng thái bản nháp để admin duyệt."}
             </Typography>
@@ -1568,23 +1581,15 @@ export function CampaignAdminPage() {
               <TextField fullWidth label="Ngày kết thúc" type="date" value={campaignForm.endDate} onChange={(event) => setCampaignForm({ ...campaignForm, endDate: event.target.value })} InputLabelProps={{ shrink: true }} slotProps={{ htmlInput: { min: campaignForm.startDate || minimumCampaignStartDate } }} error={Boolean(campaignForm.endDate && campaignForm.endDate < campaignForm.startDate)} helperText={campaignForm.endDate && campaignForm.endDate < campaignForm.startDate ? "Ngày kết thúc phải sau ngày bắt đầu." : undefined} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={1}>
-                <Button component="label" variant="outlined" startIcon={<AddIcon />} disabled={uploadCampaignCover.isPending} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
-                  Chọn ảnh bìa chiến dịch
-                  <input
-                    hidden
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-                      uploadCampaignCover.mutate(file);
-                      event.currentTarget.value = "";
-                    }}
-                  />
-                </Button>
-                <TextField fullWidth label="Hoặc nhập URL ảnh bìa" value={campaignForm.coverImageUrl} onChange={(event) => setCampaignForm({ ...campaignForm, coverImageUrl: event.target.value })} placeholder="https://..." />
-              </Stack>
+              <FileUploadField
+                label="Ảnh bìa chiến dịch"
+                accept="image/*"
+                preview="image"
+                value={campaignForm.coverImageUrl}
+                onChange={(url) => setCampaignForm((current) => ({ ...current, coverImageUrl: url }))}
+                onUploadingChange={setIsCampaignCoverUploading}
+                helperText="Chọn ảnh từ thiết bị. Đường dẫn ảnh sẽ được lưu tự động sau khi tải lên."
+              />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField fullWidth multiline minRows={3} label="Mô tả chiến dịch" value={campaignForm.description} onChange={(event) => setCampaignForm({ ...campaignForm, description: event.target.value })} />
@@ -1594,13 +1599,8 @@ export function CampaignAdminPage() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              disabled={!campaignForm.name || !campaignForm.affectedArea || !hasValidCampaignDates || createCampaign.isPending || uploadCampaignCover.isPending}
-              onClick={() => {
-                if (isInlineImageDataUrl(campaignForm.coverImageUrl)) {
-                  showToast("Ảnh dạng base64 không được gửi lên backend. Chiến dịch sẽ được tạo không kèm ảnh bìa.", "warning");
-                }
-                createCampaign.mutate();
-              }}
+              disabled={!campaignForm.name || !campaignForm.affectedArea || !hasValidCampaignDates || createCampaign.isPending || isCampaignCoverUploading}
+              onClick={() => createCampaign.mutate()}
             >
               {isAdmin ? "Tạo và kích hoạt" : "Tạo bản nháp chờ duyệt"}
             </Button>
@@ -1609,7 +1609,7 @@ export function CampaignAdminPage() {
       </SectionPaper>
       ) : null}
       <QueryState isLoading={campaigns.isLoading} error={campaigns.error} empty={!campaigns.data?.data.length} refetch={campaigns.refetch}>
-        <Paper variant="outlined">
+        <DataTableFrame label="Danh sách chiến dịch gây quỹ">
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -1648,7 +1648,7 @@ export function CampaignAdminPage() {
               ))}
             </TableBody>
           </Table>
-        </Paper>
+        </DataTableFrame>
       </QueryState>
       </Stack>
     </>
@@ -1671,10 +1671,6 @@ function toCampaignStartIso(value: string) {
 
 function toCampaignEndIso(value: string) {
   return `${value}T23:59:59Z`;
-}
-
-function isInlineImageDataUrl(value?: string | null) {
-  return /^data:image\/[a-z0-9.+-]+;base64,/i.test(value?.trim() ?? "");
 }
 
 function isReadyVehicleStatus(status?: string | null) {
@@ -1701,6 +1697,7 @@ export function ProcurementPage() {
   const [selectedProcurement, setSelectedProcurement] = useState<Procurement | null>(null);
   const [payingProcurement, setPayingProcurement] = useState<Procurement | null>(null);
   const [procurementPaymentReceiptUrl, setProcurementPaymentReceiptUrl] = useState("");
+  const [isProcurementReceiptUploading, setIsProcurementReceiptUploading] = useState(false);
   const [procurementForm, setProcurementForm] = useState({
     campaignId: "",
     supplierId: "",
@@ -1775,7 +1772,7 @@ export function ProcurementPage() {
             <SectionPaper>
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant="h6" fontWeight={900}>Đề xuất mua vật tư</Typography>
+                  <Typography variant="h6" fontWeight={800}>Đề xuất mua vật tư</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Điều phối viên lập đơn mua nhiều vật tư từ nhà cung cấp về Kho Tổng. Kế toán duyệt để hệ thống khóa giữ ngân sách, tránh chi tiêu vượt quỹ.
                   </Typography>
@@ -1872,7 +1869,7 @@ export function ProcurementPage() {
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 2 }}>
-                        <Typography fontWeight={900} sx={{ color: "var(--color-green-800)" }}>
+                        <Typography fontWeight={800} sx={{ color: "var(--color-green-800)" }}>
                           {formatMoney(Number(item.quantity) * Number(item.pricePerUnit))}
                         </Typography>
                       </Grid>
@@ -1993,22 +1990,27 @@ export function ProcurementPage() {
         <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Xác nhận thanh toán mua sắm</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <Alert severity="info">Nhập URL hóa đơn/biên lai chuyển khoản để lưu minh chứng thanh toán trước khi nhập kho.</Alert>
+            <Alert severity="info">Tải hóa đơn hoặc biên lai chuyển khoản để lưu minh chứng thanh toán trước khi nhập kho.</Alert>
             <MetricCard label="Đề xuất" value={payingProcurement?.campaignName ?? payingProcurement?.id ?? "Đề xuất mua sắm"} />
-            <TextField
-              label="URL hóa đơn hoặc biên lai"
+            <FileUploadField
+              label="Hóa đơn hoặc biên lai"
+              accept="image/*,.pdf"
               value={procurementPaymentReceiptUrl}
-              onChange={(event) => setProcurementPaymentReceiptUrl(event.target.value)}
-              placeholder="https://..."
-              autoFocus
+              onChange={setProcurementPaymentReceiptUrl}
+              onUploadingChange={setIsProcurementReceiptUploading}
+              helperText="Chọn ảnh hoặc tệp PDF. Hệ thống sẽ tải tệp lên và lưu đường dẫn tự động."
+              required
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPayingProcurement(null)}>Hủy</Button>
+          <Button onClick={() => {
+            setPayingProcurement(null);
+            setProcurementPaymentReceiptUrl("");
+          }}>Hủy</Button>
           <Button
             variant="contained"
-            disabled={!payingProcurement || !procurementPaymentReceiptUrl.trim() || action.isPending}
+            disabled={!payingProcurement || !procurementPaymentReceiptUrl.trim() || action.isPending || isProcurementReceiptUploading}
             onClick={() => payingProcurement ? action.mutate({ id: payingProcurement.id, type: "pay", receiptUrl: procurementPaymentReceiptUrl.trim() }) : undefined}
           >
             Xác nhận thanh toán
@@ -2075,7 +2077,7 @@ export function AllocationPlansPage() {
             <SectionPaper>
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant="h6" fontWeight={900}>Lập phương án cấp phát</Typography>
+                  <Typography variant="h6" fontWeight={800}>Lập phương án cấp phát</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Chọn chiến dịch, báo cáo nhu cầu đã xác minh và khai báo lượng hàng/tiền cần giữ chỗ trước khi trình kế toán duyệt.
                   </Typography>
@@ -2197,6 +2199,7 @@ export function DisbursementsPage() {
   const [selectedDisbursement, setSelectedDisbursement] = useState<WorkflowRow | null>(null);
   const [disbursementForm, setDisbursementForm] = useState({ allocationPlanId: "", expenseCategory: "DIRECT_AID", itemName: "Hỗ trợ tiền mặt", type: "CASH", method: "IN_PERSON", amount: 0 });
   const [executeForm, setExecuteForm] = useState({ invoiceUrl: "", actualAmount: 0 });
+  const [isDisbursementReceiptUploading, setIsDisbursementReceiptUploading] = useState(false);
   const rows = useQuery({ queryKey: ["disbursements"], queryFn: () => aidApi.disbursements({ page: 1, limit: 50 }) });
   const plans = useQuery({ queryKey: ["allocation-plans", "disbursement-select"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }), enabled: canCreateDisbursement });
   const create = useMutation({
@@ -2237,7 +2240,7 @@ export function DisbursementsPage() {
             <SectionPaper>
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant="h6" fontWeight={900}>Đề xuất chi hỗ trợ</Typography>
+                  <Typography variant="h6" fontWeight={800}>Đề xuất chi hỗ trợ</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Điều phối viên tạo khoản chi, kế toán thực hiện chuyển khoản và tải biên lai để ghi chi phí trực tiếp lên sổ cái công khai.
                   </Typography>
@@ -2285,17 +2288,28 @@ export function DisbursementsPage() {
         }}>Thực hiện</Button> : <Typography variant="body2" color="text.secondary">Chờ kế toán chuyển khoản</Typography>
       )} />
       <Dialog open={Boolean(selectedDisbursement)} onClose={() => setSelectedDisbursement(null)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 900, color: "var(--color-green-800)" }}>Thực hiện giải ngân</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800, color: "var(--color-green-800)" }}>Thực hiện giải ngân</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <MetricCard label="Khoản chi" value={selectedDisbursement?.itemName ?? selectedDisbursement?.campaignName ?? selectedDisbursement?.id ?? "-"} />
             <TextField label="Số tiền thực chuyển" type="number" value={executeForm.actualAmount} onChange={(event) => setExecuteForm({ ...executeForm, actualAmount: Number(event.target.value) })} />
-            <TextField label="URL biên lai chuyển khoản" value={executeForm.invoiceUrl} onChange={(event) => setExecuteForm({ ...executeForm, invoiceUrl: event.target.value })} placeholder="https://..." />
+            <FileUploadField
+              label="Biên lai chuyển khoản"
+              accept="image/*,.pdf"
+              value={executeForm.invoiceUrl}
+              onChange={(url) => setExecuteForm((current) => ({ ...current, invoiceUrl: url }))}
+              onUploadingChange={setIsDisbursementReceiptUploading}
+              helperText="Chọn ảnh hoặc tệp PDF. Hệ thống sẽ tải tệp lên và lưu đường dẫn tự động."
+              required
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedDisbursement(null)}>Hủy</Button>
-          <Button variant="contained" disabled={!selectedDisbursement || !executeForm.invoiceUrl || Number(executeForm.actualAmount) <= 0 || execute.isPending} onClick={() => selectedDisbursement ? execute.mutate(selectedDisbursement.id) : undefined}>
+          <Button onClick={() => {
+            setSelectedDisbursement(null);
+            setExecuteForm({ invoiceUrl: "", actualAmount: 0 });
+          }}>Hủy</Button>
+          <Button variant="contained" disabled={!selectedDisbursement || !executeForm.invoiceUrl || Number(executeForm.actualAmount) <= 0 || execute.isPending || isDisbursementReceiptUploading} onClick={() => selectedDisbursement ? execute.mutate(selectedDisbursement.id) : undefined}>
             Xác nhận chuyển khoản
           </Button>
         </DialogActions>
@@ -2402,9 +2416,9 @@ function WorkflowTable({ title, rows, loading, error, refetch, actions }: { titl
     <>
       <PageHeader title={title} description="Hồ sơ tài chính và cứu trợ được đồng bộ từ hệ thống vận hành Tâm Lũ." />
       <QueryState isLoading={loading} error={error} empty={!rows.length} refetch={refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Bản ghi</TableCell><TableCell>Số tiền</TableCell><TableCell>Trạng thái</TableCell><TableCell>Ngày tạo</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+        <DataTableFrame label={title}><Table size="small"><TableHead><TableRow><TableCell>Bản ghi</TableCell><TableCell>Số tiền</TableCell><TableCell>Trạng thái</TableCell><TableCell>Ngày tạo</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {rows.map((row) => <TableRow key={row.id}><TableCell>{row.campaignName ?? row.areaName ?? row.itemName ?? row.id}</TableCell><TableCell>{formatMoney(row.totalAmount ?? row.totalPlannedAmount ?? row.amount ?? 0)}</TableCell><TableCell><StatusChip value={row.status} /></TableCell><TableCell>{formatDate(row.createdAt)}</TableCell><TableCell>{actions(row)}</TableCell></TableRow>)}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
     </>
   );
@@ -2429,7 +2443,7 @@ export function UsersPage() {
         <MenuItem value="">Tất cả</MenuItem>{Object.values(ROLES).map((item) => <MenuItem key={item} value={item}>{ROLE_LABELS[item]}</MenuItem>)}
       </TextField>
       <QueryState isLoading={users.isLoading} error={users.error} empty={!users.data?.data.length} refetch={users.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Họ tên</TableCell><TableCell>Email</TableCell><TableCell>Số điện thoại</TableCell><TableCell>Vai trò</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+        <DataTableFrame label="Danh sách người dùng"><Table size="small"><TableHead><TableRow><TableCell>Họ tên</TableCell><TableCell>Email</TableCell><TableCell>Số điện thoại</TableCell><TableCell>Vai trò</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
           {users.data?.data.map((user) => {
             const needsApproval = userNeedsOperationalApproval(user, role);
             return (
@@ -2458,7 +2472,7 @@ export function UsersPage() {
               </TableRow>
             );
           })}
-        </TableBody></Table></Paper>
+        </TableBody></Table></DataTableFrame>
       </QueryState>
       <Alert severity="info" sx={{ mt: 2 }}>Mã vai trò: {Object.entries(ROLE_IDS).map(([key, value]) => `${key}=${value}`).join(", ")}</Alert>
     </>
@@ -2507,7 +2521,7 @@ export function OrganizationsPage() {
         {showRegisterForm ? (
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Đăng ký đơn vị hỗ trợ ngoài</Typography>
+              <Typography variant="h6" fontWeight={800}>Đăng ký đơn vị hỗ trợ ngoài</Typography>
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Tên đơn vị" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Grid>
                 <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth select label="Loại hình" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>{["NGO", "COMPANY", "GOVERNMENT", "COMMUNITY_GROUP"].map((type) => <MenuItem key={type} value={type}>{type}</MenuItem>)}</TextField></Grid>
@@ -2524,9 +2538,9 @@ export function OrganizationsPage() {
         ) : null}
       </Stack>
       <QueryState isLoading={rows.isLoading} error={rows.error} empty={!list?.length} refetch={rows.refetch}>
-        <Paper variant="outlined"><Table size="small"><TableHead><TableRow><TableCell>Tên tổ chức</TableCell><TableCell>Loại hình</TableCell><TableCell>Điểm tin cậy</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
-          {(list ?? []).map((org) => <TableRow key={org.id}><TableCell><Typography component="span" fontWeight={900}>{org.name}</Typography></TableCell><TableCell>{org.type}</TableCell><TableCell>{org.trustScore}</TableCell><TableCell><Stack direction="row" spacing={1}><StatusChip value={org.status} /><StatusChip value={org.isVerified ? "VERIFIED" : "PENDING"} /></Stack></TableCell><TableCell>{isAdmin ? <Stack direction="row" spacing={1}><Button size="small" disabled={verify.isPending || org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: true })}>Duyệt</Button><Button size="small" color="error" disabled={verify.isPending || !org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: false })}>Hủy xác minh</Button></Stack> : <Typography variant="body2" color="text.secondary">Chờ xét duyệt</Typography>}</TableCell></TableRow>)}
-        </TableBody></Table></Paper>
+        <DataTableFrame label="Danh sách tổ chức đối tác"><Table size="small"><TableHead><TableRow><TableCell>Tên tổ chức</TableCell><TableCell>Loại hình</TableCell><TableCell>Điểm tin cậy</TableCell><TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
+          {(list ?? []).map((org) => <TableRow key={org.id}><TableCell><Typography component="span" fontWeight={800}>{org.name}</Typography></TableCell><TableCell>{org.type}</TableCell><TableCell>{org.trustScore}</TableCell><TableCell><Stack direction="row" spacing={1}><StatusChip value={org.status} /><StatusChip value={org.isVerified ? "VERIFIED" : "PENDING"} /></Stack></TableCell><TableCell>{isAdmin ? <Stack direction="row" spacing={1}><Button size="small" disabled={verify.isPending || org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: true })}>Duyệt</Button><Button size="small" color="error" disabled={verify.isPending || !org.isVerified} onClick={() => verify.mutate({ id: org.id, isVerified: false })}>Hủy xác minh</Button></Stack> : <Typography variant="body2" color="text.secondary">Chờ xét duyệt</Typography>}</TableCell></TableRow>)}
+        </TableBody></Table></DataTableFrame>
       </QueryState>
     </>
   );
@@ -2592,7 +2606,7 @@ export function ComplaintsPage() {
                         <Button
                           variant="text"
                           onClick={() => setExpandedComplaintId((current) => current === item.id ? "" : item.id)}
-                          sx={{ display: "block", maxWidth: "100%", minWidth: 0, p: 0, textAlign: "left", textTransform: "none", fontWeight: 900, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.45 }}
+                          sx={{ display: "block", maxWidth: "100%", minWidth: 0, p: 0, textAlign: "left", textTransform: "none", fontWeight: 800, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.45 }}
                         >
                           {item.title}
                         </Button>
@@ -2609,7 +2623,7 @@ export function ComplaintsPage() {
                           <Grid container spacing={2.5}>
                             <Grid size={{ xs: 12, lg: 7 }}>
                               <Stack spacing={1.25}>
-                                <Typography variant="overline" color="text.secondary" fontWeight={900}>Nội dung phản ánh</Typography>
+                                <Typography variant="overline" color="text.secondary" fontWeight={800}>Nội dung phản ánh</Typography>
                                 <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.7 }}>{item.description || "Chưa có nội dung chi tiết."}</Typography>
                                 <Typography variant="body2" color="text.secondary">Loại phản ánh: {getComplaintTypeLabel(item.complaintType)}</Typography>
                                 {item.resolution ? <Alert severity={normalizeComplaintStatus(item.status) === "REJECTED" ? "warning" : "success"}>Phản hồi xử lý: {item.resolution}</Alert> : null}
@@ -2617,15 +2631,15 @@ export function ComplaintsPage() {
                             </Grid>
                             <Grid size={{ xs: 12, lg: 5 }}>
                               <Stack spacing={1.25}>
-                                <Typography variant="overline" color="text.secondary" fontWeight={900}>Thông tin người phản ánh</Typography>
-                                <Typography fontWeight={900}>{getComplaintReporterName(record)}</Typography>
+                                <Typography variant="overline" color="text.secondary" fontWeight={800}>Thông tin người phản ánh</Typography>
+                                <Typography fontWeight={800}>{getComplaintReporterName(record)}</Typography>
                                 <Typography variant="body2" color="text.secondary">{getComplaintReporterContact(record)}</Typography>
                                 <Typography variant="caption" color="text.secondary">Mã phản ánh: {item.id}</Typography>
                               </Stack>
                             </Grid>
                             {!isTerminalStatus ? <Grid size={{ xs: 12 }}>
                               <Stack spacing={1.5} sx={{ borderTop: "1px solid var(--color-border)", pt: 2 }}>
-                                <Typography variant="subtitle2" fontWeight={900}>Cập nhật trạng thái phản ánh</Typography>
+                                <Typography variant="subtitle2" fontWeight={800}>Cập nhật trạng thái phản ánh</Typography>
                                 <Grid container spacing={1.5} alignItems="flex-start">
                                   <Grid size={{ xs: 12, md: 4 }}>
                                     <TextField fullWidth select label="Trạng thái" value={selectedStatus} onChange={(event) => setStatusDrafts((current) => ({ ...current, [item.id]: event.target.value as "INVESTIGATING" | "RESOLVED" | "REJECTED" }))} sx={{ "& .MuiInputBase-root": { height: 88 } }}>
@@ -2689,7 +2703,7 @@ export function AuditLogsPage() {
         </TextField>
       </Stack>
       <QueryState isLoading={rows.isLoading} error={rows.error} empty={!filteredRows.length} refetch={rows.refetch}>
-        <Paper variant="outlined">
+        <DataTableFrame label="Nhật ký hệ thống">
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -2718,7 +2732,7 @@ export function AuditLogsPage() {
               })}
             </TableBody>
           </Table>
-        </Paper>
+        </DataTableFrame>
       </QueryState>
     </>
   );
@@ -2847,7 +2861,7 @@ function SimpleStaticList({ title, description = "Dữ liệu vận hành từ p
               <Grid size={{ xs: 12, md: 6, lg: 4 }} key={String(record.id ?? index)}>
                 <SectionPaper sx={{ height: "100%" }}>
                   <Stack spacing={1.5} sx={{ minHeight: 88, height: "100%", justifyContent: "space-between" }}>
-                    <Typography fontWeight={900} sx={{ lineHeight: 1.45 }}>
+                    <Typography fontWeight={800} sx={{ lineHeight: 1.45 }}>
                       {String(record[primaryKey] ?? record.name ?? record.id ?? "Bản ghi")}
                     </Typography>
                     {record.status ? (

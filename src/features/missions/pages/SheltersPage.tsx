@@ -26,6 +26,7 @@ import { TamLuMap } from "@/shared/maps/TamLuMap";
 import { formatDate } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { QueryState } from "@/shared/ui/QueryState";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
 import { SectionPaper } from "@/shared/ui/SectionPaper";
 import { StatusChip } from "@/shared/ui/StatusChip";
 import { useToast } from "@/shared/ui/toast";
@@ -253,7 +254,7 @@ export function SheltersPage() {
           {showShelterForm ? (
             <SectionPaper>
               <Stack spacing={2}>
-                <Typography variant="h6" fontWeight={900}>Tạo điểm trú tạm an toàn</Typography>
+                <Typography variant="h6" fontWeight={800}>Tạo điểm trú tạm an toàn</Typography>
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField fullWidth label="Tên điểm trú" value={shelterForm.name} onChange={(event) => setShelterForm({ ...shelterForm, name: event.target.value })} />
@@ -297,16 +298,16 @@ export function SheltersPage() {
                   mt: { xs: 2, md: 0 },
                   width: { xs: "100%", md: 320 },
                   p: 2,
-                  borderRadius: 0,
+                  borderRadius: 2,
                   bgcolor: "var(--color-surface)",
-                  backdropFilter: "blur(14px)",
+                  boxShadow: "var(--shadow-surface)",
                 }}
               >
                 <Stack spacing={1.25}>
-                  <Typography fontWeight={900}>Sức chứa điểm trú tạm</Typography>
+                  <Typography fontWeight={800}>Sức chứa điểm trú tạm</Typography>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography variant="body2" color="text.secondary">Người đã ghi nhận</Typography>
-                    <Typography fontWeight={900}>{totalOccupancy}/{totalCapacity}</Typography>
+                    <Typography fontWeight={800}>{totalOccupancy}/{totalCapacity}</Typography>
                   </Stack>
                   <LinearProgress variant="determinate" value={occupancyPct} color={occupancyPct > 85 ? "warning" : "success"} />
                 </Stack>
@@ -318,14 +319,14 @@ export function SheltersPage() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={900}>Ghi nhận vào điểm trú</Typography>
+              <Typography variant="h6" fontWeight={800}>Ghi nhận vào điểm trú</Typography>
               <Typography variant="body2" color="text.secondary">
                 Chọn điểm trú tạm, nhập tên người hoặc hộ gia đình, sau đó check-in hoặc check-out khi rời điểm trú.
               </Typography>
               {activeCheckIn ? (
                 <Stack spacing={1.5}>
                   <Alert severity="info">Tài khoản đang lưu trú tại {activeCheckIn.shelterName ?? "điểm trú tạm đã chọn"}. Hãy check-out trước khi chỉnh sửa hoặc check-in điểm mới.</Alert>
-                  <Typography fontWeight={900}>{activeCheckIn.personName} · {activeCheckIn.numPeople} người</Typography>
+                  <Typography fontWeight={800}>{activeCheckIn.personName} · {activeCheckIn.numPeople} người</Typography>
                 </Stack>
               ) : <>
               <TextField select label="Điểm trú tạm" value={form.shelterId} onChange={(event) => setForm({ ...form, shelterId: event.target.value })}>
@@ -355,7 +356,7 @@ export function SheltersPage() {
         <Grid size={{ xs: 12 }}>
           <SectionPaper>
             <Stack spacing={1.5}>
-              <Typography variant="h6" fontWeight={900}>
+              <Typography variant="h6" fontWeight={800}>
                 Danh sách đã check-in{selectedShelter ? ` tại ${selectedShelter.name}` : ""}
               </Typography>
               {canManageShelters ? (
@@ -381,7 +382,7 @@ export function SheltersPage() {
                   emptyText="Khi có người dân check-in tại điểm trú này, danh sách sẽ hiển thị tại đây."
                   refetch={shelterCheckIns.refetch}
                 >
-                  <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+                  <DataTableFrame label="Danh sách người đang lưu trú">
                     <Table size="small">
                       <TableHead>
                         <TableRow>
@@ -413,7 +414,7 @@ export function SheltersPage() {
                         ))}
                       </TableBody>
                     </Table>
-                  </Paper>
+                  </DataTableFrame>
                 </QueryState>
               )}
             </Stack>
@@ -423,9 +424,16 @@ export function SheltersPage() {
 
         {shelterOptions.map((shelter) => (
           <Grid size={{ xs: 12, md: 6, lg: 4 }} key={shelter.id}>
-            <SectionPaper>
+            <SectionPaper
+              sx={{
+                height: "100%",
+                borderTop: "3px solid var(--color-green-600)",
+                transition: "border-color var(--motion-fast), background-color var(--motion-fast)",
+                "&:hover": { borderTopColor: "var(--color-green-800)", bgcolor: "var(--color-green-50)" },
+              }}
+            >
               <Stack spacing={1}>
-                <Typography fontWeight={900}>{shelter.name}</Typography>
+                <Typography fontWeight={800}>{shelter.name}</Typography>
                 <Typography color="text.secondary">{shelter.address}</Typography>
                 <StatusChip value={shelter.status} />
                 <Box>

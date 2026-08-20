@@ -64,7 +64,7 @@ export function PublicReliefMapPage() {
           backgroundImage: "none",
         },
         "& .MuiAlert-root.MuiAlert-standardError": {
-          borderRadius: 3,
+          borderRadius: 2,
           bgcolor: "#fff1f2",
           color: "#b91c1c",
           border: "1px solid rgba(248,113,113,.28)",
@@ -73,10 +73,10 @@ export function PublicReliefMapPage() {
     >
       <Box sx={{ mx: "auto", maxWidth: 1500 }}>
         <Stack spacing={1.4} sx={{ mb: { xs: 3, md: 4 }, maxWidth: 880 }}>
-          <Typography sx={{ color: pageTheme.waterSoft, fontSize: 13, fontWeight: 950, letterSpacing: ".12em", textTransform: "uppercase" }}>
+          <Typography sx={{ color: pageTheme.waterSoft, fontSize: 13, fontWeight: 800, letterSpacing: 0, textTransform: "uppercase" }}>
             Bản đồ cứu trợ công khai
           </Typography>
-          <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1, fontWeight: 950, letterSpacing: "-.035em" }}>
+          <Typography component="h1" sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.08, fontWeight: 800, letterSpacing: 0 }}>
             Luồng hậu cần của chiến dịch đã xác minh
           </Typography>
           <Typography sx={{ color: pageTheme.muted, fontSize: { xs: 16, md: 18 }, lineHeight: 1.65 }}>
@@ -86,13 +86,12 @@ export function PublicReliefMapPage() {
       <Paper
         sx={{
           p: { xs: 2, md: 3 },
-          borderRadius: 3,
+          borderRadius: 2,
           border: `1px solid ${pageTheme.line}`,
           bgcolor: pageTheme.panel,
           color: pageTheme.text,
-          boxShadow: "none",
-          backdropFilter: "blur(18px)",
           overflow: "hidden",
+          boxShadow: "var(--shadow-surface)",
         }}
       >
         <Stack spacing={2.5}>
@@ -148,10 +147,10 @@ export function PublicReliefMapPage() {
               sx={{
                 position: "relative",
                 overflow: "visible",
-                borderRadius: 3,
+                borderRadius: 2,
                 border: `1px solid ${pageTheme.line}`,
                 bgcolor: pageTheme.panelSoft,
-                "& .leaflet-container": { borderRadius: 3 },
+                "& .leaflet-container": { borderRadius: 2 },
               }}
             >
               <TamLuMap markers={markers} height={560} />
@@ -164,16 +163,15 @@ export function PublicReliefMapPage() {
                   mt: { xs: 2, md: 0 },
                   width: { xs: "100%", md: 300 },
                   p: 2.25,
-                  borderRadius: 3,
+                  borderRadius: 2,
                   bgcolor: pageTheme.panel,
                   color: pageTheme.text,
                   borderColor: pageTheme.lineStrong,
-                  backdropFilter: "blur(14px)",
-                  boxShadow: "none",
+                  boxShadow: "var(--shadow-surface)",
                 }}
               >
                 <Stack spacing={1.5}>
-                  <Typography fontWeight={900}>Lớp bản đồ</Typography>
+                  <Typography fontWeight={800}>Lớp bản đồ</Typography>
                   {[
                     { label: "Kho hàng đã xác minh", color: pageTheme.waterSoft, value: markers.length },
                     { label: "Tuyến phân phối đang hoạt động", color: pageTheme.amber, value: map.data?.activeRoutes.length ?? 0 },
@@ -181,7 +179,7 @@ export function PublicReliefMapPage() {
                   ].map((item) => (
                     <Stack key={item.label} direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 10, height: 10, borderRadius: 0, bgcolor: item.color }} />
+                        <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: item.color, flex: "0 0 auto" }} />
                         <Typography variant="body2" fontWeight={800}>{item.label}</Typography>
                       </Stack>
                       <Typography variant="body2" sx={{ color: pageTheme.muted }}>{item.value}</Typography>
@@ -192,7 +190,7 @@ export function PublicReliefMapPage() {
             </Box>
           </QueryState>
           <Stack spacing={1}>
-            <Typography variant="h6" fontWeight={900} sx={{ color: pageTheme.text }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: pageTheme.text }}>
               Tóm tắt tuyến phân phối
             </Typography>
             {map.data?.activeRoutes.map((route) => (
@@ -201,7 +199,7 @@ export function PublicReliefMapPage() {
                 variant="outlined"
                 sx={{
                   p: { xs: 1.75, md: 2 },
-                  borderRadius: 3,
+                  borderRadius: 2,
                   borderColor: pageTheme.line,
                   bgcolor: pageTheme.panelSoft,
                   color: pageTheme.text,

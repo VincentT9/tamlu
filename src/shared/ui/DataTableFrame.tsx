@@ -15,12 +15,12 @@ export function DataTableFrame({ children, label }: DataTableFrameProps) {
       tabIndex={0}
       sx={{
         overflowX: "auto",
-        borderRadius: 1.5,
+        borderRadius: "var(--radius-panel)",
         borderColor: "var(--color-border)",
         bgcolor: "var(--color-surface)",
-        boxShadow: "0 6px 20px rgba(14, 92, 107, 0.05)",
+        boxShadow: "none",
         "&:focus-visible": {
-          outline: "3px solid rgba(14, 92, 107, 0.2)",
+          outline: "3px solid rgba(83, 159, 5, 0.24)",
           outlineOffset: 2,
         },
       }}

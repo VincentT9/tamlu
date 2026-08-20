@@ -41,20 +41,7 @@ export function QueryState({ isLoading, error, empty, emptyTitle, emptyText, ref
 
   if (empty) {
     return (
-      <Box sx={{ py: 7, px: 2, textAlign: "center", color: "var(--color-text)" }}>
-        <Box
-          aria-hidden="true"
-          sx={{
-            mx: "auto",
-            mb: 2,
-            width: 56,
-            height: 56,
-            borderRadius: "50%",
-            border: "1px solid",
-            borderColor: "var(--color-border)",
-            bgcolor: "var(--color-green-50)",
-          }}
-        />
+      <Box className="tamlu-empty-state" sx={{ py: 5, px: 2.5, textAlign: "left", color: "var(--color-text)" }}>
         <Typography variant="h6" fontWeight={800}>
           {emptyTitle ?? "Chưa có dữ liệu"}
         </Typography>

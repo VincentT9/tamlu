@@ -48,8 +48,8 @@ export function ForgotPasswordPage() {
     <main className="grid min-h-[100dvh] place-items-center bg-[var(--color-cream-50)] px-4 py-10 text-[var(--color-text)]">
       <Card className="w-full max-w-md border-[var(--color-border)] bg-[var(--color-bg-card)]">
         <div className="mb-6">
-          <p className="text-sm font-black uppercase tracking-wide text-[var(--color-green-600)]">Khôi phục tài khoản</p>
-          <h1 className="mt-2 text-3xl font-black text-[var(--color-green-800)]">Đặt lại mật khẩu</h1>
+          <p className="text-sm font-extrabold uppercase text-[var(--color-green-600)]">Khôi phục tài khoản</p>
+          <h1 className="mt-2 text-3xl font-extrabold text-[var(--color-green-800)]">Đặt lại mật khẩu</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">Sử dụng email đã đăng ký để nhận mã OTP, sau đó tạo mật khẩu mới.</p>
         </div>
 

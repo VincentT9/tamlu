@@ -1,10 +1,11 @@
-import { Paper, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { donationApi } from "@/features/donations/api";
 import { formatDate, formatMoney } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { QueryState } from "@/shared/ui/QueryState";
 import { StatusChip } from "@/shared/ui/StatusChip";
+import { DataTableFrame } from "@/shared/ui/DataTableFrame";
 
 const paymentMethodLabels: Record<string, string> = {
   BANK_TRANSFER: "Chuyển khoản ngân hàng",
@@ -16,7 +17,7 @@ export function DonationHistoryPage() {
     <>
       <PageHeader title="Lịch sử ủng hộ" description="Các khoản ủng hộ cá nhân được ghi nhận từ hệ thống Tâm Lũ." />
       <QueryState isLoading={donations.isLoading} error={donations.error} empty={!donations.data?.data.length} refetch={donations.refetch}>
-        <Paper variant="outlined">
+        <DataTableFrame label="Lịch sử các khoản ủng hộ">
           <Table>
             <TableHead>
               <TableRow>
@@ -41,7 +42,7 @@ export function DonationHistoryPage() {
               ))}
             </TableBody>
           </Table>
-        </Paper>
+        </DataTableFrame>
       </QueryState>
     </>
   );

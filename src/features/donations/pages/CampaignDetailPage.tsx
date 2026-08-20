@@ -1,13 +1,13 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CheckIcon from "@mui/icons-material/Check";
 import PaidIcon from "@mui/icons-material/Paid";
-import { Box, Button, Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Divider, Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { donationApi } from "@/features/donations/api";
 import type { PublicCampaignDetail } from "@/shared/api/domain";
-import { getCampaignImageUrl, setCampaignImageFallback } from "@/shared/utils/campaignImage";
 import { formatDate, formatMoney, percent } from "@/shared/utils/format";
-import { MetricCard } from "@/shared/ui/MetricCard";
+import { CampaignMedia } from "@/shared/ui/CampaignMedia";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { PublicPageFrame } from "@/shared/ui/PublicPageFrame";
 import { QueryState } from "@/shared/ui/QueryState";
@@ -51,24 +51,10 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
         <Grid size={{ xs: 12, lg: 8 }}>
           <SectionPaper>
             <Stack spacing={2}>
-              <Box sx={{ position: "relative", overflow: "visible", borderRadius: 0 }}>
-                <Box
-                  component="img"
-                  src={getCampaignImageUrl(campaign.coverImageUrl)}
-                  alt={campaign.name}
-                  loading="lazy"
-                  onError={setCampaignImageFallback}
-                  sx={{
-                    width: "100%",
-                    height: { xs: 260, md: 420 },
-                    objectFit: "cover",
-                    objectPosition: "center",
-                    display: "block",
-                    filter: "saturate(.86) contrast(1.02)",
-                  }}
-                />
+              <Box sx={{ position: "relative", overflow: "hidden", borderRadius: 2 }}>
+                <CampaignMedia src={campaign.coverImageUrl} alt={campaign.name} height={{ xs: 260, md: 420 }} />
                 <Box sx={{ position: "absolute", inset: "auto 0 0 0", p: 2.5, background: "linear-gradient(180deg, transparent, rgba(246,248,232,.90))", color: "var(--color-text)" }}>
-                  <Typography fontWeight={900} sx={{ color: "var(--color-green-800)" }}>{campaign.affectedArea}</Typography>
+                  <Typography fontWeight={800} sx={{ color: "var(--color-green-800)" }}>{campaign.affectedArea}</Typography>
                   <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
                     {formatDate(campaign.startDate)} đến {formatDate(campaign.endDate)}
                   </Typography>
@@ -80,7 +66,7 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
                   Thời gian chiến dịch công khai
                 </Typography>
               </Stack>
-              <LinearProgress variant="determinate" value={Math.min(progress, 100)} sx={{ height: 10, borderRadius: 0 }} />
+              <LinearProgress variant="determinate" value={Math.min(progress, 100)} sx={{ height: 10, borderRadius: 999 }} />
               <Typography fontWeight={800}>
                 Đã quyên góp {formatMoney(campaign.currentAmount)} trên mục tiêu {formatMoney(campaign.targetAmount)} ({percent(progress)})
               </Typography>
@@ -89,15 +75,26 @@ function CampaignDetailContent({ data }: { data: PublicCampaignDetail }) {
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
           <Stack spacing={2}>
-            <MetricCard label="Tổng thu" value={formatMoney(data.ledgerSummary.totalIncome)} tone="green" />
-            <MetricCard label="Tổng chi" value={formatMoney(data.ledgerSummary.totalExpense)} tone="orange" />
-            <MetricCard label="Số dư còn lại" value={formatMoney(data.ledgerSummary.balance)} />
-            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 0 }}>
+            <SectionPaper>
+              <Stack spacing={1.75} divider={<Divider flexItem />}>
+                {[
+                  ["Tổng thu", formatMoney(data.ledgerSummary.totalIncome)],
+                  ["Tổng chi", formatMoney(data.ledgerSummary.totalExpense)],
+                  ["Số dư còn lại", formatMoney(data.ledgerSummary.balance)],
+                ].map(([label, value]) => (
+                  <Stack key={label} direction="row" justifyContent="space-between" alignItems="baseline" spacing={2}>
+                    <Typography color="text.secondary" fontWeight={700}>{label}</Typography>
+                    <Typography sx={{ color: "var(--color-green-800)", fontSize: 22, fontWeight: 800, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{value}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </SectionPaper>
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
               <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={900}>Cơ sở tạo dựng niềm tin</Typography>
+                <Typography variant="h6" fontWeight={800}>Cơ sở tạo dựng niềm tin</Typography>
                 {["Sổ thu chi công khai", "Luân chuyển hàng cứu trợ", "Minh chứng hiện trường"].map((item) => (
                   <Stack key={item} direction="row" spacing={1.25} alignItems="center">
-                    <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "success.main" }} />
+                    <CheckIcon sx={{ color: "var(--color-green-700)", fontSize: 19, flex: "0 0 auto" }} />
                     <Typography fontWeight={800}>{item}</Typography>
                   </Stack>
                 ))}
