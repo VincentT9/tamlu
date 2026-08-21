@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -794,15 +794,165 @@ export function TeamProofsPage() {
 }
 export function TeamProfilePage() {
   const team = useQuery({ queryKey: ["my-team"], queryFn: missionApi.myTeam });
+  const profile = team.data?.team;
+  const members = profile?.members ?? [];
+  const activeMemberCount = members.filter((member) => member.isActive).length;
+
   return (
     <>
       <PageHeader title="Đội cứu hộ của tôi" description="Hồ sơ đội hiện tại được đồng bộ từ hệ thống." />
-      <QueryState isLoading={team.isLoading} error={team.error} refetch={team.refetch}>
-        <SectionPaper>
-          <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{JSON.stringify(team.data, null, 2)}</pre>
-        </SectionPaper>
+      <QueryState
+        isLoading={team.isLoading}
+        error={team.error}
+        empty={!profile}
+        emptyTitle="Chưa có thông tin đội cứu hộ"
+        emptyText="Tài khoản của bạn chưa được liên kết với đội cứu hộ nào."
+        refetch={team.refetch}
+      >
+        {profile ? (
+          <Stack spacing={2.5}>
+            <SectionPaper>
+              <Stack spacing={3}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.5}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  justifyContent="space-between"
+                >
+                  <Box>
+                    <Typography component="h2" variant="h4" fontWeight={800} sx={{ textWrap: "balance" }}>
+                      {profile.name}
+                    </Typography>
+                    <Typography sx={{ mt: 0.75, color: "var(--color-text-muted)", maxWidth: 680 }}>
+                      {profile.specialty || "Chưa cập nhật chuyên môn của đội."}
+                    </Typography>
+                  </Box>
+                  <StatusChip value={profile.status} size="medium" />
+                </Stack>
+
+                <Divider />
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))" },
+                    gap: { xs: 2, md: 3 },
+                  }}
+                >
+                  <TeamProfileFact label="Đội trưởng" value={profile.leaderName || "Chưa cập nhật"} />
+                  <TeamProfileFact
+                    label="Số điện thoại liên hệ"
+                    value={profile.phone || "Chưa cập nhật"}
+                    href={profile.phone ? `tel:${profile.phone}` : undefined}
+                  />
+                  <TeamProfileFact label="Thành viên hoạt động" value={`${activeMemberCount}/${members.length} người`} />
+                  <TeamProfileFact label="Ngày thành lập" value={profile.createdAt ? formatDate(profile.createdAt) : "Chưa cập nhật"} />
+                </Box>
+              </Stack>
+            </SectionPaper>
+
+            <SectionPaper>
+              <Stack spacing={2.25}>
+                <Box>
+                  <Typography component="h2" variant="h5" fontWeight={800}>
+                    Thành viên đội
+                  </Typography>
+                  <Typography sx={{ mt: 0.5, color: "var(--color-text-muted)" }}>
+                    Vai trò, trạng thái và thông tin liên hệ của từng thành viên.
+                  </Typography>
+                </Box>
+
+                {members.length ? (
+                  <Stack divider={<Divider flexItem />}>
+                    {members.map((member) => (
+                      <Box
+                        key={member.id}
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "auto minmax(0, 1fr)", md: "auto minmax(0, 1.5fr) minmax(180px, 1fr) auto" },
+                          columnGap: 2,
+                          rowGap: 1.25,
+                          alignItems: "center",
+                          py: 2,
+                        }}
+                      >
+                        <Avatar
+                          variant="rounded"
+                          sx={{
+                            gridRow: { xs: "1 / span 2", md: "auto" },
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            bgcolor: "var(--color-green-700)",
+                            color: "#ffffff",
+                            fontWeight: 800,
+                          }}
+                        >
+                          {getMemberInitials(member.userFullName)}
+                        </Avatar>
+
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography fontWeight={800} sx={{ overflowWrap: "anywhere" }}>
+                            {member.userFullName || "Chưa cập nhật họ tên"}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 0.25, color: "var(--color-text-muted)" }}>
+                            {member.roleInTeam || "Thành viên đội"}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ gridColumn: { xs: "2", md: "auto" }, minWidth: 0 }}>
+                          <Typography variant="caption" sx={{ color: "var(--color-text-muted)" }}>
+                            Số điện thoại
+                          </Typography>
+                          <Typography
+                            component={member.userPhone ? "a" : "p"}
+                            href={member.userPhone ? `tel:${member.userPhone}` : undefined}
+                            fontWeight={700}
+                            sx={{ m: 0, color: "inherit", textDecoration: "none", overflowWrap: "anywhere" }}
+                          >
+                            {member.userPhone || "Chưa cập nhật"}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, justifySelf: { xs: "start", md: "end" } }}>
+                          <StatusChip value={member.isActive ? "ACTIVE" : "INACTIVE"} />
+                        </Box>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Alert severity="info">Đội cứu hộ chưa có thành viên được ghi nhận.</Alert>
+                )}
+              </Stack>
+            </SectionPaper>
+          </Stack>
+        ) : null}
       </QueryState>
     </>
   );
+}
+
+function TeamProfileFact({ label, value, href }: { label: string; value: string; href?: string }) {
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      <Typography variant="caption" sx={{ color: "var(--color-text-muted)" }}>
+        {label}
+      </Typography>
+      <Typography
+        component={href ? "a" : "p"}
+        href={href}
+        fontWeight={800}
+        sx={{ mt: 0.5, mb: 0, color: "inherit", textDecoration: "none", overflowWrap: "anywhere" }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function getMemberInitials(name?: string | null) {
+  if (!name?.trim()) return "TV";
+  const words = name.trim().split(/\s+/);
+  return `${words[0]?.[0] ?? ""}${words.at(-1)?.[0] ?? ""}`.toUpperCase();
 }
 

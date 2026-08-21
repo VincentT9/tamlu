@@ -146,7 +146,7 @@ export function LoginPage() {
           </Stack>
           <MuiLink component={Link} to="/" textAlign="center" sx={{ color: "var(--color-text-muted)", fontWeight: 800 }}>
             <ShieldOutlinedIcon sx={{ mr: .75, fontSize: 18, verticalAlign: "text-bottom" }} />
-            Tiếp tục xem trang công khai
+            Quay lại trang chủ
           </MuiLink>
         </Stack>
       </Paper>

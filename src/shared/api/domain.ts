@@ -166,6 +166,27 @@ export interface RescueTeam {
   status: string;
 }
 
+export interface RescueTeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  userFullName?: string | null;
+  userPhone?: string | null;
+  roleInTeam?: string | null;
+  isActive: boolean;
+  joinedAt?: string | null;
+}
+
+export interface RescueTeamProfile extends RescueTeam {
+  leaderId?: string | null;
+  createdAt?: string | null;
+  members: RescueTeamMember[];
+}
+
+export interface MyRescueTeamResponse {
+  team: RescueTeamProfile | null;
+}
+
 export interface Vehicle {
   id: string;
   vehicleName: string;

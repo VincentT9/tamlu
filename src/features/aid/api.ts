@@ -2,6 +2,17 @@ import { getData, postData, putData } from "@/shared/api/client";
 import type { AllocationPlan, AreaAssessment, Disbursement, Procurement } from "@/shared/api/domain";
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 
+export interface CreateAllocationPlanRequest {
+  campaignId: string;
+  assessmentId: string;
+  items: Array<{
+    areaNeedId?: string | null;
+    itemType: string;
+    quantity: number;
+    approvedAmount: number;
+  }>;
+}
+
 export const aidApi = {
   suppliers: () => getData<Array<{ id: string; name: string; phone?: string; address?: string; isTrusted: boolean }>>("/api/suppliers"),
   createSupplier: (body: { name: string; phone?: string; address?: string; isTrusted: boolean }) =>
@@ -20,7 +31,8 @@ export const aidApi = {
   verifyAreaAssessment: (id: string, body: { status: "VERIFIED" | "REJECTED"; notes?: string }) =>
     putData<AreaAssessment>(`/api/area-assessments/${id}/verify`, body),
   allocationPlans: (params?: QueryParams) => getData<PaginatedResult<AllocationPlan>>("/api/allocation-plans", params),
-  createAllocationPlan: (body: unknown) => postData<AllocationPlan>("/api/allocation-plans", body),
+  allocationPlan: (id: string) => getData<AllocationPlan>(`/api/allocation-plans/${id}`),
+  createAllocationPlan: (body: CreateAllocationPlanRequest) => postData<AllocationPlan>("/api/allocation-plans", body),
   submitAllocationPlan: (id: string) => putData<AllocationPlan>(`/api/allocation-plans/${id}/submit`),
   approveAllocationPlan: (id: string, body: { status: "APPROVED" | "REJECTED"; note?: string }) =>
     putData<AllocationPlan>(`/api/allocation-plans/${id}/approve`, body),

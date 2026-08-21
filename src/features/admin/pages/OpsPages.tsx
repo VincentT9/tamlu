@@ -4,7 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SearchIcon from "@mui/icons-material/Search";
 import { Alert, Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, MenuItem, Paper, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
@@ -2034,6 +2034,18 @@ export function AllocationPlansPage() {
     items: [{ itemType: "Gạo", quantity: 100, approvedAmount: 0 }],
   });
   const plans = useQuery({ queryKey: ["allocation-plans"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
+  const planRows = plans.data?.data ?? [];
+  const planDetails = useQueries({
+    queries: planRows.map((plan) => ({
+      queryKey: ["allocation-plan", plan.id],
+      queryFn: () => aidApi.allocationPlan(plan.id),
+      staleTime: 30_000,
+    })),
+  });
+  const detailedPlanRows = planRows.map((plan, index) => (
+    planDetails[index]?.data ? { ...plan, ...planDetails[index].data } : plan
+  ));
+  const planDetailState = new Map(planRows.map((plan, index) => [plan.id, planDetails[index]]));
   const campaigns = useQuery({ queryKey: ["campaigns-admin", "allocation-select"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }), enabled: canCreateAllocation });
   const assessments = useQuery({ queryKey: ["area-assessments", "allocation-select"], queryFn: () => aidApi.areaAssessments({ page: 1, limit: 100 }), enabled: canCreateAllocation });
   const verifiedAssessments = (assessments.data?.data ?? []).filter((assessment) => isVerifiedAssessmentStatus(assessment.status));
@@ -2042,7 +2054,7 @@ export function AllocationPlansPage() {
   const createPlan = useMutation({
     mutationFn: () => aidApi.createAllocationPlan({
       campaignId: allocationForm.campaignId,
-      areaAssessmentId: allocationForm.areaAssessmentId || null,
+      assessmentId: allocationForm.areaAssessmentId,
       items: allocationForm.items.map((item) => ({
         itemType: item.itemType,
         quantity: Number(item.quantity),
@@ -2060,9 +2072,10 @@ export function AllocationPlansPage() {
   const action = useMutation({
     mutationFn: ({ id, type }: { id: string; type: "submit" | "approve" | "close" }) =>
       type === "submit" ? aidApi.submitAllocationPlan(id) : type === "approve" ? aidApi.approveAllocationPlan(id, { status: "APPROVED" }) : aidApi.closeAllocationPlan(id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       showToast("Kế hoạch phân bổ đã được cập nhật. Khi phê duyệt, hệ thống khóa giữ tiền và hàng theo kế hoạch.", "success");
       queryClient.invalidateQueries({ queryKey: ["allocation-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["allocation-plan", variables.id] });
     },
     onError: (error) => showToast(getErrorMessage(error), "error"),
   });
@@ -2091,7 +2104,7 @@ export function AllocationPlansPage() {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField fullWidth select label="Báo cáo nhu cầu đã xác minh" value={allocationForm.areaAssessmentId} onChange={(event) => setAllocationForm({ ...allocationForm, areaAssessmentId: event.target.value })}>
-                      <MenuItem value="">Không gắn báo cáo</MenuItem>
+                      <MenuItem value="" disabled>Chọn báo cáo nhu cầu đã xác minh</MenuItem>
                       {verifiedAssessments.length ? verifiedAssessments.map((assessment) => <MenuItem key={assessment.id} value={assessment.id}>{assessment.areaName} - {assessment.householdsAffected} hộ</MenuItem>) : (
                         <MenuItem disabled>{assessments.isLoading ? "Đang tải báo cáo..." : "Chưa có báo cáo đã xác minh"}</MenuItem>
                       )}
@@ -2134,7 +2147,7 @@ export function AllocationPlansPage() {
                   </Button>
                   <MetricCard label="Tổng tiền giữ chỗ" value={formatMoney(allocationTotal)} />
                 </Stack>
-                <Button variant="contained" disabled={!hasValidAllocationItems || createPlan.isPending} onClick={() => createPlan.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+                <Button variant="contained" disabled={!allocationForm.campaignId || !allocationForm.areaAssessmentId || !hasValidAllocationItems || createPlan.isPending} onClick={() => createPlan.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
                   Tạo kế hoạch phân bổ
                 </Button>
               </Stack>
@@ -2142,13 +2155,63 @@ export function AllocationPlansPage() {
           ) : null}
         </Stack>
       ) : null}
-      <WorkflowTable title="Kế hoạch phân bổ" rows={plans.data?.data ?? []} loading={plans.isLoading} error={plans.error} refetch={plans.refetch} actions={(row) => (
+      <WorkflowTable
+        title="Kế hoạch phân bổ"
+        recordHeader="Kế hoạch"
+        amountHeader="Tiền dự kiến"
+        extraColumnHeader="Vật tư cấp phát"
+        rows={detailedPlanRows}
+        loading={plans.isLoading}
+        error={plans.error}
+        refetch={plans.refetch}
+        renderExtraColumn={(row) => (
+          <Stack direction="row" useFlexGap flexWrap="wrap" gap={0.75}>
+            {row.items?.length ? row.items.map((item) => (
+              <Box
+                key={item.id}
+                component="span"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  gap: 0.5,
+                  maxWidth: "100%",
+                  px: 1.25,
+                  py: 0.625,
+                  borderRadius: "var(--radius-control)",
+                  backgroundColor: "var(--color-green-100)",
+                  color: "var(--color-green-800)",
+                }}
+              >
+                <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
+                  {item.itemType || "Vật tư"}
+                </Typography>
+                <Typography component="span" variant="body2" sx={{ whiteSpace: "nowrap", color: "var(--color-text-muted)" }}>
+                  × {new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(item.quantity)}
+                </Typography>
+              </Box>
+            )) : planDetailState.get(row.id)?.isPending ? (
+              <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
+                Đang tải vật tư...
+              </Typography>
+            ) : planDetailState.get(row.id)?.isError ? (
+              <Typography variant="body2" color="error.main">
+                Không thể tải vật tư
+              </Typography>
+            ) : (
+              <Typography variant="body2" sx={{ color: "var(--color-text-muted)" }}>
+                Chưa có vật tư
+              </Typography>
+            )}
+          </Stack>
+        )}
+        actions={(row) => (
         <Stack direction="row" spacing={1}>
           {canCreateAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "submit") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "submit" })}>Trình duyệt</Button> : null}
           {canApproveAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "approve") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "approve" })}>Phê duyệt và khóa giữ</Button> : null}
           {canCreateAllocation ? <Button size="small" disabled={!canRunAllocationAction(row.status, "close") || action.isPending} onClick={() => action.mutate({ id: row.id, type: "close" })}>Đóng kế hoạch</Button> : null}
         </Stack>
-      )} />
+      )}
+      />
     </Stack>
   );
 }
@@ -2284,7 +2347,7 @@ export function DisbursementsPage() {
       <WorkflowTable title="Giải ngân" rows={rows.data?.data ?? []} loading={rows.isLoading} error={rows.error} refetch={rows.refetch} actions={(row) => (
         canExecuteDisbursement ? <Button size="small" onClick={() => {
           setSelectedDisbursement(row);
-          setExecuteForm({ invoiceUrl: "", actualAmount: row.amount ?? row.totalAmount ?? 0 });
+          setExecuteForm({ invoiceUrl: "", actualAmount: row.amount ?? 0 });
         }}>Thực hiện</Button> : <Typography variant="body2" color="text.secondary">Chờ kế toán chuyển khoản</Typography>
       )} />
       <Dialog open={Boolean(selectedDisbursement)} onClose={() => setSelectedDisbursement(null)} maxWidth="sm" fullWidth>
@@ -2411,14 +2474,61 @@ function getVolunteerDisplayName(volunteer: { id: string; skills?: string | null
   return `${name}${area}`;
 }
 
-function WorkflowTable({ title, rows, loading, error, refetch, actions }: { title: string; rows: WorkflowRow[]; loading: boolean; error: unknown; refetch: () => void; actions: (row: WorkflowRow) => React.ReactNode }) {
+interface WorkflowTableProps<Row extends WorkflowRow> {
+  title: string;
+  recordHeader?: string;
+  amountHeader?: string;
+  extraColumnHeader?: string;
+  rows: Row[];
+  loading: boolean;
+  error: unknown;
+  refetch: () => void;
+  renderExtraColumn?: (row: Row) => React.ReactNode;
+  actions: (row: Row) => React.ReactNode;
+}
+
+function WorkflowTable<Row extends WorkflowRow>({
+  title,
+  recordHeader = "Bản ghi",
+  amountHeader = "Số tiền",
+  extraColumnHeader,
+  rows,
+  loading,
+  error,
+  refetch,
+  renderExtraColumn,
+  actions,
+}: WorkflowTableProps<Row>) {
   return (
     <>
       <PageHeader title={title} description="Hồ sơ tài chính và cứu trợ được đồng bộ từ hệ thống vận hành Tâm Lũ." />
       <QueryState isLoading={loading} error={error} empty={!rows.length} refetch={refetch}>
-        <DataTableFrame label={title}><Table size="small"><TableHead><TableRow><TableCell>Bản ghi</TableCell><TableCell>Số tiền</TableCell><TableCell>Trạng thái</TableCell><TableCell>Ngày tạo</TableCell><TableCell>Thao tác</TableCell></TableRow></TableHead><TableBody>
-          {rows.map((row) => <TableRow key={row.id}><TableCell>{row.campaignName ?? row.areaName ?? row.itemName ?? row.id}</TableCell><TableCell>{formatMoney(row.totalAmount ?? row.totalPlannedAmount ?? row.amount ?? 0)}</TableCell><TableCell><StatusChip value={row.status} /></TableCell><TableCell>{formatDate(row.createdAt)}</TableCell><TableCell>{actions(row)}</TableCell></TableRow>)}
-        </TableBody></Table></DataTableFrame>
+        <DataTableFrame label={title}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>{recordHeader}</TableCell>
+                {renderExtraColumn ? <TableCell>{extraColumnHeader}</TableCell> : null}
+                <TableCell>{amountHeader}</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Ngày tạo</TableCell>
+                <TableCell>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>{row.campaignName ?? row.areaName ?? row.itemName ?? row.id}</TableCell>
+                  {renderExtraColumn ? <TableCell sx={{ minWidth: 220 }}>{renderExtraColumn(row)}</TableCell> : null}
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{formatMoney(row.totalAmount ?? row.totalPlannedAmount ?? row.amount ?? 0)}</TableCell>
+                  <TableCell><StatusChip value={row.status} /></TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(row.createdAt)}</TableCell>
+                  <TableCell>{actions(row)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataTableFrame>
       </QueryState>
     </>
   );

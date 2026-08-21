@@ -1,5 +1,5 @@
 import { deleteData, getData, postData, postFormData, putData } from "@/shared/api/client";
-import type { Mission, RescueTeam, RescueUpdate, Shelter, Vehicle } from "@/shared/api/domain";
+import type { Mission, MyRescueTeamResponse, RescueTeam, RescueUpdate, Shelter, Vehicle } from "@/shared/api/domain";
 import type { PaginatedResult, QueryParams } from "@/shared/api/types";
 import { appendFiles, appendIfPresent } from "@/shared/utils/formData";
 
@@ -67,5 +67,5 @@ export const missionApi = {
   createVehicle: (body: Partial<Vehicle>) => postData<Vehicle>("/api/vehicles", body),
   updateVehicle: (id: string, body: Partial<Vehicle>) => putData<Vehicle>(`/api/vehicles/${id}`, body),
   deleteVehicle: (id: string) => deleteData<void>(`/api/vehicles/${id}`),
-  myTeam: () => getData<unknown>("/api/team/my-team"),
+  myTeam: () => getData<MyRescueTeamResponse>("/api/team/my-team"),
 };
