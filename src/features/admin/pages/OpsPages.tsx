@@ -2031,7 +2031,8 @@ export function AllocationPlansPage() {
   const [allocationForm, setAllocationForm] = useState({
     campaignId: "",
     areaAssessmentId: "",
-    items: [{ itemType: "Gạo", quantity: 100, approvedAmount: 0 }],
+    warehouseId: "",
+    items: [{ inventoryItemId: "", itemType: "", quantity: 1, approvedAmount: 0 }],
   });
   const plans = useQuery({ queryKey: ["allocation-plans"], queryFn: () => aidApi.allocationPlans({ page: 1, limit: 50 }) });
   const planRows = plans.data?.data ?? [];
@@ -2048,14 +2049,39 @@ export function AllocationPlansPage() {
   const planDetailState = new Map(planRows.map((plan, index) => [plan.id, planDetails[index]]));
   const campaigns = useQuery({ queryKey: ["campaigns-admin", "allocation-select"], queryFn: () => donationApi.campaigns({ page: 1, limit: 50 }), enabled: canCreateAllocation });
   const assessments = useQuery({ queryKey: ["area-assessments", "allocation-select"], queryFn: () => aidApi.areaAssessments({ page: 1, limit: 100 }), enabled: canCreateAllocation });
+  const allocationWarehouses = useQuery({
+    queryKey: ["warehouses", "allocation-select"],
+    queryFn: inventoryApi.warehouses,
+    enabled: canCreateAllocation && showAllocationForm,
+  });
+  const allocationWarehouseItems = useQuery({
+    queryKey: ["warehouse-items", "allocation-select", allocationForm.warehouseId],
+    queryFn: () => inventoryApi.warehouseItems(allocationForm.warehouseId, { page: 1, limit: 100 }),
+    enabled: canCreateAllocation && showAllocationForm && Boolean(allocationForm.warehouseId),
+  });
   const verifiedAssessments = (assessments.data?.data ?? []).filter((assessment) => isVerifiedAssessmentStatus(assessment.status));
+  const selectedAllocationWarehouse = (allocationWarehouses.data ?? []).find((warehouse) => warehouse.id === allocationForm.warehouseId);
+  const allocationStockItems = allocationWarehouseItems.data?.data ?? [];
   const allocationTotal = allocationForm.items.reduce((total, item) => total + Number(item.approvedAmount), 0);
-  const hasValidAllocationItems = allocationForm.items.every((item) => item.itemType && Number(item.quantity) > 0 && Number(item.approvedAmount) >= 0);
+  const allocationItemIssues = allocationForm.items.map((item) => {
+    const inventoryItem = allocationStockItems.find((stockItem) => stockItem.id === item.inventoryItemId);
+    if (!inventoryItem) return "Vui lòng chọn vật tư có trong kho.";
+    const availableQuantity = Math.max(0, Number(inventoryItem.quantity) - Number(inventoryItem.reservedQuantity));
+    if (Number(item.quantity) <= 0) return "Số lượng cấp phát phải lớn hơn 0.";
+    if (Number(item.quantity) > availableQuantity) {
+      return `Kho chỉ còn ${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(availableQuantity)} ${inventoryItem.unit} có thể giữ chỗ.`;
+    }
+    if (Number(item.approvedAmount) < 0) return "Tiền mặt dự kiến không được âm.";
+    return "";
+  });
+  const hasValidAllocationItems = Boolean(allocationForm.warehouseId) && allocationItemIssues.every((issue) => !issue);
   const createPlan = useMutation({
     mutationFn: () => aidApi.createAllocationPlan({
       campaignId: allocationForm.campaignId,
       assessmentId: allocationForm.areaAssessmentId,
       items: allocationForm.items.map((item) => ({
+        // The allocation API currently identifies stock by itemType, so always send
+        // the canonical item name returned by the selected warehouse inventory.
         itemType: item.itemType,
         quantity: Number(item.quantity),
         approvedAmount: Number(item.approvedAmount),
@@ -2063,7 +2089,7 @@ export function AllocationPlansPage() {
     }),
     onSuccess: () => {
       showToast("Kế hoạch phân bổ đã được tạo. Điều phối viên có thể trình duyệt khi sẵn sàng.", "success");
-      setAllocationForm({ campaignId: "", areaAssessmentId: "", items: [{ itemType: "Gạo", quantity: 100, approvedAmount: 0 }] });
+      setAllocationForm({ campaignId: "", areaAssessmentId: "", warehouseId: "", items: [{ inventoryItemId: "", itemType: "", quantity: 1, approvedAmount: 0 }] });
       setShowAllocationForm(false);
       queryClient.invalidateQueries({ queryKey: ["allocation-plans"] });
     },
@@ -2096,13 +2122,13 @@ export function AllocationPlansPage() {
                   </Typography>
                 </Box>
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
+                  <Grid size={{ xs: 12, lg: 4 }}>
                     <TextField fullWidth select label="Chiến dịch" value={allocationForm.campaignId} onChange={(event) => setAllocationForm({ ...allocationForm, campaignId: event.target.value })}>
                       <MenuItem value="" disabled>{campaigns.isLoading ? "Đang tải chiến dịch..." : "Chọn chiến dịch"}</MenuItem>
                       {(campaigns.data?.data ?? []).map((campaign) => <MenuItem key={campaign.id} value={campaign.id}>{campaign.name}</MenuItem>)}
                     </TextField>
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
+                  <Grid size={{ xs: 12, lg: 4 }}>
                     <TextField fullWidth select label="Báo cáo nhu cầu đã xác minh" value={allocationForm.areaAssessmentId} onChange={(event) => setAllocationForm({ ...allocationForm, areaAssessmentId: event.target.value })}>
                       <MenuItem value="" disabled>Chọn báo cáo nhu cầu đã xác minh</MenuItem>
                       {verifiedAssessments.length ? verifiedAssessments.map((assessment) => <MenuItem key={assessment.id} value={assessment.id}>{assessment.areaName} - {assessment.householdsAffected} hộ</MenuItem>) : (
@@ -2110,19 +2136,80 @@ export function AllocationPlansPage() {
                       )}
                     </TextField>
                   </Grid>
+                  <Grid size={{ xs: 12, lg: 4 }}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Kho cấp phát"
+                      value={allocationForm.warehouseId}
+                      onChange={(event) => setAllocationForm({
+                        ...allocationForm,
+                        warehouseId: event.target.value,
+                        items: [{ inventoryItemId: "", itemType: "", quantity: 1, approvedAmount: 0 }],
+                      })}
+                      helperText="Chỉ cho phép chọn vật tư và số lượng còn khả dụng tại kho này."
+                    >
+                      <MenuItem value="" disabled>{allocationWarehouses.isLoading ? "Đang tải kho..." : "Chọn kho cấp phát"}</MenuItem>
+                      {(allocationWarehouses.data ?? []).map((warehouse) => (
+                        <MenuItem key={warehouse.id} value={warehouse.id}>{warehouse.name}</MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
                 </Grid>
+                {allocationWarehouses.error ? (
+                  <Alert severity="error">{getErrorMessage(allocationWarehouses.error)}</Alert>
+                ) : null}
                 <Stack spacing={1.5}>
                   {allocationForm.items.map((item, index) => (
-                    <Grid container spacing={1.5} alignItems="center" key={index}>
+                    <Grid container spacing={1.5} alignItems="flex-start" key={index}>
                       <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField fullWidth label="Loại vật tư/tiền mặt" value={item.itemType} onChange={(event) => {
-                          const items = [...allocationForm.items];
-                          items[index] = { ...item, itemType: event.target.value };
-                          setAllocationForm({ ...allocationForm, items });
-                        }} />
+                        <TextField
+                          fullWidth
+                          select
+                          label="Vật tư trong kho"
+                          InputLabelProps={{ shrink: true }}
+                          value={item.inventoryItemId}
+                          disabled={!allocationForm.warehouseId || allocationWarehouseItems.isLoading}
+                          error={Boolean(item.inventoryItemId && allocationItemIssues[index])}
+                          helperText={item.inventoryItemId && allocationItemIssues[index]
+                            ? allocationItemIssues[index]
+                            : item.inventoryItemId
+                              ? (() => {
+                                  const inventoryItem = allocationStockItems.find((stockItem) => stockItem.id === item.inventoryItemId);
+                                  if (!inventoryItem) return "";
+                                  const available = Math.max(0, Number(inventoryItem.quantity) - Number(inventoryItem.reservedQuantity));
+                                  return `Có thể giữ chỗ ${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(available)} ${inventoryItem.unit} tại ${selectedAllocationWarehouse?.name ?? "kho đã chọn"}.`;
+                                })()
+                              : allocationForm.warehouseId
+                                ? "Chọn đúng mặt hàng từ danh mục tồn kho."
+                                : "Chọn kho cấp phát trước."}
+                          onChange={(event) => {
+                            const inventoryItem = allocationStockItems.find((stockItem) => stockItem.id === event.target.value);
+                            const items = [...allocationForm.items];
+                            items[index] = {
+                              ...item,
+                              inventoryItemId: event.target.value,
+                              itemType: inventoryItem?.itemName ?? "",
+                            };
+                            setAllocationForm({ ...allocationForm, items });
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            {allocationWarehouseItems.isLoading ? "Đang tải tồn kho..." : "Chọn vật tư"}
+                          </MenuItem>
+                          {allocationStockItems.map((inventoryItem) => {
+                            const available = Math.max(0, Number(inventoryItem.quantity) - Number(inventoryItem.reservedQuantity));
+                            const selectedElsewhere = allocationForm.items.some((formItem, itemIndex) => itemIndex !== index && formItem.inventoryItemId === inventoryItem.id);
+                            return (
+                              <MenuItem key={inventoryItem.id} value={inventoryItem.id} disabled={available <= 0 || selectedElsewhere}>
+                                {inventoryItem.itemName} - còn {new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(available)} {inventoryItem.unit}
+                              </MenuItem>
+                            );
+                          })}
+                        </TextField>
                       </Grid>
                       <Grid size={{ xs: 12, md: 3 }}>
-                        <TextField fullWidth label="Số lượng cấp phát" type="number" value={item.quantity} onChange={(event) => {
+                        <TextField fullWidth label="Số lượng cấp phát" type="number" value={item.quantity} error={Boolean(item.inventoryItemId && allocationItemIssues[index])} onChange={(event) => {
                           const items = [...allocationForm.items];
                           items[index] = { ...item, quantity: Number(event.target.value) };
                           setAllocationForm({ ...allocationForm, items });
@@ -2142,12 +2229,12 @@ export function AllocationPlansPage() {
                   ))}
                 </Stack>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ xs: "stretch", md: "center" }} justifyContent="space-between">
-                  <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setAllocationForm({ ...allocationForm, items: [...allocationForm.items, { itemType: "", quantity: 1, approvedAmount: 0 }] })}>
+                  <Button variant="outlined" startIcon={<AddIcon />} disabled={!allocationForm.warehouseId} onClick={() => setAllocationForm({ ...allocationForm, items: [...allocationForm.items, { inventoryItemId: "", itemType: "", quantity: 1, approvedAmount: 0 }] })}>
                     Thêm dòng cấp phát
                   </Button>
                   <MetricCard label="Tổng tiền giữ chỗ" value={formatMoney(allocationTotal)} />
                 </Stack>
-                <Button variant="contained" disabled={!allocationForm.campaignId || !allocationForm.areaAssessmentId || !hasValidAllocationItems || createPlan.isPending} onClick={() => createPlan.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
+                <Button variant="contained" disabled={!allocationForm.campaignId || !allocationForm.areaAssessmentId || !hasValidAllocationItems || createPlan.isPending || allocationWarehouseItems.isLoading} onClick={() => createPlan.mutate()} sx={{ alignSelf: { xs: "stretch", md: "flex-start" } }}>
                   Tạo kế hoạch phân bổ
                 </Button>
               </Stack>
